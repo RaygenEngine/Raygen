@@ -57,10 +57,11 @@ inline struct Layouts_ {
 	RRenderPassLayout secondaryPassLayout;
 	RRenderPassLayout shadowPassLayout;
 	RRenderPassLayout singleFloatColorAttPassLayout;
+	RRenderPassLayout ptPassLayout;
 
 	RRenderPassLayout svgfPassLayout;
 	// Ray Trace Here
-	RRenderPassLayout ptPassLayout;
+	RRenderPassLayout unlitPassLayout;
 	// Output pass
 
 	void MakeRenderPassLayouts();

@@ -3,6 +3,7 @@
 #include "global.glsl"
 
 #include "global-descset.glsl"
+#include "surface.glsl"
 
 // out
 
@@ -13,6 +14,13 @@ layout(location = 0) out vec4 outColor;
 layout(location = 0) in vec2 uv;
 
 // uniform
+
+layout(push_constant) uniform PC
+{
+	int quadlightCount;
+};
+
+layout(set = 1, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
 vec4 AmbientInfoBlurredOcclusion()
 {
@@ -34,15 +42,41 @@ vec4 AmbientInfoBlurredOcclusion()
     return color;
 }
 
+vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
+{
+	vec3 L = normalize(ql.center - surface.position);
+	addIncomingLightDirection(surface, L);
+		
+
+	return ql.color * ql.intensity * DirectLightBRDF(surface); // we use the surface.nol calculated in arealights
+}
+
 void main()
 {
-    vec3 emissive = texture(g_EmissiveSampler, uv).rgb;
+    Surface surface = surfaceFromGBuffer(
+	    cam,
+	    g_DepthSampler,
+	    g_NormalSampler,
+	    g_AlbedoSampler,
+	    g_SpecularSampler,
+	    g_EmissiveSampler,
+	    uv
+    );
+
 	vec3 directLight = texture(directLightSampler, uv).rgb;
 	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
-    vec3 arealights = texture(_reserved_, uv).rgb;
+    vec4 arealightShadowing = texture(_reserved_, uv);
     vec3 mirror = texture(mirrorSampler, uv).rgb;
     vec4 ambientInfo = AmbientInfoBlurredOcclusion();
 	// ...
-	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + emissive + mirror + arealights;
+
+    vec3 arealights = vec3(0);
+
+    for (int i = 0; i < quadlightCount; ++i) {
+		Quadlight ql = quadlights.light[i];
+		arealights += Quadlight_AfterContribution(ql, surface) * arealightShadowing[i];
+    }
+
+	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + surface.emissive + mirror + arealights;
 	outColor = vec4(final, 1.0);
 }

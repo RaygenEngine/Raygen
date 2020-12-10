@@ -6,16 +6,16 @@
 
 namespace vl {
 
-RRenderPassLayout::Attachment::State StateFromLayout(vk::ImageLayout layout)
+RRenderPassLayout::Attachment::State StateFromLayout(vk::ImageLayout layout, bool isDepth)
 {
 
 	using enum vk::ImageLayout;
 	using enum RRenderPassLayout::Attachment::State;
 
 	switch (layout) {
-		case eShaderReadOnlyOptimal: return ShaderRead;
-		case eColorAttachmentOptimal: return Color;
-		case eDepthStencilAttachmentOptimal: return Depth;
+		case eShaderReadOnlyOptimal: return isDepth ? DepthShaderRead : ColorShaderRead;
+		case eColorAttachmentOptimal: return ColorAttachmentWrite;
+		case eDepthStencilAttachmentOptimal: return DepthAttachmentWrite;
 	}
 	LOG_ABORT("Unfinished enum detector");
 }
@@ -83,7 +83,7 @@ RRenderPassLayout::AttachmentRef RRenderPassLayout::CreateAttachment(
 		.setFinalLayout(vk::ImageLayout::eUndefined);
 
 
-	att.state = att.isDepth ? Attachment::State::Depth : Attachment::State::Color;
+	att.state = att.isDepth ? Attachment::State::DepthAttachmentWrite : Attachment::State::ColorAttachmentWrite;
 
 	auto& cv = clearValues.emplace_back();
 
@@ -129,12 +129,12 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 		dep.setSrcSubpass(attParam.Get().previousOutputSubpassIndex) //
 			.setDstSubpass(subpassIndex);
 
-		if (attParam.Get().state == Attachment::State::Color) {
+		if (attParam.Get().state == Attachment::State::ColorAttachmentWrite) {
 
 			dep.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 				.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 		}
-		else if (attParam.Get().state == Attachment::State::Depth) {
+		else if (attParam.Get().state == Attachment::State::DepthAttachmentWrite) {
 
 			dep.setSrcStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests)
 				.setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
@@ -151,43 +151,72 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 	}
 
 	for (auto& att : outputs) {
-		if (IsExternal(att) && !att.IsDepth()) {
-			LOG_ABORT("External non depth outputs are not yet supported");
-		}
+		// if (IsExternal(att) && !att.IsDepth()) {
+		//	LOG_ABORT("External non depth outputs are not yet supported");
+		//}
 
 		if (IsExternal(att)) {
-			auto extDepthAtt = UseExternal(att, subpassIndex);
-			if (extDepthAtt.firstUseIndex != subpassIndex) {
+			auto extAtt = UseExternal(att, subpassIndex);
+			if (extAtt.firstUseIndex != subpassIndex) {
 				LOG_ABORT("External depth as output for multiple subpasses is not supported");
 			}
 
-			auto prevState = extDepthAtt.Get().state;
+			auto prevState = extAtt.Get().state;
 
-			extDepthAtt.GetDescr()
-				.setFormat(extDepthAtt.GetFormat()) //
+			extAtt.GetDescr()
+				.setFormat(extAtt.GetFormat()) //
 				.setSamples(vk::SampleCountFlagBits::e1)
 				.setLoadOp(vk::AttachmentLoadOp::eLoad)
 				.setStoreOp(vk::AttachmentStoreOp::eStore)
 				.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-				.setInitialLayout(prevState == Attachment::State::ShaderRead
-									  ? vk::ImageLayout::eShaderReadOnlyOptimal
-									  : vk::ImageLayout::eDepthStencilAttachmentOptimal)
-				.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
 
-			extDepthAtt.Get().state = Attachment::State::Depth;
+			switch (prevState) {
+				case Attachment::State::ColorShaderRead:
+					extAtt.GetDescr().setInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+					break;
+				case Attachment::State::ColorAttachmentWrite:
+					extAtt.GetDescr().setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
+					break;
+				case Attachment::State::DepthShaderRead:
+					extAtt.GetDescr().setInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+					break;
+				case Attachment::State::DepthAttachmentWrite:
+					extAtt.GetDescr().setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+					break;
+			}
 
-			subpass.depth = extDepthAtt;
-			subpass.vkDepth = std::make_unique<vk::AttachmentReference>();
-			subpass.vkDepth
-				->setAttachment(extDepthAtt.GetAttachmentIndex()) //
-				.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+			switch (prevState) {
+				case Attachment::State::ColorShaderRead:
+				case Attachment::State::ColorAttachmentWrite: {
+					extAtt.GetDescr().setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+					extAtt.Get().state = Attachment::State::ColorAttachmentWrite;
+					subpass.colors.emplace_back(extAtt);
+					auto& attRef = subpass.vkColors.emplace_back();
+					attRef
+						.setAttachment(extAtt.GetAttachmentIndex()) //
+						.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+					break;
+				}
+				case Attachment::State::DepthShaderRead:
+				case Attachment::State::DepthAttachmentWrite: {
+					extAtt.GetDescr().setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+					extAtt.Get().state = Attachment::State::DepthAttachmentWrite;
+					subpass.depth = extAtt;
+					subpass.vkDepth = std::make_unique<vk::AttachmentReference>();
+					subpass.vkDepth
+						->setAttachment(extAtt.GetAttachmentIndex()) //
+						.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+					break;
+				}
+			}
+
 
 			continue;
 		}
 
 		if (att.IsDepth()) {
-			CLOG_ABORT(att.Get().state != Attachment::State::Depth,
+			CLOG_ABORT(att.Get().state != Attachment::State::DepthAttachmentWrite,
 				"Found depth as output attachment but its state was not Depth Write");
 
 			subpass.depth = att;
@@ -197,7 +226,7 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 				.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 		else {
-			if (att.Get().state != Attachment::State::Color) {
+			if (att.Get().state != Attachment::State::ColorAttachmentWrite) {
 				// CHECK: doesn't work because of subpass dependency index changes
 				LOG_WARN("Reading and writting at the same attachment in the same render pass");
 
@@ -255,13 +284,13 @@ void RRenderPassLayout::Generate()
 
 	for (int32 i = 0; auto& att : internalAttachmentsDescr) {
 		attachmentDescrs.emplace_back(att);
-		internalAttachments[i].state = StateFromLayout(att.finalLayout);
+		internalAttachments[i].state = StateFromLayout(att.finalLayout, internalAttachments[i].isDepth);
 		++i;
 	}
 
 	for (int32 i = 0; auto& att : externalAttachmentsDescr) {
 		attachmentDescrs.emplace_back(att);
-		externalAttachments[i].Get().state = StateFromLayout(att.finalLayout);
+		externalAttachments[i].Get().state = StateFromLayout(att.finalLayout, externalAttachments[i].IsDepth());
 		++i;
 	}
 

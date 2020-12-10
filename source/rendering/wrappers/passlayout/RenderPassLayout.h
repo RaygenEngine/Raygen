@@ -44,9 +44,10 @@ struct RRenderPassLayout {
 	struct Attachment {
 		enum class State
 		{
-			ShaderRead, // CHECK: currently only used for depth
-			Depth,
-			Color,
+			ColorShaderRead,
+			DepthShaderRead,
+			ColorAttachmentWrite,
+			DepthAttachmentWrite,
 		} state; // current subpass state.
 
 		// CHECK:

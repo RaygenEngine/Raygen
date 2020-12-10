@@ -4,16 +4,35 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/scene/SceneCamera.h"
 
+
+namespace {
+struct PushConstant {
+	int32 quadlightCount;
+};
+
+static_assert(sizeof(PushConstant) <= 128);
+} // namespace
+
 namespace vl {
 void PtLightBlend::MakeLayout()
 {
 	std::array layouts{
 		Layouts->globalDescLayout.handle(),
+		Layouts->singleStorageBuffer.handle(), // quadlights
 	};
 
 	// pipeline layout
+	vk::PushConstantRange pushConstantRange{};
+	pushConstantRange
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment) //
+		.setSize(sizeof(PushConstant))
+		.setOffset(0u);
+
+
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayouts(layouts);
+	pipelineLayoutInfo
+		.setPushConstantRanges(pushConstantRange) //
+		.setSetLayouts(layouts);
 
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
@@ -46,10 +65,19 @@ void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
+	PushConstant pc{
+		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+	};
+
+	cmdBuffer.pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
+
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
 
-	// draw call (triangle)
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
+		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);
 }
 

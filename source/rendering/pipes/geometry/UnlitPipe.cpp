@@ -120,7 +120,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(Layouts->ptPassLayout.compatibleRenderPass.get())
+			.setRenderPass(Layouts->unlitPassLayout.compatibleRenderPass.get())
 			.setSubpass(1u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);

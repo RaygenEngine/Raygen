@@ -154,7 +154,7 @@ vk::UniquePipeline BillboardPipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(Layouts->ptPassLayout.compatibleRenderPass.get())
+		.setRenderPass(Layouts->unlitPassLayout.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
