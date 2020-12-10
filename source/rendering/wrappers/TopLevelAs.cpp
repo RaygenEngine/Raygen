@@ -35,8 +35,8 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 		.setInstanceShaderBindingTableRecordOffset(instance.materialId)
 		.setFlags(instance.flags)
 		.setAccelerationStructureReference(instance.blas)
-		.setMask(1); // Use a single mask for all objects for now. Mask must match the cullMask parameter of
-					 // rayQueryInitializeEXT in the shader.
+		.setMask(instance.cullMask); // Use a single mask for all objects for now. Mask must match the cullMask
+									 // parameter of rayQueryInitializeEXT in the shader.
 
 	// https://github.com/KhronosGroup/GLSL/blob/master/extensions/ext/GLSL_EXT_ray_query.txt#L252
 
@@ -83,7 +83,6 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 
 	int32 totalGroups = 0;
 
-
 	for (auto geom : geoms) {
 		auto transform = geom->transform;
 
@@ -94,9 +93,10 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 
 			AsInstance inst{};
 			inst.transform = transform;    // Position of the instance
-			inst.instanceId = totalGroups; // gl_InstanceID
+			inst.instanceId = totalGroups; // gl_InstanceCustomIndexEXT
 			inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
 			inst.materialId = 0;
+			inst.cullMask = 0x01;
 			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
 			instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 
@@ -105,21 +105,19 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 		}
 	}
 
-	int32 totalQuadlights = 0;
-
+	auto k = 0u;
 	for (auto ql : quadlights) {
 
 		auto transform = ql->transform;
 
 		AsInstance inst{};
-		inst.transform = transform;        // Position of the instance
-		inst.instanceId = totalQuadlights; // gl_InstanceID
+		inst.transform = transform; // Position of the instance
+		inst.instanceId = k++;      // gl_InstanceCustomIndexEXT
 		inst.blas = Device->getAccelerationStructureAddressKHR(quadlightBlas.handle());
-		inst.materialId = 1; // WIP:
+		inst.materialId = 1;  // WIP:
+		inst.cullMask = 0x02; // cull system, lights, geom etc
 		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
 		instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
-
-		totalQuadlights++;
 	}
 
 	auto imgSize = GpuAssetManager->Z_GetSize();

@@ -14,6 +14,8 @@ struct Quadlight_Ubo {
 	float linearTerm{};
 	float quadraticTerm{};
 
+	float cosAperture{};
+
 	float radius{};
 
 	int32 samples{};

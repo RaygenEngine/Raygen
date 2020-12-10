@@ -238,7 +238,7 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 
 void main() {
 	
-	int matId = gl_InstanceID;
+	int matId = gl_InstanceCustomIndexEXT;
 
 	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
 

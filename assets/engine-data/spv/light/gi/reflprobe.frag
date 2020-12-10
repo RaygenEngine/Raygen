@@ -51,6 +51,10 @@ void main( )
 //		return; 
 //	}
 	
+	if(surface.a <= SPEC_THRESHOLD){
+		discard;
+	}
+	
 	vec3 finalContribution = Reflprobe_Contribution(rp, std_BrdfLut, irradianceSampler, prefilteredSampler, surface);
 	outColor = vec4(finalContribution, 1);
 }

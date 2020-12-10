@@ -64,7 +64,7 @@ float Quadlight_ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin,
 	rayQueryInitializeEXT(rayQuery, 
 						  topLevelAs, 
 						  gl_RayFlagsTerminateOnFirstHitEXT, 
-						  0xFF, 
+						  0xFD, 
 						  origin, 
 						  tMin,
 						  direction, 
@@ -95,7 +95,7 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	vec3 L = normalize(samplePoint - surface.position);  
 	addIncomingLightDirection(surface, L);
 
-	if(dot(-L, ql.normal) < 0) {
+	if(dot(-L, ql.normal) < ql.cosAperture) {
 		return vec3(0.0); // if behind light
 	}			
 
@@ -137,9 +137,9 @@ vec3 Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Sur
 	}
 
 	vec3 L = surfaceIncidentLightDir(surface);  
-	if(dot(-L, ql.normal) < 0) {
+	if(dot(-L, ql.normal) < ql.cosAperture) {
 		return vec3(0.0); // if behind light
-	}			
+	}						
 
 	vec3 samplePoint;
 	if(!rayQuadIntersection(ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height, surface.position, L, samplePoint)) {
@@ -147,6 +147,7 @@ vec3 Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Sur
 	}
 
 	float dist = distance(samplePoint, surface.position);
+	
 	if(ql.hasShadow == 1 && Quadlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, dist) > 0.0){
 		return vec3(0.0); // in shadow
 	}
@@ -166,16 +167,23 @@ vec3 Quadlight_FastContribution(accelerationStructureEXT topLevelAs, Quadlight q
 	vec3 L = normalize(ql.center - surface.position);
 	addIncomingLightDirection(surface, L);
 
-	float shadow = ql.hasShadow != 0 ? Quadlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, distance(ql.center, surface.position)) : 0;
+	if(dot(-L, ql.normal) < ql.cosAperture) {
+		return vec3(0.0); // if behind light
+	}			
 
 	float dist = distance(ql.center, surface.position);
+
+	if(ql.hasShadow == 1 && Quadlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, dist) > 0.0){
+		return vec3(0.0); // in shadow
+	}
+	
 	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist + 
   			     ql.quadraticTerm * (dist * dist));
 
 	vec3 Le = ql.color * ql.intensity * attenuation; 
 
 	// point light
-	return Le * DirectLightBRDF(surface) * surface.nol * (1 - shadow);
+	return Le * DirectLightBRDF(surface) * surface.nol;
 }
 
 
