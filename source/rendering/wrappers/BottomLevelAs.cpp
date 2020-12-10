@@ -77,9 +77,9 @@ BottomLevelAs::BottomLevelAs(const RBuffer& combinedVertexBuffer, uint32 vertexC
 		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
 		.setIndexType(vk::IndexType::eUint32)
 		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
-		.setMaxPrimitiveCount(indexCount / 3) // WIP:
-		.setMaxVertexCount(vertexCount)       // WIP:
-		.setAllowsTransforms(VK_FALSE);       // No adding transformation matrices
+		.setMaxPrimitiveCount(indexCount / 3)
+		.setMaxVertexCount(vertexCount)
+		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
 
 	// Building part
 	auto vertexAddress = Device->getBufferAddress(combinedVertexBuffer.handle());
@@ -106,8 +106,8 @@ BottomLevelAs::BottomLevelAs(const RBuffer& combinedVertexBuffer, uint32 vertexC
 	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
 	offset
 		.setPrimitiveCount(asCreate.maxPrimitiveCount) //
-		.setPrimitiveOffset(0u)                        // WIP:
-		.setFirstVertex(0u)                            // WIP:
+		.setPrimitiveOffset(0u)
+		.setFirstVertex(0u)
 		.setTransformOffset(0);
 
 	asGeoms.emplace_back(asGeom);

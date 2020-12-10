@@ -22,6 +22,8 @@ struct AsInstance {
 	int32 instanceId{ 0xFF }; // gl_InstanceID
 	int32 materialId{ 0 };    // aka Shader Binding Table Offset
 
+	uint32 cullMask{ 1 };
+
 	vk::GeometryInstanceFlagsKHR flags{ vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise };
 	glm::mat4 transform{ glm::identity<glm::mat4>() };
 };

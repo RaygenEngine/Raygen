@@ -214,6 +214,8 @@ struct Quadlight {
 	float linearTerm;
 	float quadraticTerm;
 
+	float cosAperture;
+
 	float radius;
 
 	int samples;
