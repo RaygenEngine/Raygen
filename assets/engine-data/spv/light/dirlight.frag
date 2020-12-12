@@ -40,6 +40,8 @@ void main()
 		g_AlbedoInput,
 		g_SpecularInput,
 		g_EmissiveInput,
+		g_VelocityInput,
+		g_UVDrawIndexInput,
 		uv
 	);
 
