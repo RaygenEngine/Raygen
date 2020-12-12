@@ -121,7 +121,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 	}
 
 	auto imgSize = GpuAssetManager->Z_GetSize();
-	sceneDesc.descSet = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(static_cast<int32>(imgSize));
+	sceneDesc.descSetGeometryAndTextures
+		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(static_cast<int32>(imgSize));
 
 
 	sceneDesc.WriteImages();
@@ -180,7 +181,7 @@ void RtSceneDescriptor::WriteImages()
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler) //
 			.setImageInfo(images)
 			.setDstBinding(1u)
-			.setDstSet(descSet[i])
+			.setDstSet(descSetGeometryAndTextures[i])
 			.setDstArrayElement(0u);
 
 		Device->updateDescriptorSets({ imgWriteSet }, nullptr);
@@ -609,7 +610,7 @@ void RtSceneDescriptor::WriteGeomGroups()
 		bufWrite
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
 			.setDstBinding(0)
-			.setDstSet(descSet[i])
+			.setDstSet(descSetGeometryAndTextures[i])
 			.setDstArrayElement(0u)
 			.setBufferInfo(sceneBufInfo);
 

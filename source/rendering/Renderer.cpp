@@ -76,6 +76,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	m_raytraceArealights.Resize(fbSize);
 	m_raytraceMirrorReflections.Resize(fbSize);
+	m_progressivePathtrace.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_unlitPassInst[i] = Layouts->unlitPassLayout.CreatePassInstance(fbSize.width, fbSize.height,
@@ -93,7 +94,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_raytraceArealights.result[i].view());        // reserved
+		views.emplace_back(m_progressivePathtrace.result[i].view());      // reserved
 		views.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror buffer
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
@@ -201,6 +202,8 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	// calculates: specular reflections (mirror)
 	// requires: gbuffer, shadowmaps, gi maps
 	m_raytraceMirrorReflections.RecordCmd(cmdBuffer, sceneDesc);
+
+	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc);
 
 	// TODO: post process
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
