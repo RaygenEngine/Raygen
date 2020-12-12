@@ -136,6 +136,8 @@ Surface surfaceFromGBuffer(
     subpassInput albedoOpacitySampler,
     subpassInput f0RoughnessSampler,
     subpassInput emissiveOcclusionSampler,
+    subpassInput use0,
+    subpassInput use1,
     vec2 uv)
 {
     Surface surface;
