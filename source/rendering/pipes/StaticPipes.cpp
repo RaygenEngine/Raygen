@@ -10,6 +10,7 @@
 #include "rendering/pipes/MirrorPipe.h"
 #include "rendering/pipes/PathtraceCubemapArrayPipe.h"
 #include "rendering/pipes/PathtraceCubemapPipe.h"
+#include "rendering/pipes/PathtracePipe.h"
 #include "rendering/pipes/PointlightPipe.h"
 #include "rendering/pipes/PrefilteredConvolutionPipe.h"
 #include "rendering/pipes/ReflprobePipe.h"
@@ -39,5 +40,6 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<VolumeLinesPipe>();
 	StaticPipes::Init<VolumeTrianglesPipe>();
 	StaticPipes::Init<ArealightsPipe>();
+	StaticPipes::Init<PathtracePipe>();
 }
 } // namespace vl

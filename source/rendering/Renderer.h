@@ -2,6 +2,7 @@
 
 #include "engine/Listener.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
+#include "rendering/techniques/ProgressivePathtrace.h"
 #include "rendering/techniques/RaytraceArealights.h"
 #include "rendering/techniques/RaytraceMirrorReflections.h"
 #include "rendering/wrappers/CmdBuffer.h"
@@ -42,6 +43,7 @@ public:
 	// non-static techniques
 	RaytraceMirrorReflections m_raytraceMirrorReflections;
 	RaytraceArealights m_raytraceArealights;
+	ProgressivePathtrace m_progressivePathtrace;
 
 private:
 	vk::Extent2D m_extent{};

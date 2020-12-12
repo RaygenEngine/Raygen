@@ -29,7 +29,7 @@ struct AsInstance {
 };
 
 struct RtSceneDescriptor {
-	InFlightResources<vk::DescriptorSet> descSet;
+	InFlightResources<vk::DescriptorSet> descSetGeometryAndTextures;
 	InFlightResources<vk::DescriptorSet> descSetPointlights;
 	InFlightResources<vk::DescriptorSet> descSetSpotlights;
 	InFlightResources<vk::DescriptorSet> descSetDirlights;
