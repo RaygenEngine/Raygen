@@ -94,7 +94,8 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_progressivePathtrace.result[i].view());      // reserved
+		views.emplace_back(m_raytraceArealights.result[i].view());        // reserved0
+		views.emplace_back(m_progressivePathtrace.result[i].view());      // reserved1
 		views.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror buffer
 		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
@@ -128,7 +129,7 @@ void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 
 		descriptorWrite
 			.setDstSet(m_globalDesc[sceneDesc.frameIndex]) //
-			.setDstBinding(14u)                            // WIP:
+			.setDstBinding(15u)                            // WIP:
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 			.setBufferInfo(bufferInfo);

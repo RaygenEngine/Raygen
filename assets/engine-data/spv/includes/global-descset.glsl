@@ -17,12 +17,13 @@ layout(set = 0, binding = 9) uniform sampler2D aoSampler;
 
 layout(set = 0, binding = 10) uniform sampler2D std_BrdfLut;
 
-layout(set = 0, binding = 11) uniform sampler2D _reserved_;
+layout(set = 0, binding = 11) uniform sampler2D _reserved0_;
+layout(set = 0, binding = 12) uniform sampler2D _reserved1_;
 
-layout(set = 0, binding = 12) uniform sampler2D mirrorSampler;
+layout(set = 0, binding = 13) uniform sampler2D mirrorSampler;
 
-layout(set = 0, binding = 13) uniform sampler2D sceneColorSampler;
+layout(set = 0, binding = 14) uniform sampler2D sceneColorSampler;
 
-layout(set = 0, binding = 14) uniform UBO_Camera { Camera cam; };
+layout(set = 0, binding = 15) uniform UBO_Camera { Camera cam; };
 
 #endif

@@ -53,31 +53,31 @@ vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 
 void main()
 {
-//    Surface surface = surfaceFromGBuffer(
-//	    cam,
-//	    g_DepthSampler,
-//	    g_NormalSampler,
-//	    g_AlbedoSampler,
-//	    g_SpecularSampler,
-//	    g_EmissiveSampler,
-//	    uv
-//    );
-//
-//	vec3 directLight = texture(directLightSampler, uv).rgb;
-//	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
-//    vec4 arealightShadowing = texture(_reserved_, uv);
-//    vec3 mirror = texture(mirrorSampler, uv).rgb;
-//    vec4 ambientInfo = AmbientInfoBlurredOcclusion();
-//	// ...
-//
-//    vec3 arealights = vec3(0);
-//
-//    for (int i = 0; i < quadlightCount; ++i) {
-//		Quadlight ql = quadlights.light[i];
-//		arealights += Quadlight_AfterContribution(ql, surface) * arealightShadowing[i];
-//    }
-//
-//	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + surface.emissive + mirror + arealights;
-    vec3 pt = texture(_reserved_, uv).rgb;
+    Surface surface = surfaceFromGBuffer(
+	    cam,
+	    g_DepthSampler,
+	    g_NormalSampler,
+	    g_AlbedoSampler,
+	    g_SpecularSampler,
+	    g_EmissiveSampler,
+	    uv
+    );
+
+	vec3 directLight = texture(directLightSampler, uv).rgb;
+	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
+    vec4 arealightShadowing = texture(_reserved0_, uv);
+    vec3 mirror = texture(mirrorSampler, uv).rgb;
+    vec4 ambientInfo = AmbientInfoBlurredOcclusion();
+	// ...
+
+    vec3 arealights = vec3(0);
+
+    for (int i = 0; i < quadlightCount; ++i) {
+		Quadlight ql = quadlights.light[i];
+		arealights += Quadlight_AfterContribution(ql, surface) * arealightShadowing[i];
+    }
+
+	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + surface.emissive + mirror + arealights;
+    vec3 pt = texture(_reserved1_, uv).rgb;
 	outColor = vec4(pt, 1.0);
 }

@@ -1,37 +1,29 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-#extension GL_EXT_scalar_block_layout : enable
-#extension GL_EXT_nonuniform_qualifier : enable
-#extension GL_EXT_buffer_reference2 : enable
-#extension GL_EXT_ray_query: require
 // TODO:
 #define RAY
 #include "global.glsl"
 
-#include "global-descset.glsl"
-
-#include "aabb.glsl"
-#include "bsdf.glsl"
-#include "lights/quadlight.glsl"
-#include "onb.glsl"
-#include "random.glsl"
-#include "sampling.glsl"
-#include "surface.glsl"
-
 struct hitPayload
 {
 	vec3 radiance;
-	vec3 accumThroughput;
+	vec3 attenuation;
 
+	float sampleWeight;
+
+	vec3 origin;
+	vec3 direction;
+
+	int done;
 	int depth;
 	uint seed;
 };
 
 layout(push_constant) uniform PC
 {
-	int samples;
 	int bounces;
+	int frame;
 	int pointlightCount;
 	int spotlightCount;
 	int dirlightCount;
@@ -46,8 +38,18 @@ layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight ligh
 void main() {
 
 	int quadId = gl_InstanceCustomIndexEXT;
+	Quadlight ql = quadlights.light[quadId];
 
-	Quadlight ql = quadlights.light[nonuniformEXT(quadId)];
+	if(prd.depth != 1){
+		prd.radiance = ql.color; // final computation will be : Le * Brdf * cosTheta
+		prd.done = 1;
+		return;
+	}
+
+	float p_selectLight = 1.0 / float(quadlightCount);
+	float pdf_area = 1.0 / (ql.width * ql.height);
+	float pdf_light = pdf_area * p_selectLight;
+	float pdf_brdf = 1.0 / prd.sampleWeight;
 
 	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
 	
@@ -55,10 +57,9 @@ void main() {
 	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist + 
   			     ql.quadraticTerm * (dist * dist));
 
-	float pdf_area = 1.0 / (ql.width * ql.height);
+	vec3 Le = ql.color * ql.intensity * attenuation; 
 
-
-	vec3 Le = ql.color * ql.intensity * attenuation / pdf_area; 
-
-	prd.radiance = Le;
+	prd.sampleWeight = 1.0  / (pdf_light + pdf_brdf);
+	prd.radiance = Le; // final computation will be : Le * Brdf * cosTheta * mis_weight
+	prd.done = 1;
 }

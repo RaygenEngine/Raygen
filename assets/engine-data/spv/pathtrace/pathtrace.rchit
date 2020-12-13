@@ -10,18 +10,22 @@
 #define RAY
 #include "global.glsl"
 
+#include "pathtrace/quadlight.glsl"
 #include "surface.glsl"
 
 
 struct hitPayload
 {
 	vec3 radiance;
-	vec3 accumThroughput;
+	vec3 attenuation;
+
+	float sampleWeight;
 
 	vec3 origin;
 	vec3 direction;
 
 	int done;
+	int depth;
 	uint seed;
 };
 
@@ -210,7 +214,7 @@ void main() {
 
 	vec3 radiance = vec3(0.f);
 
-	// DIRECT // WIP: MLS lights
+	// DIRECT // WIP: MLS all lights
 	{
 //		for(int i = 0; i < pointlightCount; ++i) {
 //			Pointlight pl = pointlights.light[i];
@@ -227,10 +231,20 @@ void main() {
 //			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
 //		}
 //
-//		for(int i = 0; i < quadlightCount; ++i) {
-//			Quadlight ql = quadlights.light[i];
-//			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
-//		}
+
+		// quadlights
+		{
+			float u = rand(prd.seed);
+
+			// uniform for now, WIP: Power-proportional source selection
+			int i = int(floor(u * quadlightCount));
+
+			float p_selectLight = 1.0 / float(quadlightCount);
+
+			Quadlight ql = quadlights.light[i];
+			// direct light sample, brdf sample from hit shader and MIS
+			radiance += Quadlight_LightSample(topLevelAs, ql, surface, p_selectLight, prd.seed); 
+		}
 
 		if(any(greaterThan(surface.emissive, vec3(BIAS)))) {
 			radiance += surface.emissive;
@@ -241,15 +255,29 @@ void main() {
 
 	// INDIRECT - next step
 	{
-		float p_specular = 0.5; // CHECK:
+		// mirror H = N WIP:
+//		float LoH = max(Ndot(surface.v), BIAS);
+//
+//		if(surface.a >= SPEC_THRESHOLD)
+//		{
+//			vec2 u = rand2(prd.seed);
+//			vec3 H = importanceSampleGGX(u, surface.a);
+//			LoH = max(dot(surface.v, H), BIAS); 
+//		}
+//
+//
+//		vec3 ks = F_Schlick(LoH, surface.f0);
+//
+//		float p_specular = 1 - (sum(ks) / 3.f);
 
+		float p_specular = 0.5;
 
-		vec3 brdf_NoL_invpdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
-														   : SampleDiffuseDirection(surface, prd.seed) / (1 - p_specular);
+		vec3 brdf_NoL = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed, prd.sampleWeight) / p_specular
+												    : SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight) / (1 - p_specular);
 
 
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);
-		prd.accumThroughput *= brdf_NoL_invpdf;
+		prd.attenuation = brdf_NoL;
 	}
 }
