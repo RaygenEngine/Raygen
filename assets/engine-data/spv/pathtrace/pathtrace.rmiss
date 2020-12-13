@@ -9,12 +9,15 @@
 struct hitPayload
 {
 	vec3 radiance;
-	vec3 accumThroughput;
+	vec3 attenuation;
+
+	float sampleWeight;
 
 	vec3 origin;
 	vec3 direction;
 
 	int done;
+	int depth;
 	uint seed;
 };
 

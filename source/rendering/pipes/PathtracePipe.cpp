@@ -62,6 +62,12 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 		StaticPipes::Recompile<PathtracePipe>();
 	};
 
+	GpuAsset<Shader>& gpuShader2
+		= GpuAssetManager->CompileShader("engine-data/spv/pathtrace/pathtrace-quadlight.shader");
+	gpuShader2.onCompileRayTracing = [&]() {
+		StaticPipes::Recompile<PathtracePipe>();
+	};
+
 	m_rtShaderGroups.clear();
 
 	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
@@ -102,6 +108,16 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 
 	m_rtShaderGroups.push_back(hg);
 
+	vk::RayTracingShaderGroupCreateInfoKHR hg2{};
+	hg2.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *gpuShader2.closestHit.Lock().module, "main" });
+	hg2.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(hg2);
 
 	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
