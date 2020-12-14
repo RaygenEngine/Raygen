@@ -29,7 +29,7 @@ SwapchainOutputPass::SwapchainOutputPass()
 	Event::OnWindowFocus.Bind(this, [&](bool isFocused) { m_isFocused = isFocused; });
 }
 
-void SwapchainOutputPass::SetAttachedRenderer(Renderer_* renderer)
+void SwapchainOutputPass::SetAttachedRenderer(RendererBase* renderer)
 {
 	m_renderer = renderer;
 	OnViewportResize();

@@ -2,11 +2,13 @@
 
 #include "assets/GpuAssetManager.h"
 #include "editor/EditorObject.h"
+#include "engine/Input.h"
 #include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
+#include "rendering/Pathtracer.h"
 #include "rendering/Renderer.h"
 #include "rendering/VulkanLoader.h"
 #include "rendering/output/SwapchainOutputPass.h"
@@ -40,6 +42,9 @@ Layer_::Layer_()
 
 
 	Renderer = new Renderer_();
+	Pathtracer = new Pathtracer_();
+
+	renderer = Renderer;
 
 	swapOutput->SetAttachedRenderer(Renderer);
 	Renderer->InitPipelines();
@@ -62,6 +67,7 @@ Layer_::~Layer_()
 	rvk::Shapes::DeinitShapes();
 
 	delete Renderer;
+	delete Pathtracer;
 	delete swapOutput;
 	delete mainScene;
 	StaticPipes::DestroyAll();
@@ -81,6 +87,17 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
+	if (Input.IsJustPressed(Key::Tab)) {
+		if (renderer == Renderer) {
+			renderer = Pathtracer;
+		}
+		else {
+			renderer = Renderer;
+		}
+		Device->waitIdle();
+		swapOutput->SetAttachedRenderer(renderer);
+	}
+
 	// DOC:
 	if (!AssetRegistry::GetGpuUpdateRequests().empty()) {
 		mainScene->forceUpdateAccel = true;
@@ -119,7 +136,7 @@ void Layer_::DrawFrame()
 
 	currentCmdBuffer.begin();
 	{
-		Renderer->DrawFrame(currentCmdBuffer, mainScene->GetRenderDesc(m_currentFrame), *swapOutput);
+		renderer->DrawFrame(currentCmdBuffer, mainScene->GetRenderDesc(m_currentFrame), *swapOutput);
 	}
 	currentCmdBuffer.end();
 

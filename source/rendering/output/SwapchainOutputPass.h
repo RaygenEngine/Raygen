@@ -11,7 +11,7 @@ class SwapchainOutputPass : public OutputPassBase {
 public:
 	SwapchainOutputPass();
 
-	virtual void SetAttachedRenderer(Renderer_* renderer) override;
+	virtual void SetAttachedRenderer(RendererBase* renderer) override;
 	// This will get called by the renderer itself when the underlying view is updated.
 	virtual void OnViewsUpdated(InFlightResources<vk::ImageView> renderResultViews) override;
 
