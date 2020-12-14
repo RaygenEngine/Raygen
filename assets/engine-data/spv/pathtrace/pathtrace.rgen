@@ -5,18 +5,24 @@
 #include "global.glsl"
 #include "random.glsl"
 
+// Values after being filled
 struct hitPayload
 {
-	vec3 radiance;
-	vec3 attenuation; // attenuation -> brdfs, nol, etc
+	vec3 radiance; // radiance of traced ray
 
-	float sampleWeight; // gather pdfs
-
-	vec3 origin;
+	vec3 origin; // next ray for tracing
 	vec3 direction;
 
-	int done;
-	int depth;
+	vec3 attenuation; // attenuation and weight of next ray
+	float sampleWeight;
+
+	// TODO: enum/defs
+	// 0-ignore
+	// 1-miss 
+	// 2-arealight: 
+	// attenuation has the value of light*sample attenuation
+	// sampleWeight has the sample weigth of light based on the MIS balanced heuristic
+	int hitType; 
 	uint seed;
 };
 
@@ -90,32 +96,35 @@ void main() {
 	vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
 
 	prd.radiance = vec3(0.f);
-	prd.attenuation = vec3(1.f);
-
-	prd.sampleWeight = 1.f;
 
 	prd.origin = origin.xyz;
 	prd.direction = direction.xyz;
 
-	prd.done = 0;
-	prd.depth = 0;
+	prd.attenuation = vec3(1.f);
+	prd.sampleWeight = 1.f;
+
+	prd.hitType = 0;
 
 	vec3 accumColor = vec3(0.f);
-	vec3 nextTotalAttenuation = vec3(1);
-	for(;(prd.depth < bounces + 1) && prd.done != 1; ++prd.depth)
+	vec3 currentTotalAttenuation = vec3(1);
+	for(int depth = 0; depth < bounces + 1 && prd.hitType == 0; ++depth)
 	{
-		// prd.radiance from incoming light
-		// prd.origin | prd.direction | prd.attenuation | prd.sampleWeight for next path segment 
-		TraceRay(); 
-		
-		accumColor += prd.radiance * nextTotalAttenuation; // incoming randiance but not next attenuation
-		
-		vec3 nextRayAttenuation = prd.attenuation * prd.sampleWeight;
-		nextTotalAttenuation *= nextRayAttenuation;
+		vec3 currentAttenuation = prd.attenuation;
+		float currentSampleWeight = prd.sampleWeight;
 
+		TraceRay(); 
+
+		if(prd.hitType == 2) {
+			currentTotalAttenuation *= prd.attenuation * prd.sampleWeight;
+		}
+		else {
+			currentTotalAttenuation *= currentAttenuation * currentSampleWeight;
+		}
+
+		accumColor += prd.radiance * currentTotalAttenuation;
 
 		// evaluate only if depth > 5
-		if(prd.depth > 5 && RRTerminationCheck(nextTotalAttenuation)) {
+		if(depth > 5 && RRTerminationCheck(currentTotalAttenuation)) {
 			break;
 		}
 

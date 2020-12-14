@@ -6,18 +6,18 @@
 
 #include "sky.glsl"
 
+// Values before being filled
 struct hitPayload
 {
-	vec3 radiance;
-	vec3 attenuation;
+	vec3 radiance; // previous radiance
 
-	float sampleWeight;
-
-	vec3 origin;
+	vec3 origin; // origin and dir of THIS ray
 	vec3 direction;
 
-	int done;
-	int depth;
+	vec3 attenuation; // attenuation and weight of THIS ray
+	float sampleWeight;
+
+	int hitType; // previous hit type
 	uint seed;
 };
 
@@ -35,5 +35,5 @@ layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
 	prd.radiance = GetSkyColor(gl_WorldRayOriginEXT, gl_WorldRayDirectionEXT);
-	prd.done = 1;
+	prd.hitType = 1; 
 }
