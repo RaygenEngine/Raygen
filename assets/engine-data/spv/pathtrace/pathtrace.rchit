@@ -253,31 +253,61 @@ void main() {
 
 	prd.radiance = radiance;
 
+	// WIP: check probablities
 	// INDIRECT - next step
 	{
-		// mirror H = N WIP:
-//		float LoH = max(Ndot(surface.v), BIAS);
-//
-//		if(surface.a >= SPEC_THRESHOLD)
-//		{
-//			vec2 u = rand2(prd.seed);
-//			vec3 H = importanceSampleGGX(u, surface.a);
-//			LoH = max(dot(surface.v, H), BIAS); 
-//		}
-//
-//
-//		vec3 ks = F_Schlick(LoH, surface.f0);
-//
-//		float p_specular = 1 - (sum(ks) / 3.f);
+		// mirror H = N 
+		float LoH = max(Ndot(surface.v), BIAS);
 
-		float p_specular = 0.5;
+		if(surface.a >= SPEC_THRESHOLD) {
+			vec2 u = rand2(prd.seed);
+			vec3 H = importanceSampleGGX(u, surface.a);
+			surface.l =  reflect(-surface.v, H);
+			LoH = max(dot(surface.v, H), BIAS); 
+		}
 
-		vec3 brdf_NoL = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed, prd.sampleWeight) / p_specular
-												    : SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight) / (1 - p_specular);
+		// Use a information
+		vec3 ks = F_SchlickRoughness(LoH, surface.f0, surface.a);
+
+		float p_specular = sum(ks) / 3.f;
+
+		// diffuse
+		if(rand(prd.seed) > p_specular) {
+			prd.attenuation = SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
+			prd.sampleWeight /= (1 - p_specular);
+		}
+
+		// reflection
+		else {
+
+			// mirror
+			if(surface.a < SPEC_THRESHOLD){
+				prd.sampleWeight = 1.f;
+				prd.attenuation = SampleMirrorDirection(surface);
+			}
+
+			// glossy
+			else {
+				cacheSurfaceDots(surface);
+
+				float pdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
+				pdf = max(pdf, BIAS); // WIP: if small...
+    
+				// WIP: should we reuse the previous ks? check difference
+				vec3 ks = F_Schlick(surface.loh, surface.f0);
+				vec3 brdf_r = SpecularTerm(surface, ks);
+
+				prd.sampleWeight = 1.f / pdf;
+				prd.attenuation = brdf_r * surface.nol;
+			}
+
+			prd.sampleWeight /= p_specular;
+		}
+
+
 
 
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);
-		prd.attenuation = brdf_NoL;
 	}
 }
