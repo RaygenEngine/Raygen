@@ -5,18 +5,18 @@
 #define RAY
 #include "global.glsl"
 
+// Values before being filled
 struct hitPayload
 {
-	vec3 radiance;
-	vec3 attenuation;
+	vec3 radiance; // previous radiance
 
-	float sampleWeight;
-
-	vec3 origin;
+	vec3 origin; // origin and dir of THIS ray
 	vec3 direction;
 
-	int done;
-	int depth;
+	vec3 attenuation; // attenuation and weight of THIS ray
+	float sampleWeight;
+
+	int hitType; // previous hit type
 	uint seed;
 };
 
@@ -40,11 +40,11 @@ void main() {
 	int quadId = gl_InstanceCustomIndexEXT;
 	Quadlight ql = quadlights.light[quadId];
 
-	if(prd.depth != 1){
-		prd.radiance = ql.color; // final computation will be : Le * Brdf * cosTheta
-		prd.done = 1;
-		return;
-	}
+	//if(prd.depth == 0){
+	//	prd.radiance = ql.color; // WIP: final computation will be , hitType = mirror  and payload depth ??
+	//	prd.done = 1;
+	//	return;
+	//}
 
 	float p_selectLight = 1.0 / float(quadlightCount);
 	float pdf_area = 1.0 / (ql.width * ql.height);
@@ -57,9 +57,10 @@ void main() {
 	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist + 
   			     ql.quadraticTerm * (dist * dist));
 
-	vec3 Le = ql.color * ql.intensity * attenuation; 
+	vec3 Le = ql.color * ql.intensity; 
 
+	prd.radiance = Le;
+	prd.attenuation *= attenuation; // total atten
 	prd.sampleWeight = 1.0  / (pdf_light + pdf_brdf);
-	prd.radiance = Le; // final computation will be : Le * Brdf * cosTheta * mis_weight
-	prd.done = 1;
+	prd.hitType = 2;
 }

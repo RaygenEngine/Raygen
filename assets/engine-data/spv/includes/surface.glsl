@@ -179,7 +179,7 @@ vec3 SpecularTerm(Surface surface, vec3 ks)
 {
     // CHECK: ks = F should probably be inside the brdfs and omitted here
     if(surface.a < SPEC_THRESHOLD){   
-		return ks *  PhongSpecular(surface.noh, surface.a);
+		return ks * PhongSpecular(surface.noh, surface.a);
     }
 
     return ks * CookTorranceGGXSmithCorrelatedSpecular(surface.nov, surface.nol, surface.noh, surface.a);
