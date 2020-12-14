@@ -1,6 +1,11 @@
 #include "BottomLevelAs.h"
 
+#include "assets/AssetManager.h"
+#include "assets/pods/MaterialArchetype.h"
+#include "assets/pods/MaterialInstance.h"
 #include "rendering/Device.h"
+#include "rendering/assets/GpuMaterialArchetype.h"
+#include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
@@ -40,11 +45,29 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 		.setIndexData(indexAddress)
 		.setTransformData({});
 
+	// WIP: temp hack
+	auto& arch = gg.material.Lock().archetype.Lock();
+	PodHandle<MaterialArchetype> pod{ arch.podUid };
+	auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
+	auto prp = cl.GetPropertyByName(std::string("mask"));
+
+
 	// Setting up the build info of the acceleration
 	vk::AccelerationStructureGeometryKHR asGeom{};
 	asGeom
 		.setGeometryType(asCreate.geometryType) //
 		.setFlags(vk::GeometryFlagBitsKHR::eOpaque);
+
+	if (prp) {
+		auto& mat = gg.material.Lock();
+		PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
+		auto mati = pod2.Lock();
+		auto mask = mati->descriptorSet.uboData.end() - 4;
+		if (*mask == 1) {
+			asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
+			isMask = true;
+		}
+	}
 
 	asGeom.geometry.setTriangles(triangles);
 

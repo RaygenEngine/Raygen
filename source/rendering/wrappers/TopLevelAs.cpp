@@ -97,7 +97,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 			inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
 			inst.materialId = 0;
 			inst.cullMask = 0x01;
-			inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
+			inst.flags = !gg.blas.isMask ? vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise
+										 : vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
 			instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 
 			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform);

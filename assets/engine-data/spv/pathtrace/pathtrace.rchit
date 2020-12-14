@@ -66,8 +66,6 @@ struct OldVertex
 	vec2 uv;
 };
 
-layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
-
 struct samplerRef {
 	int index;
 };
@@ -108,6 +106,19 @@ struct GeometryGroup {
 	mat4 invTransform;
 };
 
+OldVertex fromVertex(Vertex p) {
+	OldVertex vtx;
+	
+	vtx.position = vec3(p.posX, p.posY, p.posZ);
+	vtx.normal = vec3(p.nrmX, p.nrmY, p.nrmZ);
+	vtx.tangent = vec3(p.tngX, p.tngY, p.tngZ);
+	
+	vtx.uv = vec2(p.u, p.v);
+	
+	return vtx;
+}
+
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 3, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
 layout(set = 3, binding = 1) uniform sampler2D textureSamplers[];
 layout(set = 4, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
@@ -119,18 +130,6 @@ layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight ligh
 
 vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
-}
-
-OldVertex fromVertex(Vertex p) {
-	OldVertex vtx;
-	
-	vtx.position = vec3(p.posX, p.posY, p.posZ);
-	vtx.normal = vec3(p.nrmX, p.nrmY, p.nrmZ);
-	vtx.tangent = vec3(p.tngX, p.tngY, p.tngZ);
-	
-	vtx.uv = vec2(p.u, p.v);
-	
-	return vtx;
 }
 
 Surface surfaceFromGeometryGroup(
@@ -206,7 +205,7 @@ Surface surfaceFromGeometryGroup(
 
 void main() {
 	
-	int matId = gl_InstanceID;
+	int matId = gl_InstanceCustomIndexEXT;
 
 	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
 
@@ -303,9 +302,6 @@ void main() {
 
 			prd.sampleWeight /= p_specular;
 		}
-
-
-
 
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);

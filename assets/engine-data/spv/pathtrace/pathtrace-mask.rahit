@@ -1,0 +1,43 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : require
+
+// TODO:
+#define RAY
+#include "global.glsl"
+
+struct hitPayload
+{
+	vec3 radiance;
+	vec3 attenuation;
+
+	float sampleWeight;
+
+	vec3 origin;
+	vec3 direction;
+
+	int done;
+	int depth;
+	uint seed;
+};
+
+layout(push_constant) uniform PC
+{
+	int bounces;
+	int frame;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
+	int quadlightCount;
+};
+
+hitAttributeEXT vec2 baryCoord;
+layout(location = 0) rayPayloadInEXT hitPayload prd;
+
+
+void main() {
+	//prd.done = 1;
+	prd.radiance = vec3(100000,0,0);
+	prd.sampleWeight = 1;
+	prd.attenuation = vec3(1,1,1);
+}

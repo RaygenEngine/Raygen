@@ -97,7 +97,7 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 
 	m_rtShaderGroups.push_back(mg);
 
-	vk::RayTracingShaderGroupCreateInfoKHR hg{};
+	vk::RayTracingShaderGroupCreateInfoKHR hg{};                     // gltf mat
 	hg.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
 		.setGeneralShader(VK_SHADER_UNUSED_KHR)
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
@@ -105,10 +105,12 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
 	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *gpuShader.closestHit.Lock().module, "main" });
 	hg.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eAnyHitKHR, *gpuShader.anyHit.Lock().module, "main" }); // for mask
+	hg.setAnyHitShader(static_cast<uint32>(stages.size() - 1));
 
 	m_rtShaderGroups.push_back(hg);
 
-	vk::RayTracingShaderGroupCreateInfoKHR hg2{};
+	vk::RayTracingShaderGroupCreateInfoKHR hg2{};                     // quad lights
 	hg2.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
 		.setGeneralShader(VK_SHADER_UNUSED_KHR)
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
@@ -128,10 +130,7 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 	rayPipelineInfo
 		// 1-raygen, n-miss, n-(hit[+anyhit+intersect])
 		.setGroups(m_rtShaderGroups)
-		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
-		// instead.
-
-		.setMaxRecursionDepth(1) // Ray depth TODO:
+		.setMaxRecursionDepth(1)
 		.setLayout(layout());
 
 
