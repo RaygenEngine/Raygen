@@ -7,6 +7,7 @@ struct Scene;
 namespace vl {
 
 class SwapchainOutputPass;
+class RendererBase;
 
 inline class Layer_ : public Listener {
 
@@ -19,6 +20,7 @@ public:
 	// TODO:
 	SwapchainOutputPass* swapOutput{ nullptr };
 	Scene* mainScene{ nullptr };
+	RendererBase* renderer{ nullptr };
 
 	void ResetMainScene();
 

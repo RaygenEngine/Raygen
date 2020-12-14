@@ -4,7 +4,8 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "rendering/Renderer.h" // WIP: remove
+#include "rendering/Pathtracer.h" // WIP: remove
+#include "rendering/Renderer.h"   // WIP: remove
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
@@ -79,7 +80,7 @@ void EditorCamera::Update(float deltaSeconds)
 	// WIP : remove
 	if (dirtyThisFrame) {
 		vl::Renderer->m_raytraceArealights.frame = 0;
-		vl::Renderer->m_progressivePathtrace.frame = 0;
+		vl::Pathtracer->m_progressivePathtrace.frame = 0;
 	}
 
 	dirtyThisFrame = true;

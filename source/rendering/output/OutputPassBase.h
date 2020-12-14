@@ -3,7 +3,7 @@
 #include "engine/Listener.h"
 
 namespace vl {
-class Renderer_;
+class RendererBase;
 
 
 struct RenderTarget {
@@ -30,10 +30,10 @@ struct RenderTarget {
 
 class OutputPassBase : public Listener {
 protected:
-	Renderer_* m_renderer{ nullptr };
+	RendererBase* m_renderer{ nullptr };
 
 public:
-	virtual void SetAttachedRenderer(Renderer_* renderer) { m_renderer = renderer; }
+	virtual void SetAttachedRenderer(RendererBase* renderer) { m_renderer = renderer; }
 
 
 	// This will get called by the renderer itself when the underlying view is updated.

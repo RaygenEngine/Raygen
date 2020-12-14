@@ -3,6 +3,7 @@
 #include "editor/EditorObject.h"
 #include "engine/Events.h"
 #include "rendering/Layer.h"
+#include "rendering/Pathtracer.h"
 #include "rendering/Renderer.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
@@ -80,7 +81,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 	auto& mirrorRes = vl::Renderer->m_raytraceMirrorReflections.result.at(0);
 	auto& arealightsRes = vl::Renderer->m_raytraceArealights.result.at(0);
-	auto& progpath = vl::Renderer->m_progressivePathtrace.result.at(0);
+	auto& progpath = vl::Pathtracer->m_progressivePathtrace.result.at(0);
 
 
 	showFramebuffer(mainFramebuffer);

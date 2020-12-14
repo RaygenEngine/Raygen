@@ -2,7 +2,6 @@
 
 #include "engine/Listener.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
-#include "rendering/techniques/ProgressivePathtrace.h"
 #include "rendering/techniques/RaytraceArealights.h"
 #include "rendering/techniques/RaytraceMirrorReflections.h"
 #include "rendering/wrappers/CmdBuffer.h"
@@ -14,19 +13,28 @@ class OutputPassBase;
 struct SceneRenderDesc;
 
 namespace vl {
+// WIP:
+class RendererBase : public Listener {
+public:
+	virtual void ResizeBuffers(uint32 width, uint32 height) = 0;
+	virtual void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass) = 0;
+	virtual InFlightResources<vk::ImageView> GetOutputViews() const = 0;
 
-inline class Renderer_ : public Listener {
+	virtual ~RendererBase() = default;
+};
+
+inline class Renderer_ : public RendererBase {
 
 public:
 	Renderer_();
 
 	void InitPipelines();
 
-	void ResizeBuffers(uint32 width, uint32 height);
+	void ResizeBuffers(uint32 width, uint32 height) override;
 
-	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass);
+	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass) override;
 
-	InFlightResources<vk::ImageView> GetOutputViews() const;
+	InFlightResources<vk::ImageView> GetOutputViews() const override;
 
 
 	// TODO: ppt
@@ -43,7 +51,6 @@ public:
 	// non-static techniques
 	RaytraceMirrorReflections m_raytraceMirrorReflections;
 	RaytraceArealights m_raytraceArealights;
-	ProgressivePathtrace m_progressivePathtrace;
 
 private:
 	vk::Extent2D m_extent{};
