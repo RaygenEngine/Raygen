@@ -195,7 +195,8 @@ vec3 DirectLightBRDF(Surface surface)
 {
     vec3 ks = F_Schlick(surface.loh, surface.f0);
     vec3 kd = 1 - ks;
-     
+    
+    // WIP: remove NoL from mirror brdf
     return DiffuseTerm(surface, kd) + SpecularTerm(surface, ks);
 }
 

@@ -8,9 +8,9 @@
 struct hitPayload
 {
 	vec3 radiance;
-	vec3 attenuation;
+	vec3 attenuation; // attenuation -> brdfs, nol, etc
 
-	float sampleWeight;
+	float sampleWeight; // gather pdfs
 
 	vec3 origin;
 	vec3 direction;
