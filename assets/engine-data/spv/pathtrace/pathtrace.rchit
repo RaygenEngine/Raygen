@@ -10,7 +10,7 @@
 #define RAY
 #include "global.glsl"
 
-#include "pathtrace/quadlight.glsl"
+#include "pathtrace/lights.glsl"
 #include "surface.glsl"
 
 // Values before being filled
@@ -122,9 +122,7 @@ layout(set = 3, binding = 0, std430) readonly buffer GeometryGroups { GeometryGr
 layout(set = 3, binding = 1) uniform sampler2D textureSamplers[];
 layout(set = 4, binding = 0, std430) readonly buffer Pointlights { Pointlight light[]; } pointlights;
 layout(set = 5, binding = 0, std430) readonly buffer Spotlights { Spotlight light[]; } spotlights;
-layout(set = 5, binding = 1) uniform sampler2DShadow spotlightShadowmap[];
 layout(set = 6, binding = 0, std430) readonly buffer Dirlights { Dirlight light[]; } dirlights;
-layout(set = 6, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
 layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
 vec4 texture(samplerRef s, vec2 uv) {
@@ -214,34 +212,44 @@ void main() {
 
 	// DIRECT // WIP: MLS all lights
 	{
-//		for(int i = 0; i < pointlightCount; ++i) {
-//			Pointlight pl = pointlights.light[i];
-//			radiance += Pointlight_FastContribution(topLevelAs, pl, surface);
-//		}
-//
-//		for(int i = 0; i < spotlightCount; ++i) {
-//			Spotlight sl = spotlights.light[i];
-//			radiance += Spotlight_FastContribution(sl, spotlightShadowmap[nonuniformEXT(i)], surface);
-//		}
-//
-//		for(int i = 0; i < dirlightCount; ++i) {
-//			Dirlight dl = dirlights.light[i];
-//			radiance += Dirlight_FastContribution(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
-//		}
-//
+		int totalLights = pointlightCount + quadlightCount + spotlightCount + dirlightCount;
+		float u = rand(prd.seed);
+		int i = int(floor(u * totalLights));
+		float p_selectLight = 1.0 / float(totalLights); // pick one of the lights
 
-		// quadlights
-		{
-			float u = rand(prd.seed);
+#define pIndex i
+#define qIndex pIndex - pointlightCount
+#define sIndex qIndex - quadlightCount
+#define dIndex sIndex - spotlightCount
 
-			// uniform for now, WIP: Power-proportional source selection
-			int i = int(floor(u * quadlightCount));
+		// PERF:
+		// pointlights // WIP: aperture of effect
+		if(pIndex < pointlightCount) {
+		    Pointlight pl = pointlights.light[pIndex];
 
-			float p_selectLight = 1.0 / float(quadlightCount);
+			radiance += Pointlight_LightSample(topLevelAs, pl, surface, p_selectLight, prd.seed); 
+		}
 
-			Quadlight ql = quadlights.light[i];
+		// quadlights WIP: area - sphere
+		else if (qIndex < quadlightCount) {
+			Quadlight ql = quadlights.light[qIndex];
 			// direct light sample, brdf sample from hit shader and MIS
 			radiance += Quadlight_LightSample(topLevelAs, ql, surface, p_selectLight, prd.seed); 
+			
+		}
+
+		// spotlights WIP: area - hemisphere
+		else if (sIndex < spotlightCount) {
+			Spotlight sl = spotlights.light[sIndex];
+
+			radiance += Spotlight_LightSample(topLevelAs, sl, surface, p_selectLight, prd.seed); 
+		}
+
+		// dirlights
+		else if (dIndex < dirlightCount) {
+			Dirlight dl = dirlights.light[dIndex];
+
+			radiance += Dirlight_LightSample(topLevelAs, dl, surface, p_selectLight, prd.seed); 
 		}
 
 		if(any(greaterThan(surface.emissive, vec3(BIAS)))) {
@@ -292,7 +300,7 @@ void main() {
 				pdf = max(pdf, BIAS); // WIP: if small...
     
 				// WIP: should we reuse the previous ks? check difference
-				vec3 ks = F_Schlick(surface.loh, surface.f0);
+				//vec3 ks = F_Schlick(surface.loh, surface.f0);
 				vec3 brdf_r = SpecularTerm(surface, ks);
 
 				prd.sampleWeight = 1.f / pdf;

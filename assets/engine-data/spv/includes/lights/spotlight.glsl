@@ -8,7 +8,6 @@
 vec3 Spotlight_Contribution(Spotlight sl, sampler2DShadow shadowmap, Surface surface, float shadow)
 {
 	vec3 L = normalize(sl.position - surface.position);
-	addIncomingLightDirection(surface, L);
 
 	float dist = distance(sl.position, surface.position);
 	float attenuation = 1.0 / (sl.constantTerm + sl.linearTerm * dist + 
@@ -20,8 +19,7 @@ vec3 Spotlight_Contribution(Spotlight sl, sampler2DShadow shadowmap, Surface sur
     float spotEffect = clamp((theta - sl.outerCutOff) / epsilon, 0.0, 1.0);
 
 	vec3 Li = (1.0 - shadow) * sl.color * sl.intensity * attenuation * spotEffect; 
-
-	return DirectLightBRDF(surface)  * Li * surface.nol;
+	return Li * SampleWorldDirection(surface, L);
 }
 
 vec3 Spotlight_FastContribution(Spotlight sl, sampler2DShadow shadowmap, Surface surface)

@@ -45,10 +45,9 @@ vec4 AmbientInfoBlurredOcclusion()
 vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 {
 	vec3 L = normalize(ql.center - surface.position);
-	addIncomingLightDirection(surface, L);
-		
 
-	return ql.color * ql.intensity * DirectLightBRDF(surface); // we use the surface.nol calculated in arealights
+	vec3 Li = ql.color * ql.intensity; 
+	return Li * SampleWorldDirection(surface, L);
 }
 
 void main()

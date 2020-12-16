@@ -182,21 +182,21 @@ vec3 SpecularTerm(Surface surface, vec3 ks)
 		return ks * PhongSpecular(surface.noh, surface.a);
     }
 
-    return ks * CookTorranceGGXSmithCorrelatedSpecular(surface.nov, surface.nol, surface.noh, surface.a);
+    return ks * CookTorranceGGXSmithCorrelatedSpecular(surface.nov, surface.nol, surface.noh, surface.a) * surface.nol;
 }
 
 vec3 DiffuseTerm(Surface surface, vec3 kd)
 {
-    return kd * LambertianDiffuse(surface.albedo);
+    return kd * LambertianDiffuse(surface.albedo) * surface.nol;
 }
 
-// same Li and L for both brdfs
-vec3 DirectLightBRDF(Surface surface)
+vec3 SampleWorldDirection(inout Surface surface, vec3 L)
 {
+    addIncomingLightDirection(surface, L);
+
     vec3 ks = F_Schlick(surface.loh, surface.f0);
     vec3 kd = 1 - ks;
     
-    // WIP: remove NoL from mirror brdf
     return DiffuseTerm(surface, kd) + SpecularTerm(surface, ks);
 }
 
@@ -223,7 +223,7 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed)
     surface.l =  reflect(-surface.v, H);
     cacheSurfaceDots(surface);
     float pdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
-    pdf = max(pdf, BIAS); // WIP: if small...
+    pdf = max(pdf, BIAS); // WIP: if small... should stop
     
     vec3 ks = F_Schlick(surface.loh, surface.f0);
     vec3 brdf_r = SpecularTerm(surface, ks);
@@ -257,7 +257,7 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed, out float s
     surface.l =  reflect(-surface.v, H);
     cacheSurfaceDots(surface);
     float pdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
-    pdf = max(pdf, BIAS); // WIP: if small...
+    pdf = max(pdf, BIAS); // WIP: if small... should stop
 
     vec3 ks = F_Schlick(surface.loh, surface.f0);
     vec3 brdf_r = SpecularTerm(surface, ks);

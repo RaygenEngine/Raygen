@@ -7,12 +7,10 @@
 
 vec3 Dirlight_Contribution(Dirlight dl, sampler2DShadow shadowmap, Surface surface, float shadow)
 {
-	vec3 L = normalize(-dl.front); // explicit light dir
-	addIncomingLightDirection(surface, L);
+	vec3 L = normalize(-dl.front); 
 
 	vec3 Li = (1.0 - shadow) * dl.color * dl.intensity; 
-
-	return DirectLightBRDF(surface)  * Li * surface.nol;
+	return Li * SampleWorldDirection(surface, L);
 }
 
 vec3 Dirlight_FastContribution(Dirlight dl, sampler2DShadow shadowmap, Surface surface)
