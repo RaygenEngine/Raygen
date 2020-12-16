@@ -254,14 +254,10 @@ void Scene::UploadDirty(uint32 frameIndex)
 	}
 
 	for (auto dl : Get<SceneDirlight>()) {
-
-		// if (primaryDirty) {
-		//	dl->UpdateBox(primaryCamera->frustum, primaryCamera->ubo.position);
-		//}
-
 		if (dl->isDirty[frameIndex]) {
 			dl->UploadUbo(frameIndex);
 			dl->isDirty[frameIndex] = false;
+			requireUpdateAccel = true;
 			anyDirty = true;
 		}
 	}

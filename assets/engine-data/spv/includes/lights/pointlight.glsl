@@ -32,15 +32,14 @@ float Pointlight_ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin
 	return 0.0;
 }
 
-vec3 Pointlight_Sample(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
+vec3 Pointlight_Sample(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, vec3 L)
 {
 	float dist = distance(pl.position, surface.position);
 	float attenuation = 1.0 / (pl.constantTerm + pl.linearTerm * dist + 
   			     pl.quadraticTerm * (dist * dist));
 
-	vec3 Le = pl.color * pl.intensity * attenuation; 
-
-	return Le * DirectLightBRDF(surface) * surface.nol;
+	vec3 Li = pl.color * pl.intensity * attenuation;  
+	return Li * SampleWorldDirection(surface, L);
 }
 
 vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
@@ -64,11 +63,10 @@ vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight 
 		samplePoint = pl.position + outOnbSpace(lightOrthoBasis, samplePoint);
 
 		vec3 L = normalize(samplePoint - surface.position);  
-		addIncomingLightDirection(surface, L);
 
 		float shadow = pl.hasShadow != 0 ? Pointlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, distance(pl.position, surface.position)) : 0;
 
-		res += Pointlight_Sample(topLevelAs, pl, surface) * (1 - shadow) * inv_pdf;
+		res += Pointlight_Sample(topLevelAs, pl, surface, L) * (1 - shadow) * inv_pdf;
 	}
 
 	return res / float(pl.samples);
@@ -77,12 +75,11 @@ vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight 
 vec3 Pointlight_FastContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
 	vec3 L = normalize(pl.position - surface.position);
-	addIncomingLightDirection(surface, L);
 
 	float shadow = pl.hasShadow != 0 ? Pointlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, distance(pl.position, surface.position)) : 0;
 
 	// single sample
-	return Pointlight_Sample(topLevelAs, pl, surface) * (1 - shadow);
+	return Pointlight_Sample(topLevelAs, pl, surface, L) * (1 - shadow);
 }
 
 vec3 Pointlight_SmoothContribution(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)

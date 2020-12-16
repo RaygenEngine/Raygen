@@ -95,10 +95,6 @@ float Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, S
 	vec3 L = normalize(samplePoint - surface.position);  
 	addIncomingLightDirection(surface, L);
 
-	if(dot(-L, ql.normal) < ql.cosAperture) {
-		return 0.0; // if behind light
-	}			
-
 	float dist = distance(samplePoint, surface.position);
 	if(ql.hasShadow == 1 && Quadlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, dist) > 0.0){
 		return 0.0; // in shadow
@@ -136,10 +132,7 @@ float Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 		pdf_brdf = max(pdf_brdf, BIAS);
 	}
 
-	vec3 L = surfaceIncidentLightDir(surface);  
-	if(dot(-L, ql.normal) < ql.cosAperture) {
-		return 0.0;
-	}						
+	vec3 L = surfaceIncidentLightDir(surface);  				
 
 	vec3 samplePoint;
 	if(!rayQuadIntersection(ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height, surface.position, L, samplePoint)) {
@@ -162,28 +155,17 @@ float Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 vec3 Quadlight_FastContribution(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface)
 {
 	vec3 L = normalize(ql.center - surface.position);
-	addIncomingLightDirection(surface, L);
-
-	if(dot(-L, ql.normal) < ql.cosAperture) {
-		return vec3(0.0);
-	}			
 
 	float dist = distance(ql.center, surface.position);
-
 	if(ql.hasShadow == 1 && Quadlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, dist) > 0.0){
 		return vec3(0.0); // in shadow
 	}
 	
 	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist + 
-  			     ql.quadraticTerm * (dist * dist));
+  	ql.quadraticTerm * (dist * dist));
 
-	vec3 Le = ql.color * ql.intensity * attenuation; 
-
-	// point light
-	return Le * DirectLightBRDF(surface) * surface.nol;
+	vec3 Li = ql.color * ql.intensity * attenuation;  
+	return Li * SampleWorldDirection(surface, L);
 }
-
-
-
 
 #endif
