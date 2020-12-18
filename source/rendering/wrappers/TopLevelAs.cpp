@@ -48,6 +48,9 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 namespace {
 
 struct RtGeometryGroup {
+
+	glm::mat4 invTransform;
+
 	VkDeviceAddress vtxBuffer;
 	VkDeviceAddress indBuffer;
 	VkDeviceAddress materialUbo;
@@ -56,7 +59,6 @@ struct RtGeometryGroup {
 	int32 primOffset;
 
 	glm::mat4 transform;
-	glm::mat4 invTransform;
 };
 
 std::vector<RtGeometryGroup> g_tempGeometryGroups;
@@ -117,7 +119,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 		inst.blas = Device->getAccelerationStructureAddressKHR(quadlightBlas.handle());
 		inst.materialId = 1;  // WIP:
 		inst.cullMask = 0x02; // cull system, lights, geom etc
-		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise;
+		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
 		instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
 	}
 

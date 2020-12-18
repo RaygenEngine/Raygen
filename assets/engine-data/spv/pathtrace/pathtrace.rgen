@@ -13,15 +13,19 @@ struct hitPayload
 	vec3 origin; // next ray for tracing
 	vec3 direction;
 
-	vec3 attenuation; // attenuation and weight of next ray
+	vec3 attenuation; // attenuation of next ray
+	float nol;
 	float sampleWeight;
 
 	// TODO: enum/defs
-	// 0-ignore
-	// 1-miss 
+	// 0-direct
+	// 1-regular
 	// 2-arealight: 
 	// attenuation has the value of light*sample attenuation
 	// sampleWeight has the sample weigth of light based on the MIS balanced heuristic
+	// 3-miss
+	// 4-mirror
+	// 10-debug
 	int hitType; 
 	uint seed;
 };
@@ -62,6 +66,7 @@ void TraceRay() {
 				0               // payload (location = 0)
 	);
 
+	// CHECK:
     if(isnan(prd.radiance.x) || isnan(prd.radiance.y) || isnan(prd.radiance.z)){
     	prd.radiance = vec3(0,0,0);
     }
@@ -101,24 +106,30 @@ void main() {
 	prd.direction = direction.xyz;
 
 	prd.attenuation = vec3(1.f);
+	prd.nol = 1.f;
 	prd.sampleWeight = 1.f;
 
-	prd.hitType = 0;
+
+	prd.hitType = 0; // direct
 
 	vec3 accumColor = vec3(0.f);
 	vec3 currentTotalAttenuation = vec3(1);
-	for(int depth = 0; depth < bounces + 1 && prd.hitType == 0; ++depth)
+	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 2 && prd.hitType != 3); ++depth)
 	{
-		vec3 currentAttenuation = prd.attenuation;
-		float currentSampleWeight = prd.sampleWeight;
+		currentTotalAttenuation *= prd.attenuation * prd.sampleWeight;
 
 		TraceRay(); 
+		
+		// debug
+		//if(prd.hitType == 10){
+		//	accumColor = prd.radiance;
+		//	break;
+		//}
 
+		// arealight 
 		if(prd.hitType == 2) {
+									   // from surface to light | mis weight
 			currentTotalAttenuation *= prd.attenuation * prd.sampleWeight;
-		}
-		else {
-			currentTotalAttenuation *= currentAttenuation * currentSampleWeight;
 		}
 
 		accumColor += prd.radiance * currentTotalAttenuation;

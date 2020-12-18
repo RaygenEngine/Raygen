@@ -176,6 +176,8 @@ layout(buffer_reference, std430) buffer Material { GltfMat m; };
 
 
 struct GeometryGroup {
+
+	mat4 invTransform;
 	Vertices vtxBuffer;
 	Indicies indBuffer;
 	Material materialUbo;
@@ -184,7 +186,6 @@ struct GeometryGroup {
 	uint primOffset;
 
 	mat4 transform;
-	mat4 invTransform;
 };
 
 layout(set = 3, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
@@ -337,11 +338,11 @@ void main() {
 		float p_specular = 0.5;
 
 
-		vec3 brdf_NoL_invpdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
-														   : SampleDiffuseDirection(surface, prd.seed) / (1 - p_specular);
-
-
-		radiance += TraceNext(brdf_NoL_invpdf, surface);
+//		vec3 brdf_NoL_invpdf = rand(prd.seed) > p_specular ? SampleSpecularDirection(surface, prd.seed) / p_specular
+//														   : SampleDiffuseDirection(surface, prd.seed) / (1 - p_specular);
+//
+//
+//		radiance += TraceNext(brdf_NoL_invpdf, surface);
 	}
 
 	prd.radiance = radiance;

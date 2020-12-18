@@ -1,5 +1,5 @@
-#ifndef pt_quadlight_glsl
-#define pt_quadlight_glsl
+#ifndef pt_lights_glsl
+#define pt_lights_glsl
 
 #include "bsdf.glsl"
 #include "random.glsl"
@@ -30,11 +30,8 @@ float PtLights_ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, 
 	return 0.0;
 }
 
-vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, float pdf_select, inout uint seed)
+vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, inout uint seed)
 {
-	float pdf_area = 1.0 / (ql.width * ql.height);
-	float pdf_light = pdf_area * pdf_select;
-
 	vec2 u = rand2(seed) * 2 - 1;
 	u.x *= ql.width / 2.f;
 	u.y *= ql.height / 2.f;
@@ -42,6 +39,11 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	vec3 samplePoint =  ql.center + u.x * ql.right + u.y * ql.up;
 	
 	vec3 L = normalize(samplePoint - surface.position);
+
+	if(dot(ql.normal, -L) < 0){
+		return vec3(0.0); // in shadow
+	}
+
 	addIncomingLightDirection(surface, L);
 
 	float dist = distance(samplePoint, surface.position);
@@ -49,24 +51,19 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 		return vec3(0.0); // in shadow
 	}
 
-	float pdf_brdf = 1;
-	if(surface.a >= SPEC_THRESHOLD)
-	{
-		pdf_brdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
-		pdf_brdf = max(pdf_brdf, BIAS);
-	}
-	
-	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist + 
+	float attenuation = (ql.constantTerm + ql.linearTerm * dist + 
 	ql.quadraticTerm * (dist * dist));
 
-	// balance heuristic
+	// Conversion of the uniform pdf 1/|A| from the area measure (dA) to the solid angle measure (dw)
+	float pdf_light = (attenuation) / (ql.width * ql.height * surface.nol);
+	float pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
 
-	vec3 Li = ql.color * ql.intensity * attenuation;
+	vec3 Li = ql.color * ql.intensity;
 	return Li * SampleWorldDirection(surface, L) * mis_weight;
 }
 
-vec3 Pointlight_LightSample(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, float pdf_select, inout uint seed)
+vec3 Pointlight_LightSample(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, inout uint seed)
 {
 	vec3 L = normalize(pl.position - surface.position);  
 
@@ -79,10 +76,10 @@ vec3 Pointlight_LightSample(accelerationStructureEXT topLevelAs, Pointlight pl, 
 	pl.quadraticTerm * (dist * dist));
 
 	vec3 Li = pl.color * pl.intensity * attenuation; 
-	return Li * SampleWorldDirection(surface, L) / pdf_select;
+	return Li * SampleWorldDirection(surface, L);
 }
 
-vec3 Spotlight_LightSample(accelerationStructureEXT topLevelAs, Spotlight sl, Surface surface, float pdf_select, inout uint seed)
+vec3 Spotlight_LightSample(accelerationStructureEXT topLevelAs, Spotlight sl, Surface surface, inout uint seed)
 {
 	vec3 L = normalize(sl.position - surface.position);
 
@@ -100,10 +97,10 @@ vec3 Spotlight_LightSample(accelerationStructureEXT topLevelAs, Spotlight sl, Su
     float spotEffect = clamp((theta - sl.outerCutOff) / epsilon, 0.0, 1.0);
 
 	vec3 Li = sl.color * sl.intensity * attenuation * spotEffect; 
-	return Li * SampleWorldDirection(surface, L) / pdf_select;
+	return Li * SampleWorldDirection(surface, L);
 }
 
-vec3 Dirlight_LightSample(accelerationStructureEXT topLevelAs, Dirlight dl, Surface surface, float pdf_select, inout uint seed)
+vec3 Dirlight_LightSample(accelerationStructureEXT topLevelAs, Dirlight dl, Surface surface, inout uint seed)
 {
 	vec3 L = normalize(-dl.front);
 
@@ -112,7 +109,7 @@ vec3 Dirlight_LightSample(accelerationStructureEXT topLevelAs, Dirlight dl, Surf
 	}
 
 	vec3 Li = dl.color * dl.intensity; 
-	return Li * SampleWorldDirection(surface, L) / pdf_select;
+	return Li * SampleWorldDirection(surface, L);
 }
 
 #endif

@@ -1,4 +1,3 @@
-
 #ifndef quadlight_glsl
 #define quadlight_glsl
 
@@ -103,7 +102,7 @@ float Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, S
 	float pdf_brdf = 1;
 	if(surface.a >= SPEC_THRESHOLD)
 	{
-		pdf_brdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
+		pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 		pdf_brdf = max(pdf_brdf, BIAS);
 	}
 	
@@ -126,10 +125,11 @@ float Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	{
 		vec2 u = rand2(seed);
 		vec3 H = importanceSampleGGX(u, surface.a);
+
 		surface.l =  reflect(-surface.v, H);
 		cacheSurfaceDots(surface);
-		pdf_brdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
-		pdf_brdf = max(pdf_brdf, BIAS);
+
+		pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	}
 
 	vec3 L = surfaceIncidentLightDir(surface);  				
