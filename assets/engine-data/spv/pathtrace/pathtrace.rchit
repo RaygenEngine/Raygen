@@ -21,7 +21,8 @@ struct hitPayload
 	vec3 origin; // origin and dir of THIS ray
 	vec3 direction;
 
-	vec3 attenuation; // attenuation and weight of THIS ray
+	vec3 attenuation;  // attenuation of THIS ray
+	float nol;
 	float sampleWeight;
 
 	int hitType; // previous hit type
@@ -94,6 +95,8 @@ layout(buffer_reference, std430) buffer Indicies { uint i[]; };
 layout(buffer_reference, std430) buffer Material { GltfMat m; };
 
 struct GeometryGroup {
+	mat4 invTransform;
+
 	Vertices vtxBuffer;
 	Indicies indBuffer;
 	Material materialUbo;
@@ -102,7 +105,7 @@ struct GeometryGroup {
 	uint primOffset;
 
 	mat4 transform;
-	mat4 invTransform;
+
 };
 
 OldVertex fromVertex(Vertex p) {
@@ -210,7 +213,7 @@ void main() {
 
 	vec3 radiance = vec3(0.f);
 
-	// DIRECT // WIP: MLS all lights
+	// DIRECT 
 	{
 		int totalLights = pointlightCount + quadlightCount + spotlightCount + dirlightCount;
 		float u = rand(prd.seed);
@@ -227,29 +230,28 @@ void main() {
 		if(pIndex < pointlightCount) {
 		    Pointlight pl = pointlights.light[pIndex];
 
-			radiance += Pointlight_LightSample(topLevelAs, pl, surface, p_selectLight, prd.seed); 
+			radiance += Pointlight_LightSample(topLevelAs, pl, surface, prd.seed) / p_selectLight; 
 		}
 
 		// quadlights WIP: area - sphere
 		else if (qIndex < quadlightCount) {
 			Quadlight ql = quadlights.light[qIndex];
 			// direct light sample, brdf sample from hit shader and MIS
-			radiance += Quadlight_LightSample(topLevelAs, ql, surface, p_selectLight, prd.seed); 
-			
+			radiance += Quadlight_LightSample(topLevelAs, ql, surface, prd.seed) / p_selectLight; 
 		}
 
 		// spotlights WIP: area - hemisphere
 		else if (sIndex < spotlightCount) {
 			Spotlight sl = spotlights.light[sIndex];
 
-			radiance += Spotlight_LightSample(topLevelAs, sl, surface, p_selectLight, prd.seed); 
+			radiance += Spotlight_LightSample(topLevelAs, sl, surface, prd.seed) / p_selectLight;  
 		}
 
-		// dirlights
+		// dirlights WIP: area - disk for each position
 		else if (dIndex < dirlightCount) {
 			Dirlight dl = dirlights.light[dIndex];
 
-			radiance += Dirlight_LightSample(topLevelAs, dl, surface, p_selectLight, prd.seed); 
+			radiance += Dirlight_LightSample(topLevelAs, dl, surface, prd.seed) / p_selectLight;  
 		}
 
 		if(any(greaterThan(surface.emissive, vec3(BIAS)))) {
@@ -259,7 +261,6 @@ void main() {
 
 	prd.radiance = radiance;
 
-	// WIP: check probablities
 	// INDIRECT - next step
 	{
 		// mirror H = N 
@@ -268,6 +269,7 @@ void main() {
 		if(surface.a >= SPEC_THRESHOLD) {
 			vec2 u = rand2(prd.seed);
 			vec3 H = importanceSampleGGX(u, surface.a);
+
 			surface.l =  reflect(-surface.v, H);
 			LoH = max(dot(surface.v, H), BIAS); 
 		}
@@ -281,6 +283,7 @@ void main() {
 		if(rand(prd.seed) > p_specular) {
 			prd.attenuation = SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
 			prd.sampleWeight /= (1 - p_specular);
+			prd.hitType = 1;
 		}
 
 		// reflection
@@ -288,28 +291,44 @@ void main() {
 
 			// mirror
 			if(surface.a < SPEC_THRESHOLD){
-				prd.sampleWeight = 1.f;
 				prd.attenuation = SampleMirrorDirection(surface);
+				prd.sampleWeight = 1.f;
+				prd.hitType = 4;// mirror
 			}
 
 			// glossy
 			else {
 				cacheSurfaceDots(surface);
 
-				float pdf = D_GGX(surface.noh, surface.a) * surface.noh /  (4.0 * surface.loh);
-				pdf = max(pdf, BIAS); // WIP: if small...
+				float pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
+				if(pdf < BIAS) {
+					prd.hitType = 3; // end this path
+					return;
+				}
     
-				// WIP: should we reuse the previous ks? check difference
-				//vec3 ks = F_Schlick(surface.loh, surface.f0);
-				vec3 brdf_r = SpecularTerm(surface, ks);
-
+				prd.attenuation = ks * SpecularTerm(surface);
 				prd.sampleWeight = 1.f / pdf;
-				prd.attenuation = brdf_r * surface.nol;
+				prd.hitType = 1;
 			}
 
 			prd.sampleWeight /= p_specular;
 		}
 
+//		float p_specular = 0.5;
+//
+//		// diffuse
+//		if(rand(prd.seed) > p_specular) {
+//			prd.attenuation = SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
+//			prd.sampleWeight /= (1 - p_specular);
+//		}
+//
+//		// specular
+//		else {
+//			prd.attenuation = SampleSpecularDirection(surface, prd.seed, prd.sampleWeight);
+//			prd.sampleWeight /= p_specular;
+//		}
+
+		prd.nol = surface.nol;	
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);
 	}

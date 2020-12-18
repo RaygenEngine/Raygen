@@ -3,62 +3,65 @@
 
 #include "fresnel.glsl"
 
-// SMATH:
-float D_GGX(float NoH, float _a) {
-    float a = NoH * _a;
-    float k = a / (1.0 - NoH * NoH + a * a);
-    return k * k * INV_PI;
+float D_GGX(float NoH, float a) {
+
+    float a2     = a * a;
+    float NoH2   = NoH * NoH;
+	
+    float nom    = a2;
+    float denom  = (NoH2 * (a2 - 1.0) + 1.0);
+    denom        = PI * denom * denom;
+	
+    return nom / denom;
 }
 
-float V_SmithGGXCorrelated(float NoV, float NoL, float a) {
-    float a2 = a * a;
-    float GGXV = NoL * sqrt(NoV * NoV * (1.0 - a2) + a2);
-    float GGXL = NoV * sqrt(NoL * NoL * (1.0 - a2) + a2);
-    return 0.5 / (GGXV + GGXL); // full is 2.0 * NoL * NoV / (GGXV + GGXL); however we simplify with the brdf denom later
-}
-
-float V_SmithGGXCorrelatedFast(float NoV, float NoL, float a) {
-    float GGXV = NoL * (NoV * (1.0 - a) + a);
-    float GGXL = NoV * (NoL * (1.0 - a) + a);
-    return 0.5 / (GGXV + GGXL); // full is 2.0 * NoL * NoV / (GGXV + GGXL); however we simplify with the brdf denom later
-}
-
-float G_SchlicksmithGGX(float NoL, float NoV, float a)
+float G_SchlickGGX(float NoV, float k)
 {
-	float k = (a * a) / 2.0;
-	float GL = NoL / (NoL * (1.0 - k) + k);
-	float GV = NoV / (NoV * (1.0 - k) + k);
-	return GL * GV;
+    float nom   = NoV;
+    float denom = NoV * (1.0 - k) + k;
+	
+    return nom / denom;
+}
+  
+float G_SmithSchlickGGX(float NoV, float NoL, float k)
+{
+    float ggx1 = G_SchlickGGX(NoV, k);
+    float ggx2 = G_SchlickGGX(NoL, k);
+	
+    return ggx1 * ggx2;
 }
 
 // Converts a square of roughness to a Phong specular power
 float RoughnessSquareToSpecPower(float a) 
 {
-    return max(0.01, 2.0 / (a + 1e-4) - 2.0);
+    return max(0.01, 2.0 / (a * a + 1e-4) - 2.0);
 }
 
-float PhongSpecular(float NoH, float a)
+float BlinnPhongSpecular(float NoH, float a)
 {
     return pow(NoH, RoughnessSquareToSpecPower(a));
 }
 
-vec3 CookTorranceGGXSmithSpecular(float NoV, float NoL, float NoH, float a)
+// R is reflect(-L)
+float PhongSpecular(float RoV, float a)
 {
-    float D = D_GGX(NoH, a);
-    float G = G_SchlicksmithGGX(NoL, NoV, a);
-
-    float denom = 4 * NoL * NoV;
-    return vec3(D * G / denom);
+    return pow(RoV, RoughnessSquareToSpecPower(a));
 }
 
-vec3 CookTorranceGGXSmithCorrelatedSpecular(float NoV, float NoL, float NoH, float a)
+float MicrofacetGGXSpecular(float NoV, float NoL, float NoH, float a)
 {
-    float D = D_GGX(NoH, a);
-    float V = V_SmithGGXCorrelated(NoV, NoL, a);
+    float k = (a * a) / 2.0;
 
-    return vec3(D * V); // denominator simplified with G (= V)
+    float NDF = D_GGX(NoH, a);
+    float G = G_SmithSchlickGGX(NoL, NoV, a);
+
+    float numerator = NDF * G;
+    float denominator = 4.0 * NoV * NoL;
+    // ks = F is later modulated
+    return numerator / max(denominator, 0.001); 
 }
 
+// view dependent
 vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 albedo) 
 {
     float f90 = 0.5 + LoH * LoH  * a;

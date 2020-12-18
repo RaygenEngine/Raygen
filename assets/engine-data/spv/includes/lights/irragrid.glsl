@@ -94,6 +94,7 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 
 	vec3 diffuseLight = mix(frontInt, backInt, backPercent);
 	
+	// WIP: try to use DisneyDiffuse 
 	return diffuseLight * LambertianDiffuse(surface.albedo) * attenfactor;
 }
 

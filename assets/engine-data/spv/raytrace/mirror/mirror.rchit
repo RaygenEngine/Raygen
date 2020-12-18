@@ -109,6 +109,9 @@ layout(buffer_reference, std430) buffer Indicies { uint i[]; };
 layout(buffer_reference, std430) buffer Material { GltfMat m; };
 
 struct GeometryGroup {
+
+	mat4 invTransform;
+
 	Vertices vtxBuffer;
 	Indicies indBuffer;
 	Material materialUbo;
@@ -117,7 +120,6 @@ struct GeometryGroup {
 	uint primOffset;
 
 	mat4 transform;
-	mat4 invTransform;
 };
 
 

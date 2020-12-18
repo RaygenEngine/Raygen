@@ -124,8 +124,10 @@ void main() {
 
 		vec3 accumColor = vec3(0.f);
 
+		prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, samples);
+
 		for(uint smpl = 0; smpl < samples; ++smpl){
-			prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, samples + smpl);
+
 			prd.depth = 1; // gbuffer 
 			prd.accumThroughput = vec3(1.f);
 

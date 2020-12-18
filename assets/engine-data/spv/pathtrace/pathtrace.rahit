@@ -17,7 +17,8 @@ struct hitPayload
 	vec3 origin; // origin and dir of THIS ray
 	vec3 direction;
 
-	vec3 attenuation; // attenuation and weight of THIS ray
+	vec3 attenuation;  // attenuation of THIS ray
+	float nol;
 	float sampleWeight;
 
 	int hitType; // previous hit type
@@ -89,6 +90,9 @@ layout(buffer_reference, std430) buffer Indicies { uint i[]; };
 layout(buffer_reference, std430) buffer Material { GltfMat m; };
 
 struct GeometryGroup {
+
+	mat4 invTransform;
+
 	Vertices vtxBuffer;
 	Indicies indBuffer;
 	Material materialUbo;
@@ -97,7 +101,6 @@ struct GeometryGroup {
 	uint primOffset;
 
 	mat4 transform;
-	mat4 invTransform;
 };
 
 OldVertex fromVertex(Vertex p) {

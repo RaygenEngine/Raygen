@@ -13,7 +13,8 @@ struct hitPayload
 	vec3 origin; // origin and dir of THIS ray
 	vec3 direction;
 
-	vec3 attenuation; // attenuation and weight of THIS ray
+	vec3 attenuation;  // attenuation of THIS ray
+	float nol;
 	float sampleWeight;
 
 	int hitType; // previous hit type
@@ -40,27 +41,37 @@ void main() {
 	int quadId = gl_InstanceCustomIndexEXT;
 	Quadlight ql = quadlights.light[quadId];
 
-	//if(prd.depth == 0){
-	//	prd.radiance = ql.color; // WIP: final computation will be , hitType = mirror  and payload depth ??
-	//	prd.done = 1;
-	//	return;
-	//}
+	if(dot(ql.normal, -gl_WorldRayDirectionEXT) < 0) {
+		prd.radiance = vec3(0); 
+		prd.hitType = 2;
+		return;
+	}
 
-	float p_selectLight = 1.0 / float(quadlightCount);
-	float pdf_area = 1.0 / (ql.width * ql.height);
-	float pdf_light = pdf_area * p_selectLight;
-	float pdf_brdf = 1.0 / prd.sampleWeight;
+	// direct hit or mirror
+	if(prd.hitType == 0 || prd.hitType == 4) {
+		prd.radiance = ql.color * ql.intensity;  
+		prd.radiance = vec3(max(prd.radiance.x, 0.0),
+		                    max(prd.radiance.y, 0.0),
+							max(prd.radiance.z, 0.0)) / vec3(max(max(prd.radiance), 1.0));
+		prd.hitType = 2;
+		return;
+	}
 
 	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
 	
 	float dist = distance(hitpoint, gl_WorldRayOriginEXT);
-	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist + 
+
+
+	float attenuation = (ql.constantTerm + ql.linearTerm * dist + 
   			     ql.quadraticTerm * (dist * dist));
+
+	float pdf_light = (attenuation) / (ql.width * ql.height * prd.nol); 
+	float pdf_brdf = 1.0 / prd.sampleWeight;
+	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
 
 	vec3 Le = ql.color * ql.intensity; 
 
 	prd.radiance = Le;
-	prd.attenuation *= attenuation; // total atten
-	prd.sampleWeight = 1.0  / (pdf_light + pdf_brdf);
+	prd.sampleWeight = mis_weight;
 	prd.hitType = 2;
 }

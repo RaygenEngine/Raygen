@@ -1,6 +1,8 @@
 #ifndef sampling_glsl
 #define sampling_glsl
 
+#include "bsdf.glsl"
+
 vec3 uniformSampleHemisphere(vec2 u) 
 {
     float z = u.x;
@@ -95,6 +97,9 @@ vec3 importanceSampleGGX(vec2 u, float a)
     return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
 }
 
-// TODO: pdf
+float importanceSamplePdf(float a, float NoH, float LoH)
+{
+    return D_GGX(NoH, a) * NoH /  (4.0 * LoH);
+}
 
 #endif
