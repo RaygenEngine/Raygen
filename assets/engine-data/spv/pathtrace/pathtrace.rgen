@@ -14,7 +14,6 @@ struct hitPayload
 	vec3 direction;
 
 	vec3 attenuation; // attenuation of next ray
-	float nol;
 	float sampleWeight;
 
 	// TODO: enum/defs
@@ -106,7 +105,6 @@ void main() {
 	prd.direction = direction.xyz;
 
 	prd.attenuation = vec3(1.f);
-	prd.nol = 1.f;
 	prd.sampleWeight = 1.f;
 
 

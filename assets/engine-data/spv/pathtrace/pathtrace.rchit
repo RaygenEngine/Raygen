@@ -22,7 +22,6 @@ struct hitPayload
 	vec3 direction;
 
 	vec3 attenuation;  // attenuation of THIS ray
-	float nol;
 	float sampleWeight;
 
 	int hitType; // previous hit type
@@ -328,7 +327,6 @@ void main() {
 //			prd.sampleWeight /= p_specular;
 //		}
 
-		prd.nol = surface.nol;	
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);
 	}
