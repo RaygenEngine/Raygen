@@ -14,7 +14,6 @@ struct hitPayload
 	vec3 direction;
 
 	vec3 attenuation;  // attenuation of THIS ray
-	float nol;
 	float sampleWeight;
 
 	int hitType; // previous hit type
@@ -41,7 +40,9 @@ void main() {
 	int quadId = gl_InstanceCustomIndexEXT;
 	Quadlight ql = quadlights.light[quadId];
 
-	if(dot(ql.normal, -gl_WorldRayDirectionEXT) < 0) {
+	float LnoL = max(dot(ql.normal, -gl_WorldRayDirectionEXT), 0.0);
+
+	if(LnoL < BIAS) {
 		prd.radiance = vec3(0); 
 		prd.hitType = 2;
 		return;
@@ -65,7 +66,7 @@ void main() {
 	float attenuation = (ql.constantTerm + ql.linearTerm * dist + 
   			     ql.quadraticTerm * (dist * dist));
 
-	float pdf_light = (attenuation) / (ql.width * ql.height * prd.nol); 
+	float pdf_light = (attenuation) / (ql.width * ql.height * LnoL); 
 	float pdf_brdf = 1.0 / prd.sampleWeight;
 	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
 

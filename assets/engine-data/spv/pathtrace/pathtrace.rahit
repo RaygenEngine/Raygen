@@ -18,7 +18,6 @@ struct hitPayload
 	vec3 direction;
 
 	vec3 attenuation;  // attenuation of THIS ray
-	float nol;
 	float sampleWeight;
 
 	int hitType; // previous hit type

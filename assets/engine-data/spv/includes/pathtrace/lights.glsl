@@ -40,7 +40,9 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	
 	vec3 L = normalize(samplePoint - surface.position);
 
-	if(dot(ql.normal, -L) < 0){
+	float LnoL = max(dot(ql.normal, -L), 0.0);
+
+	if (LnoL < BIAS) {
 		return vec3(0.0); // in shadow
 	}
 
@@ -55,7 +57,7 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	ql.quadraticTerm * (dist * dist));
 
 	// Conversion of the uniform pdf 1/|A| from the area measure (dA) to the solid angle measure (dw)
-	float pdf_light = (attenuation) / (ql.width * ql.height * surface.nol);
+	float pdf_light = (attenuation) / (ql.width * ql.height * LnoL);
 	float pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
 
