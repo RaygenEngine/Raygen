@@ -226,7 +226,7 @@ vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed, out float sa
 	return kd * brdf_d * surface.nol;
 }
 
-vec3 SampleSpecularDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+vec3 ImportanceSampleSpecularDirection(inout Surface surface, inout uint seed, out float sampleWeight)
 {
     if(surface.a < SPEC_THRESHOLD){
         sampleWeight = 1.0;
@@ -243,6 +243,26 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed, out float s
     pdf = max(pdf, BIAS); // WIP: if small... notify to stop
 
     sampleWeight = 1 / pdf;
+
+    vec3 ks = F_Schlick(surface.loh, surface.f0);
+    float brdf_r = MicrofacetGGXSpecular(surface.nov, surface.nol, surface.noh, surface.a);
+
+    return ks * brdf_r * surface.nol;
+}
+
+
+vec3 SampleSpecularDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+{
+    if(surface.a < SPEC_THRESHOLD){
+        sampleWeight = 1.0;
+        return SampleMirrorDirection(surface);
+    }
+
+    vec2 u = rand2(seed); 
+    surface.l = cosineSampleHemisphere(u);
+    cacheSurfaceDots(surface);
+
+    sampleWeight = 1.0 / cosineHemispherePdf(surface.nol);
 
     vec3 ks = F_Schlick(surface.loh, surface.f0);
     float brdf_r = MicrofacetGGXSpecular(surface.nov, surface.nol, surface.noh, surface.a);

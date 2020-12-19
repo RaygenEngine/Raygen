@@ -594,6 +594,10 @@ void RtSceneDescriptor::WriteQuadlights(const std::vector<SceneQuadlight*>& quad
 
 void RtSceneDescriptor::WriteGeomGroups()
 {
+	if (g_tempGeometryGroups.empty()) {
+		return;
+	}
+
 	auto& geomGroupsVec = g_tempGeometryGroups;
 
 	geomGroupsBuffer = RBuffer{ sizeof(RtGeometryGroup) * geomGroupsVec.size(), vk::BufferUsageFlagBits::eStorageBuffer,

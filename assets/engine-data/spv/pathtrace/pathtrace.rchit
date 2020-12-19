@@ -253,9 +253,9 @@ void main() {
 			radiance += Dirlight_LightSample(topLevelAs, dl, surface, prd.seed) / p_selectLight;  
 		}
 
-		if(any(greaterThan(surface.emissive, vec3(BIAS)))) {
-			radiance += surface.emissive;
-		}
+		// add emissive
+		radiance += surface.emissive;
+
 	}
 
 	prd.radiance = radiance;
@@ -323,7 +323,7 @@ void main() {
 //
 //		// specular
 //		else {
-//			prd.attenuation = SampleSpecularDirection(surface, prd.seed, prd.sampleWeight);
+//			prd.attenuation = ImportanceSampleSpecularDirection(surface, prd.seed, prd.sampleWeight);
 //			prd.sampleWeight /= p_specular;
 //		}
 

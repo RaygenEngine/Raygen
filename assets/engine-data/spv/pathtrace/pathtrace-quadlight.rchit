@@ -40,16 +40,18 @@ void main() {
 	int quadId = gl_InstanceCustomIndexEXT;
 	Quadlight ql = quadlights.light[quadId];
 
-	float LnoL = max(dot(ql.normal, -gl_WorldRayDirectionEXT), 0.0);
+	float LnoL = dot(ql.normal, -gl_WorldRayDirectionEXT);
 
-	if(LnoL < BIAS) {
+	if (LnoL < BIAS) {
 		prd.radiance = vec3(0); 
 		prd.hitType = 2;
 		return;
 	}
 
-	// direct hit or mirror
-	if(prd.hitType == 0 || prd.hitType == 4) {
+	LnoL = abs(LnoL);
+
+	// direct hit 
+	if(prd.hitType == 0) {
 		prd.radiance = ql.color * ql.intensity;  
 		prd.radiance = vec3(max(prd.radiance.x, 0.0),
 		                    max(prd.radiance.y, 0.0),
@@ -57,6 +59,10 @@ void main() {
 		prd.hitType = 2;
 		return;
 	}
+
+//	// mirror WIP: what do?
+//	if(prd.hitType == 4) {
+//	}
 
 	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
 	
