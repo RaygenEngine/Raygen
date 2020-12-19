@@ -40,11 +40,13 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	
 	vec3 L = normalize(samplePoint - surface.position);
 
-	float LnoL = max(dot(ql.normal, -L), 0.0);
+	float LnoL = dot(ql.normal, -L);
 
 	if (LnoL < BIAS) {
-		return vec3(0.0); // in shadow
+		return vec3(0.0); // behind light
 	}
+
+	LnoL = abs(LnoL);
 
 	addIncomingLightDirection(surface, L);
 
