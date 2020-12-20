@@ -296,10 +296,10 @@ void main() {
 
 	// INDIRECT Mirror
 	{		
-		vec3 brdf_NoL = SampleMirrorDirection(surface);
-
-		vec3 L = surfaceIncidentLightDir(surface);
-		radiance += RadianceOfRay(surface.position, L) * brdf_NoL;
+//		vec3 brdf_NoL = SampleSpecularReflectionDirection(surface);
+//
+//		vec3 L = surfaceIncidentLightDir(surface);
+//		radiance += RadianceOfRay(surface.position, L) * brdf_NoL;
 	}
 
 	prd.radiance = radiance + surface.emissive;

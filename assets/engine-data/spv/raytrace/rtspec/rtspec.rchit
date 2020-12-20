@@ -277,7 +277,7 @@ void main() {
 
 	// INDIRECT Specular
 	{
-		vec3 brdf_NoL_invpdf = SampleSpecularDirection(surface, prd.seed);
+		vec3 brdf_NoL_invpdf = SampleReflectionDirection(surface, prd.seed);
 
 		vec3 L = surfaceIncidentLightDir(surface);
 		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;

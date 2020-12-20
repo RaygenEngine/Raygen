@@ -135,5 +135,16 @@ vec3 reflect(vec3 wo)
 	return vec3(wo.x, wo.y, -wo.z);
 }
 
+vec3 refract(vec3 wo, float eta)
+{
+	float k = 1.0 - eta * eta * (1.0 - wo.z * wo.z);
+    if (k < 0.0) {
+        return vec3(0);
+	}
+	else {
+        return vec3(eta * wo.x, eta * wo.y, -sqrt(k));
+	}
+}
+
 
 #endif

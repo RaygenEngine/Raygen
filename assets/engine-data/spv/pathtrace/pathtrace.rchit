@@ -264,25 +264,63 @@ void main() {
 	{
 		// mirror H = N 
 		float LoH = max(Ndot(surface.v), BIAS);
+		vec3 H = vec3(0,0,1); // surface space
 
 		if(surface.a >= SPEC_THRESHOLD) {
 			vec2 u = rand2(prd.seed);
-			vec3 H = importanceSampleGGX(u, surface.a);
-
-			surface.l =  reflect(-surface.v, H);
+			H = importanceSampleGGX(u, surface.a);
 			LoH = max(dot(surface.v, H), BIAS); 
 		}
 
 		// Use a information
-		vec3 ks = F_SchlickRoughness(LoH, surface.f0, surface.a);
+		vec3 kr = F_Schlick(LoH, surface.f0);
 
-		float p_specular = sum(ks) / 3.f;
+		float p_specular = sum(kr) / 3.f;
 
-		// diffuse
+		// refraction
 		if(rand(prd.seed) > p_specular) {
-			prd.attenuation = SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
+
+			vec3 kt = 1.0 - kr;
+
+			float p_transparency = 1.0 - surface.opacity;
+
+			// diffuse
+			if(rand(prd.seed) > p_transparency) {
+				prd.attenuation = kt * SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
+				prd.sampleWeight /= (1 - p_transparency);
+				prd.hitType = 1;
+			}
+
+			// transmission
+			else {
+				
+				// specular
+				if(surface.a < SPEC_THRESHOLD){
+					prd.attenuation =  kt * SamplePerfectRefractionDirection(surface);
+					prd.sampleWeight = 1.f;
+					prd.hitType = 4; // mirror
+				}
+
+				// glossy
+				else {
+					surface.l =  refract(-surface.v, H, (1.00 / 1.31));		
+					cacheBackSurfaceDots(surface);
+
+					float pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
+					if(pdf < BIAS) {
+						prd.hitType = 3; // end this path
+						return;
+					}
+
+					float brdfr_nol = microfacetBrdfNoL(surface);
+
+					prd.attenuation = kt * brdfr_nol;
+					prd.sampleWeight = 1.f / pdf;
+					prd.hitType = 1;
+				}
+			}
+
 			prd.sampleWeight /= (1 - p_specular);
-			prd.hitType = 1;
 		}
 
 		// reflection
@@ -290,13 +328,14 @@ void main() {
 
 			// mirror
 			if(surface.a < SPEC_THRESHOLD){
-				prd.attenuation = SampleMirrorDirection(surface);
+				prd.attenuation = kr * SampleSpecularReflectionDirection(surface);
 				prd.sampleWeight = 1.f;
-				prd.hitType = 4;// mirror
+				prd.hitType = 4; // mirror
 			}
 
 			// glossy
 			else {
+				surface.l =  reflect(-surface.v, H);		
 				cacheSurfaceDots(surface);
 
 				float pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
@@ -304,8 +343,10 @@ void main() {
 					prd.hitType = 3; // end this path
 					return;
 				}
-    
-				prd.attenuation = ks * SpecularTerm(surface);
+
+				float brdfr_nol = microfacetBrdfNoL(surface);
+
+				prd.attenuation = kr * brdfr_nol;
 				prd.sampleWeight = 1.f / pdf;
 				prd.hitType = 1;
 			}
@@ -323,9 +364,10 @@ void main() {
 //
 //		// specular
 //		else {
-//			prd.attenuation = ImportanceSampleSpecularDirection(surface, prd.seed, prd.sampleWeight);
+//			prd.attenuation = ImportanceSampleReflectionDirection(surface, prd.seed, prd.sampleWeight);
 //			prd.sampleWeight /= p_specular;
 //		}
+
 
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);

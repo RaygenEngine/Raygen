@@ -52,7 +52,7 @@ vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube 
 
 	vec3 specularLight = textureLod(prefilteredSampler, reprojR, lod).rgb;
 
-	vec3 diffuse = diffuseLight * DiffuseTerm(surface) * rp.irradianceFactor;
+//	vec3 diffuse = diffuseLight * DiffuseTerm(surface) * rp.irradianceFactor;
 	vec3 specular = specularLight * (surface.f0 * brdfLut.x + brdfLut.y);
 
 	//  kd * diffuse +
