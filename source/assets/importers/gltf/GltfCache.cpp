@@ -1,12 +1,12 @@
 #include "GltfCache.h"
 
 #include "assets/AssetImporterManager.h"
+#include "assets/StdAssets.h"
 #include "assets/importers/gltf/GltfUtl.h"
 #include "assets/pods/Image.h"
 #include "assets/pods/MaterialArchetype.h"
 #include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Sampler.h"
-#include "assets/StdAssets.h"
 
 #include <nlohmann/json.hpp>
 
@@ -40,13 +40,11 @@ GltfCache::GltfCache(const fs::path& path)
 void GltfCache::LoadImages()
 {
 	for (auto& img : gltfData->images) {
-		if (img.bufferView != -1)
-			[[unlikely]]
-			{
-				LOG_ERROR("GltfImporter: Embedded images not supported");
-				imagePods.emplace_back();
-				continue;
-			}
+		if (img.bufferView != -1) [[unlikely]] {
+			LOG_ERROR("GltfImporter: Embedded images not supported");
+			imagePods.emplace_back();
+			continue;
+		}
 
 		fs::path imgPath = systemPath.remove_filename() / img.uri;
 		imagePods.push_back(AssetImporterManager->ImportRequest<Image>(imgPath));

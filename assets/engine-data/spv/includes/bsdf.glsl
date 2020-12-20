@@ -48,19 +48,6 @@ float PhongSpecular(float RoV, float a)
     return pow(RoV, RoughnessSquareToSpecPower(a));
 }
 
-float MicrofacetGGXSpecular(float NoV, float NoL, float NoH, float a)
-{
-    float k = (a * a) / 2.0;
-
-    float NDF = D_GGX(NoH, a);
-    float G = G_SmithSchlickGGX(NoL, NoV, a);
-
-    float numerator = NDF * G;
-    float denominator = 4.0 * NoV * NoL;
-    // ks = F is later modulated
-    return numerator / max(denominator, 0.001); 
-}
-
 // view dependent
 vec3 DisneyDiffuse(float NoL, float NoV, float LoH, float a, vec3 albedo) 
 {

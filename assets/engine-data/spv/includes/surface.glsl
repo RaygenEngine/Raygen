@@ -52,6 +52,18 @@ void cacheSurfaceDots(inout Surface surface)
     surface.nol = max(Ndot(surface.l), BIAS);
 }
 
+// caches as if the light direction hits the frontface
+void cacheBackSurfaceDots(inout Surface surface)
+{
+    vec3 l = surface.l;
+    l.z *= -1;
+
+    surface.h = normalize(surface.v + l); 
+    surface.noh = max(Ndot(surface.h), BIAS);
+    surface.loh = max(dot(l, surface.h), BIAS);
+    surface.nol = max(Ndot(l), BIAS);
+}
+
 void addIncomingLightDirection(inout Surface surface, vec3 L)
 {
     surface.l = normalize(toOnbSpace(surface.basis, L));
@@ -174,44 +186,59 @@ Surface surfaceFromGBuffer(
 }
 #endif
 
-float SpecularTerm(Surface surface)
+float microfacetBrdfNoL(Surface surface) 
 {
-    if(surface.a < SPEC_THRESHOLD){   
-		return BlinnPhongSpecular(surface.noh, surface.a);
-    }
+    float NDF = D_GGX(surface.noh, surface.a);
+    float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
 
-    // F is omitted in this brdf, since it is contributed from ks
-    return MicrofacetGGXSpecular(surface.nov, surface.nol, surface.noh, surface.a) * surface.nol;
+    // SMATH:
+    float numerator = NDF * G * surface.loh * surface.loh;
+    float denominator =  (surface.loh + (1.00 / 1.31) * surface.loh); 
+    denominator *= denominator;
+    denominator *= surface.nov;// omit nol
+
+    return numerator / max(denominator, 0.001); 
 }
 
-vec3 DiffuseTerm(Surface surface)
+// SMATH:
+float microfacetBtdfNoL(Surface surface) 
 {
-    //return LambertianDiffuse(surface.albedo) * surface.nol;
-    return DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo) * surface.nol;
+    float NDF = D_GGX(surface.noh, surface.a);
+    float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
+
+    float numerator = NDF * G;
+    float denominator = 4.0 * surface.nov; // omit nol
+
+    return numerator / max(denominator, 0.001); 
 }
 
-// NOTE: applies cosTheta terms based on material
+// SMATH:
 vec3 SampleWorldDirection(inout Surface surface, vec3 L)
 {
     addIncomingLightDirection(surface, L);
 
     vec3 ks = F_Schlick(surface.loh, surface.f0);
-    vec3 kd = 1 - ks;
+    vec3 kdort = 1 - ks;
+
+    vec3 kd = surface.opacity * kdort;
+
+    vec3 brdf_d = DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo);
+
+    float brdfr_nol = surface.a < SPEC_THRESHOLD ?  BlinnPhongSpecular(surface.noh, surface.a) : microfacetBrdfNoL(surface);
     
-    return kd * DiffuseTerm(surface) + ks * SpecularTerm(surface);
+    return kd * brdf_d * surface.nol + ks * brdfr_nol;
 }
 
-vec3 SampleMirrorDirection(inout Surface surface)
+// returns perfect refraction brdf * nol
+float SamplePerfectRefractionDirection(inout Surface surface)
 {
-    surface.l = reflect(-surface.v);
-    cacheSurfaceDots(surface);
+    surface.l = refract(-surface.v, 1.00 / 1.31);
+    cacheBackSurfaceDots(surface);
 
-    vec3 ks = F_Schlick(surface.loh, surface.f0);
-    float brdf_r = BlinnPhongSpecular(surface.noh, surface.a);
-
-    return ks * brdf_r;
+    return (1.00 * 1.00) / (1.31 * 1.31); // omit nol
 }
 
+// diffuse brdf * nol
 vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed, out float sampleWeight)
 {
     vec2 u = rand2(seed); 
@@ -220,17 +247,26 @@ vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed, out float sa
 
     sampleWeight = 1.0 / cosineHemispherePdf(surface.nol);
 
-	vec3 kd = 1 - F_Schlick(surface.loh, surface.f0);
     vec3 brdf_d = DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo);
 	
-	return kd * brdf_d * surface.nol;
+	return brdf_d * surface.nol;
 }
 
-vec3 ImportanceSampleSpecularDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+// returns mirror brdf * nol
+float SampleSpecularReflectionDirection(inout Surface surface)
+{
+    surface.l = reflect(-surface.v);
+    cacheSurfaceDots(surface);
+
+    return BlinnPhongSpecular(surface.noh, surface.a);
+}
+
+// returns microfacet brdf * nol
+float ImportanceSampleReflectionDirection(inout Surface surface, inout uint seed, out float sampleWeight)
 {
     if(surface.a < SPEC_THRESHOLD){
         sampleWeight = 1.0;
-        return SampleMirrorDirection(surface);
+        return SampleSpecularReflectionDirection(surface);
     }
 
     vec2 u = rand2(seed);
@@ -244,18 +280,15 @@ vec3 ImportanceSampleSpecularDirection(inout Surface surface, inout uint seed, o
 
     sampleWeight = 1 / pdf;
 
-    vec3 ks = F_Schlick(surface.loh, surface.f0);
-    float brdf_r = MicrofacetGGXSpecular(surface.nov, surface.nol, surface.noh, surface.a);
-
-    return ks * brdf_r * surface.nol;
+    return microfacetBrdfNoL(surface); 
 }
 
-
-vec3 SampleSpecularDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+// returns microfacet brdf * nol
+float SampleReflectionDirection(inout Surface surface, inout uint seed, out float sampleWeight)
 {
     if(surface.a < SPEC_THRESHOLD){
         sampleWeight = 1.0;
-        return SampleMirrorDirection(surface);
+        return SampleSpecularReflectionDirection(surface);
     }
 
     vec2 u = rand2(seed); 
@@ -264,10 +297,7 @@ vec3 SampleSpecularDirection(inout Surface surface, inout uint seed, out float s
 
     sampleWeight = 1.0 / cosineHemispherePdf(surface.nol);
 
-    vec3 ks = F_Schlick(surface.loh, surface.f0);
-    float brdf_r = MicrofacetGGXSpecular(surface.nov, surface.nol, surface.noh, surface.a);
-
-    return ks * brdf_r * surface.nol;
+    return microfacetBrdfNoL(surface); 
 }
 
 #endif
