@@ -186,22 +186,8 @@ Surface surfaceFromGBuffer(
 }
 #endif
 
-float microfacetBrdfNoL(Surface surface) 
-{
-    float NDF = D_GGX(surface.noh, surface.a);
-    float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
-
-    // SMATH:
-    float numerator = NDF * G * surface.loh * surface.loh;
-    float denominator =  (surface.loh + (1.00 / 1.31) * surface.loh); 
-    denominator *= denominator;
-    denominator *= surface.nov;// omit nol
-
-    return numerator / max(denominator, 0.001); 
-}
-
 // SMATH:
-float microfacetBtdfNoL(Surface surface) 
+float microfacetBrdfNoL(Surface surface) 
 {
     float NDF = D_GGX(surface.noh, surface.a);
     float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
@@ -212,15 +198,27 @@ float microfacetBtdfNoL(Surface surface)
     return numerator / max(denominator, 0.001); 
 }
 
+float microfacetBtdfNoL(Surface surface, float iorRation) 
+{
+    float NDF = D_GGX(surface.noh, surface.a);
+    float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
+
+    // SMATH:
+    float numerator = NDF * G * surface.loh * surface.loh;
+    float denominator =  (surface.loh + iorRation * surface.loh); 
+    denominator *= denominator;
+    denominator *= surface.nov;// omit nol
+
+    return numerator / max(denominator, 0.001); 
+}
+
 // SMATH:
 vec3 SampleWorldDirection(inout Surface surface, vec3 L)
 {
     addIncomingLightDirection(surface, L);
 
     vec3 ks = F_Schlick(surface.loh, surface.f0);
-    vec3 kdort = 1 - ks;
-
-    vec3 kd = surface.opacity * kdort;
+    vec3 kd = 1 - ks;
 
     vec3 brdf_d = DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo);
 
@@ -229,13 +227,13 @@ vec3 SampleWorldDirection(inout Surface surface, vec3 L)
     return kd * brdf_d * surface.nol + ks * brdfr_nol;
 }
 
-// returns perfect refraction brdf * nol
-float SamplePerfectRefractionDirection(inout Surface surface)
+// returns specular transmission brdf * nol
+float SampleSpecularTransmissionDirection(inout Surface surface, float iorRation)
 {
-    surface.l = refract(-surface.v, 1.00 / 1.31);
+    surface.l = refract(-surface.v, iorRation);
     cacheBackSurfaceDots(surface);
 
-    return (1.00 * 1.00) / (1.31 * 1.31); // omit nol
+    return iorRation * iorRation; // omit nol
 }
 
 // diffuse brdf * nol
