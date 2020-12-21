@@ -16,6 +16,9 @@ struct hitPayload
 	vec3 attenuation; // attenuation of next ray
 	float sampleWeight;
 
+	//float etaI; // eta of inner medium
+	//float etaO; // eta of outer medium
+
 	// TODO: enum/defs
 	// 0-direct
 	// 1-regular
@@ -107,7 +110,6 @@ void main() {
 	prd.attenuation = vec3(1.f);
 	prd.sampleWeight = 1.f;
 
-
 	prd.hitType = 0; // direct
 
 	vec3 accumColor = vec3(0.f);
@@ -118,12 +120,6 @@ void main() {
 
 		TraceRay(); 
 		
-		// debug
-		//if(prd.hitType == 10){
-		//	accumColor = prd.radiance;
-		//	break;
-		//}
-
 		// arealight 
 		if(prd.hitType == 2) {
 									   // from surface to light | mis weight

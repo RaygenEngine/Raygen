@@ -11,18 +11,9 @@
 
 #include "random.glsl"
 
-// Values before being filled
-struct hitPayload
+struct shadowHitPayload
 {
-	vec3 radiance; // previous radiance
-
-	vec3 origin; // origin and dir of THIS ray
-	vec3 direction;
-
-	vec3 attenuation;  // attenuation of THIS ray
-	float sampleWeight;
-
-	int hitType; // previous hit type
+	vec3 filt; 
 	uint seed;
 };
 
@@ -37,7 +28,7 @@ layout(push_constant) uniform PC
 };
 
 hitAttributeEXT vec2 baryCoord;
-layout(location = 0) rayPayloadInEXT hitPayload prd;
+layout(location = 1) rayPayloadInEXT shadowHitPayload prd;
 
 struct Vertex
 {
@@ -158,11 +149,12 @@ void main() {
 		ignoreIntersectionEXT();
 	}
 
-	// filtering
-//	if(mat.mask == 2) {
-//		if(rand(prd.seed) > opacity) {
-//			ignoreIntersectionEXT();
-//		}
-//	}
+	// filtering, hack for tinted glass
+	if(mat.mask == 2) {
+		if(rand(prd.seed) > opacity) {
+			prd.filt *= sampledBaseColor.rgb;
+			ignoreIntersectionEXT();
+		}
+	}
 
 }

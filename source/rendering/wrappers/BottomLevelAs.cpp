@@ -63,7 +63,7 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 		PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
 		auto mati = pod2.Lock();
 		auto mask = mati->descriptorSet.uboData.end() - 4;
-		if (*mask == 1) {
+		if (*mask == 1 || *mask == 2) {
 			asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
 			isMask = true;
 		}

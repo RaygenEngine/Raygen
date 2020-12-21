@@ -4,7 +4,6 @@
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2 : enable
-#extension GL_EXT_ray_query: require
 
 // TODO:
 #define RAY
@@ -23,6 +22,9 @@ struct hitPayload
 
 	vec3 attenuation;  // attenuation of THIS ray
 	float sampleWeight;
+
+	//float etaI; // eta of inner medium THIS ray travels
+	//float etaO; // eta of outer medium IF THIS ray exits
 
 	int hitType; // previous hit type
 	uint seed;
@@ -131,6 +133,7 @@ vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
 }
 
+bool exits = false;
 Surface surfaceFromGeometryGroup(
     GeometryGroup gg)
 {
@@ -181,12 +184,18 @@ Surface surfaceFromGeometryGroup(
 	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
 	float reflectance = 0.5;
 
+	vec3 V = normalize(-gl_WorldRayDirectionEXT);
+
+	if(dot(V, ns) < 0) {
+		ns = -ns; // exits
+		exits = true;
+	}
+
 	Surface surface;
 
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 	surface.basis = branchlessOnb(ns);
 
-	vec3 V = normalize(-gl_WorldRayDirectionEXT);
     surface.v = normalize(toOnbSpace(surface.basis, V));
     surface.nov = max(Ndot(surface.v), BIAS);
 
@@ -197,7 +206,7 @@ Surface surfaceFromGeometryGroup(
 	surface.a = roughness * roughness;
 
     surface.emissive = sampledEmissive.rgb;
-    surface.occlusion = sampledEmissive.a;
+    surface.occlusion = sampledEmissive.a;			
 
     return surface;
 }
@@ -294,16 +303,26 @@ void main() {
 			// transmission
 			else {
 				
+				float sqrtf0 = sqrt(max(surface.f0));
+				float eta = (2 / (1 - sqrtf0)) - 1; // (1 + sqrtf0) / (1 - sqrtf0);
+
+				// WIP: recursive
+				float etaI = exits ? eta : 1.0;
+				float etaO = exits ? 1.0 : eta;
+		
+				float iorRatio = etaI / etaO;
+
+
 				// specular
-				if(surface.a < SPEC_THRESHOLD){
-					prd.attenuation =  kt * SamplePerfectRefractionDirection(surface);
+				if(surface.a < SPEC_THRESHOLD) {
+					prd.attenuation =  kt * SampleSpecularTransmissionDirection(surface, iorRatio);
 					prd.sampleWeight = 1.f;
 					prd.hitType = 4; // mirror
 				}
 
 				// glossy
 				else {
-					surface.l =  refract(-surface.v, H, (1.00 / 1.31));		
+					surface.l =  refract(-surface.v, H, iorRatio);		
 					cacheBackSurfaceDots(surface);
 
 					float pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
@@ -312,7 +331,7 @@ void main() {
 						return;
 					}
 
-					float brdfr_nol = microfacetBrdfNoL(surface);
+					float brdfr_nol = microfacetBtdfNoL(surface, iorRatio);
 
 					prd.attenuation = kt * brdfr_nol;
 					prd.sampleWeight = 1.f / pdf;
@@ -344,30 +363,15 @@ void main() {
 					return;
 				}
 
-				float brdfr_nol = microfacetBrdfNoL(surface);
+				float btdfr_nol = microfacetBrdfNoL(surface);
 
-				prd.attenuation = kr * brdfr_nol;
+				prd.attenuation = kr * btdfr_nol;
 				prd.sampleWeight = 1.f / pdf;
 				prd.hitType = 1;
 			}
 
 			prd.sampleWeight /= p_specular;
 		}
-
-//		float p_specular = 0.5;
-//
-//		// diffuse
-//		if(rand(prd.seed) > p_specular) {
-//			prd.attenuation = SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
-//			prd.sampleWeight /= (1 - p_specular);
-//		}
-//
-//		// specular
-//		else {
-//			prd.attenuation = ImportanceSampleReflectionDirection(surface, prd.seed, prd.sampleWeight);
-//			prd.sampleWeight /= p_specular;
-//		}
-
 
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);

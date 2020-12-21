@@ -68,6 +68,11 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 		StaticPipes::Recompile<PathtracePipe>();
 	};
 
+	GpuAsset<Shader>& gpuShader3 = GpuAssetManager->CompileShader("engine-data/spv/pathtrace/pathtrace-shadow.shader");
+	gpuShader3.onCompileRayTracing = [&]() {
+		StaticPipes::Recompile<PathtracePipe>();
+	};
+
 	m_rtShaderGroups.clear();
 
 	// Indices within this vector will be used as unique identifiers for the shaders in the Shader Binding Table.
@@ -86,7 +91,7 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 	m_rtShaderGroups.push_back(rg);
 
 	// Miss
-	vk::RayTracingShaderGroupCreateInfoKHR mg{};
+	vk::RayTracingShaderGroupCreateInfoKHR mg{};           // miss general 0
 	mg.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
 		.setGeneralShader(VK_SHADER_UNUSED_KHR)
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
@@ -97,7 +102,19 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 
 	m_rtShaderGroups.push_back(mg);
 
-	vk::RayTracingShaderGroupCreateInfoKHR hg{};                     // gltf mat
+	// Miss
+	vk::RayTracingShaderGroupCreateInfoKHR mg1{};           // miss shadow 1
+	mg1.setType(vk::RayTracingShaderGroupTypeKHR::eGeneral) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eMissKHR, *gpuShader3.miss.Lock().module, "main" });
+	mg1.setGeneralShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(mg1);
+
+	vk::RayTracingShaderGroupCreateInfoKHR hg{};                     // gltf mat offset 0
 	hg.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
 		.setGeneralShader(VK_SHADER_UNUSED_KHR)
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
@@ -110,7 +127,7 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 
 	m_rtShaderGroups.push_back(hg);
 
-	vk::RayTracingShaderGroupCreateInfoKHR hg2{};                     // quad lights
+	vk::RayTracingShaderGroupCreateInfoKHR hg2{};                     // quad lights offest 1
 	hg2.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
 		.setGeneralShader(VK_SHADER_UNUSED_KHR)
 		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
@@ -120,6 +137,20 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 	hg2.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
 
 	m_rtShaderGroups.push_back(hg2);
+
+	vk::RayTracingShaderGroupCreateInfoKHR hg3{};                     // shadow offset 2
+	hg3.setType(vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup) //
+		.setGeneralShader(VK_SHADER_UNUSED_KHR)
+		.setClosestHitShader(VK_SHADER_UNUSED_KHR)
+		.setAnyHitShader(VK_SHADER_UNUSED_KHR)
+		.setIntersectionShader(VK_SHADER_UNUSED_KHR);
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitKHR, *gpuShader3.closestHit.Lock().module, "main" });
+	hg3.setClosestHitShader(static_cast<uint32>(stages.size() - 1));
+	stages.push_back({ {}, vk::ShaderStageFlagBits::eAnyHitKHR, *gpuShader3.anyHit.Lock().module, "main" }); // for mask
+	hg3.setAnyHitShader(static_cast<uint32>(stages.size() - 1));
+
+	m_rtShaderGroups.push_back(hg3);
+
 
 	// Assemble the shader stages and recursion depth info into the ray tracing pipeline
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
@@ -207,7 +238,7 @@ void PathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 	vk::DeviceSize missStride = progSize;
 
 	// Hit index
-	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
+	vk::DeviceSize hitGroupOffset = 3u * progSize; // Jump over the previous shaders (raygen, miss0, miss1)
 	vk::DeviceSize hitGroupStride = progSize;
 
 
