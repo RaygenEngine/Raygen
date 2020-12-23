@@ -65,6 +65,7 @@ struct GltfMat {
 	float roughnessFactor;
 	float normalScale;
 	float occlusionStrength;
+	float baseReflectivity;
 
 	// alpha mask
 	float alphaCutoff;
@@ -150,11 +151,11 @@ void main() {
 	}
 
 	// filtering, hack for tinted glass
-	if(mat.mask == 2) {
-		if(rand(prd.seed) > opacity) {
-			prd.filt *= sampledBaseColor.rgb;
-			ignoreIntersectionEXT();
-		}
-	}
+//	if(mat.mask == 2) { 
+//		if(rand(prd.seed) > opacity) {
+//			prd.filt *= sampledBaseColor.rgb;
+//			ignoreIntersectionEXT();
+//		}
+//	}
 
 }

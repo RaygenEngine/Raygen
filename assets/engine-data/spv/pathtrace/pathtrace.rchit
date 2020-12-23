@@ -79,6 +79,7 @@ struct GltfMat {
 	float roughnessFactor;
 	float normalScale;
 	float occlusionStrength;
+	float baseReflectivity;
 
 	// alpha mask
 	float alphaCutoff;
@@ -182,7 +183,6 @@ Surface surfaceFromGeometryGroup(
 	vec3 baseColor = sampledBaseColor.rgb;
 	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
 	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
-	float reflectance = 0.5;
 
 	vec3 V = normalize(-gl_WorldRayDirectionEXT);
 
@@ -199,10 +199,10 @@ Surface surfaceFromGeometryGroup(
     surface.v = normalize(toOnbSpace(surface.basis, V));
     surface.nov = max(Ndot(surface.v), BIAS);
 
-	surface.albedo = (1.0 - metallic) * baseColor;
+	surface.albedo = mix(baseColor, vec3(0.0), metallic);
     surface.opacity = sampledBaseColor.a;
 
-	surface.f0 = vec3(0.16 * reflectance * reflectance * (1.0 - metallic)) + baseColor * metallic;
+	surface.f0 = mix(vec3(mat.baseReflectivity), baseColor, metallic);
 	surface.a = roughness * roughness;
 
     surface.emissive = sampledEmissive.rgb;
@@ -273,7 +273,7 @@ void main() {
 	{
 		// mirror H = N 
 		float LoH = max(Ndot(surface.v), BIAS);
-		vec3 H = vec3(0,0,1); // surface space
+		vec3 H = vec3(0, 0, 1); // surface space N
 
 		if(surface.a >= SPEC_THRESHOLD) {
 			vec2 u = rand2(prd.seed);
@@ -281,7 +281,6 @@ void main() {
 			LoH = max(dot(surface.v, H), BIAS); 
 		}
 
-		// Use a information
 		vec3 kr = F_Schlick(LoH, surface.f0);
 
 		float p_specular = sum(kr) / 3.f;
@@ -303,8 +302,9 @@ void main() {
 			// transmission
 			else {
 				
-				float sqrtf0 = sqrt(max(surface.f0));
-				float eta = (2 / (1 - sqrtf0)) - 1; // (1 + sqrtf0) / (1 - sqrtf0);
+				float f0 = max(surface.f0);
+				float sqrtf0 = sqrt(f0);
+				float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
 
 				// WIP: recursive
 				float etaI = exits ? eta : 1.0;

@@ -64,6 +64,7 @@ struct GltfMat {
 	float roughnessFactor;
 	float normalScale;
 	float occlusionStrength;
+	float baseReflectivity;
 
 	// alpha mask
 	float alphaCutoff;
