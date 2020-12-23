@@ -110,6 +110,9 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 	setData("normalScale", static_cast<float>(data.normalTexture.scale));
 	setData("occlusionStrength", static_cast<float>(data.occlusionTexture.strength));
 
+	// WIP: remove, this shouldn't be part of gltf mat, but is used now for real time adjustments
+	setData("baseReflectivity", 0.04f);
+
 	// alpha
 	setData("mask", int{ GetAlphaMode(data.alphaMode) });
 	setData("alphaCutoff", static_cast<float>(data.alphaCutoff));
@@ -156,6 +159,17 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 
 		auto& emissiveTextureInfo = data.emissiveTexture;
 		fillNextTexture(emissiveTextureInfo, true);
+
+
+		// factor adjustments that make sense
+		if (baseColorTextureInfo.index == -1) {
+			setData("baseColorFactor", glm::vec4(1.f, 0.f, 1.f, 1.f));
+		}
+
+		if (metallicRougnessTextureInfo.index == -1) {
+			setData("metallicFactor", 0.f);
+			setData("roughnessFactor", 0.45f);
+		}
 	}
 }
 
