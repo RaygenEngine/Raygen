@@ -118,7 +118,7 @@ if (MSVC)
 	endforeach()
 endif()
 
-
+target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 							  
@@ -135,7 +135,6 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/cereal/includ
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nativefiledialog/src/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/spirv-cross/include)
 
-target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR}/../glslang)
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

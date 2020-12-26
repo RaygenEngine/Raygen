@@ -71,9 +71,10 @@ struct TopLevelAs : RAccelerationStructure {
 
 
 	void AddAsInstance(AsInstance&& instance);
+	void AddAsInstance(const AsInstance& instance);
 
 	void Clear();
-	void Build();
+	void Build(vk::BuildAccelerationStructureFlagsKHR buildFlags);
 
 
 	// TODO: Get this out of here
@@ -83,5 +84,6 @@ private:
 	RBuffer instanceBuffer;
 
 	std::vector<vk::AccelerationStructureInstanceKHR> instances;
+	std::vector<uint32> maxPrimitiveCounts;
 };
 } // namespace vl

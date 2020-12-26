@@ -24,28 +24,34 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 	: vk::PhysicalDevice(vkHandle)
 	, surface(inSurface)
 {
-	auto properties = getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPropertiesKHR>();
+	auto properties
+		= getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPipelinePropertiesKHR>();
 	generalProperties = properties.get<vk::PhysicalDeviceProperties2>();
-	raytracingProperties = properties.get<vk::PhysicalDeviceRayTracingPropertiesKHR>();
+	raytracingProperties = properties.get<vk::PhysicalDeviceRayTracingPipelinePropertiesKHR>();
 
-	CLOG_ABORT(raytracingProperties.shaderGroupHandleSize != 32u && raytracingProperties.maxRecursionDepth < 1,
+	CLOG_ABORT(raytracingProperties.shaderGroupHandleSize != 32u && raytracingProperties.maxRayRecursionDepth < 1,
 		"Rt properties not supported by device");
 
 	auto supportedFeaturesChain = getFeatures2<vk::PhysicalDeviceFeatures2,
 		vk::PhysicalDeviceBufferDeviceAddressFeatures, vk::PhysicalDeviceDescriptorIndexingFeatures,
-		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT, vk::PhysicalDeviceRayTracingFeaturesKHR>();
+		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT, vk::PhysicalDeviceAccelerationStructureFeaturesKHR,
+		vk::PhysicalDeviceRayTracingPipelineFeaturesKHR, vk::PhysicalDeviceRayQueryFeaturesKHR>();
 
 	auto& s_deviceFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceFeatures2>();
 	auto& s_bufferAddressFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
 	auto& s_descriptorIndexingFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
 	auto& s_dynamicStateExtFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-	auto& s_raytracingFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
+	auto& s_accelStructureFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceAccelerationStructureFeaturesKHR>();
+	auto& s_raytracingFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceRayTracingPipelineFeaturesKHR>();
+	auto& s_rayqueryFeatures = supportedFeaturesChain.get<vk::PhysicalDeviceRayQueryFeaturesKHR>();
 
 	auto& deviceFeatures = featuresChain.get<vk::PhysicalDeviceFeatures2>();
 	auto& bufferAddressFeatures = featuresChain.get<vk::PhysicalDeviceBufferDeviceAddressFeatures>();
 	auto& descriptorIndexingFeatures = featuresChain.get<vk::PhysicalDeviceDescriptorIndexingFeatures>();
 	auto& dynamicStateExtFeatures = featuresChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
-	auto& raytracingFeatures = featuresChain.get<vk::PhysicalDeviceRayTracingFeaturesKHR>();
+	auto& accelStructureFeatures = featuresChain.get<vk::PhysicalDeviceAccelerationStructureFeaturesKHR>();
+	auto& raytracingFeatures = featuresChain.get<vk::PhysicalDeviceRayTracingPipelineFeaturesKHR>();
+	auto& rayqueryFeatures = featuresChain.get<vk::PhysicalDeviceRayQueryFeaturesKHR>();
 
 
 	CHECK_ADD_FEATURE(deviceFeatures.features.samplerAnisotropy);
@@ -57,14 +63,17 @@ RPhysicalDevice::RPhysicalDevice(vk::PhysicalDevice vkHandle, vk::SurfaceKHR inS
 	CHECK_ADD_FEATURE(descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing);
 	CHECK_ADD_FEATURE(descriptorIndexingFeatures.descriptorBindingVariableDescriptorCount);
 	CHECK_ADD_FEATURE(dynamicStateExtFeatures.extendedDynamicState);
-	CHECK_ADD_FEATURE(raytracingFeatures.rayTracing);
-	CHECK_ADD_FEATURE(raytracingFeatures.rayQuery);
+	CHECK_ADD_FEATURE(accelStructureFeatures.accelerationStructure);
+	CHECK_ADD_FEATURE(raytracingFeatures.rayTracingPipeline);
+	CHECK_ADD_FEATURE(rayqueryFeatures.rayQuery);
 
 	extensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 		VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-		VK_KHR_RAY_TRACING_EXTENSION_NAME,
+		VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+		VK_KHR_RAY_QUERY_EXTENSION_NAME,
+		VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
 		VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
 	};
 

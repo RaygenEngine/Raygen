@@ -17,20 +17,9 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 	GpuGeometryGroup& gg, //
 	vk::BuildAccelerationStructureFlagsKHR buildFlags)
 {
-	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
 	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
-	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
-
-
-	// Setting up the creation info of acceleration structure
-	vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
-	asCreate
-		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
-		.setIndexType(vk::IndexType::eUint32)
-		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
-		.setMaxPrimitiveCount(gg.indexCount / 3)
-		.setMaxVertexCount(gg.vertexCount)
-		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
+	std::vector<vk::AccelerationStructureBuildRangeInfoKHR> asBuildRangeInfos{};
+	std::vector<uint32> maxPrimitiveCounts{};
 
 	// Building part
 	auto vertexAddress = Device->getBufferAddress(combinedVertexBuffer.handle());
@@ -38,71 +27,62 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 
 	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
 	triangles
-		.setVertexFormat(asCreate.vertexFormat) //
+		.setVertexFormat(vk::Format::eR32G32B32Sfloat) //
 		.setVertexData(vertexAddress)
 		.setVertexStride(vertexStride)
-		.setIndexType(asCreate.indexType)
+		.setIndexType(vk::IndexType::eUint32)
 		.setIndexData(indexAddress)
+		.setMaxVertex(gg.vertexCount - 1) // WIP:
 		.setTransformData({});
-
-	// WIP: temp hack
-	auto& arch = gg.material.Lock().archetype.Lock();
-	PodHandle<MaterialArchetype> pod{ arch.podUid };
-	auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
-	auto prp = cl.GetPropertyByName(std::string("mask"));
-
 
 	// Setting up the build info of the acceleration
 	vk::AccelerationStructureGeometryKHR asGeom{};
 	asGeom
-		.setGeometryType(asCreate.geometryType) //
-		.setFlags(vk::GeometryFlagBitsKHR::eOpaque);
+		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
+		.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
+		.geometry.setTriangles(triangles);
 
-	if (prp) {
-		auto& mat = gg.material.Lock();
-		PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
-		auto mati = pod2.Lock();
-		auto mask = mati->descriptorSet.uboData.end() - 4;
-		if (*mask == 1 || *mask == 2) {
-			asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
-			isMask = true;
+	{
+		// WIP: temp hack - this is part of every archetype
+		auto& arch = gg.material.Lock().archetype.Lock();
+		PodHandle<MaterialArchetype> pod{ arch.podUid };
+		auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
+		auto prp = cl.GetPropertyByName(std::string("mask"));
+		if (prp) {
+			auto& mat = gg.material.Lock();
+			PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
+			auto mati = pod2.Lock();
+			auto mask = mati->descriptorSet.uboData.end() - 4;
+			if (*mask == 1 || *mask == 2) {
+				asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
+				isMask = true;
+			}
 		}
 	}
 
-	asGeom.geometry.setTriangles(triangles);
+	const auto maxPrimitiveCount = gg.indexCount / 3;
 
 	// The primitive itself
-	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
-	offset
-		.setPrimitiveCount(asCreate.maxPrimitiveCount) //
+	vk::AccelerationStructureBuildRangeInfoKHR asBuildRange{};
+	asBuildRange
+		.setPrimitiveCount(maxPrimitiveCount) //
 		.setPrimitiveOffset(gg.indexBufferOffset)
 		.setFirstVertex(gg.indexOffset)
 		.setTransformOffset(0);
 
 	asGeoms.emplace_back(asGeom);
-	asCreateGeomInfos.emplace_back(asCreate);
-	asBuildOffsetInfos.emplace_back(offset);
+	asBuildRangeInfos.emplace_back(asBuildRange);
+	maxPrimitiveCounts.emplace_back(maxPrimitiveCount);
 
-	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
+	Build(buildFlags, asGeoms, asBuildRangeInfos, maxPrimitiveCounts);
 }
 
 BottomLevelAs::BottomLevelAs(const RBuffer& combinedVertexBuffer, uint32 vertexCount,
 	const RBuffer& combinedIndexBuffer, uint32 indexCount, vk::BuildAccelerationStructureFlagsKHR buildFlags)
 {
-	std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR> asCreateGeomInfos{};
 	std::vector<vk::AccelerationStructureGeometryKHR> asGeoms{};
-	std::vector<vk::AccelerationStructureBuildOffsetInfoKHR> asBuildOffsetInfos{};
-
-
-	// Setting up the creation info of acceleration structure
-	vk::AccelerationStructureCreateGeometryTypeInfoKHR asCreate{};
-	asCreate
-		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
-		.setIndexType(vk::IndexType::eUint32)
-		.setVertexFormat(vk::Format::eR32G32B32Sfloat)
-		.setMaxPrimitiveCount(indexCount / 3)
-		.setMaxVertexCount(vertexCount)
-		.setAllowsTransforms(VK_FALSE); // No adding transformation matrices
+	std::vector<vk::AccelerationStructureBuildRangeInfoKHR> asBuildRangeInfos{};
+	std::vector<uint32> maxPrimitiveCounts{};
 
 	// Building part
 	auto vertexAddress = Device->getBufferAddress(combinedVertexBuffer.handle());
@@ -110,99 +90,94 @@ BottomLevelAs::BottomLevelAs(const RBuffer& combinedVertexBuffer, uint32 vertexC
 
 	vk::AccelerationStructureGeometryTrianglesDataKHR triangles{};
 	triangles
-		.setVertexFormat(asCreate.vertexFormat) //
+		.setVertexFormat(vk::Format::eR32G32B32Sfloat) //
 		.setVertexData(vertexAddress)
 		.setVertexStride(sizeof(glm::vec3))
-		.setIndexType(asCreate.indexType)
+		.setIndexType(vk::IndexType::eUint32)
 		.setIndexData(indexAddress)
+		.setMaxVertex(vertexCount - 1) // WIP:
 		.setTransformData({});
 
 	// Setting up the build info of the acceleration
 	vk::AccelerationStructureGeometryKHR asGeom{};
 	asGeom
-		.setGeometryType(asCreate.geometryType) //
-		.setFlags(vk::GeometryFlagBitsKHR::eOpaque);
+		.setGeometryType(vk::GeometryTypeKHR::eTriangles) //
+		.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
+		.geometry.setTriangles(triangles);
 
-	asGeom.geometry.setTriangles(triangles);
+	const auto maxPrimitiveCount = indexCount / 3;
 
 	// The primitive itself
-	vk::AccelerationStructureBuildOffsetInfoKHR offset{};
-	offset
-		.setPrimitiveCount(asCreate.maxPrimitiveCount) //
+	vk::AccelerationStructureBuildRangeInfoKHR asBuildRange{};
+	asBuildRange
+		.setPrimitiveCount(maxPrimitiveCount) //
 		.setPrimitiveOffset(0u)
 		.setFirstVertex(0u)
 		.setTransformOffset(0);
 
 	asGeoms.emplace_back(asGeom);
-	asCreateGeomInfos.emplace_back(asCreate);
-	asBuildOffsetInfos.emplace_back(offset);
+	asBuildRangeInfos.emplace_back(asBuildRange);
+	maxPrimitiveCounts.emplace_back(maxPrimitiveCount);
 
-	Build(buildFlags, asCreateGeomInfos, asGeoms, asBuildOffsetInfos);
+	Build(buildFlags, asGeoms, asBuildRangeInfos, maxPrimitiveCounts);
 }
 
-
 void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
-	const std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR>& asCreateGeomInfos,
 	const std::vector<vk::AccelerationStructureGeometryKHR>& asGeoms,
-	const std::vector<vk::AccelerationStructureBuildOffsetInfoKHR>& asBuildOffsetInfos)
+	const std::vector<vk::AccelerationStructureBuildRangeInfoKHR>& asBuildRangeInfos,
+	const std::vector<uint32>& maxPrimitiveCounts)
 {
+	const vk::AccelerationStructureGeometryKHR* pGeometry = asGeoms.data();
+	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
+	asBuildGeomInfo
+		.setFlags(buildFlags) //
+		.setGeometryCount(static_cast<uint32>(asGeoms.size()))
+		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel)
+		.setPpGeometries(&pGeometry)
+		.setMode(vk::BuildAccelerationStructureModeKHR::eBuild);
+
+	auto asBuildSizes = Device->getAccelerationStructureBuildSizesKHR(
+		vk::AccelerationStructureBuildTypeKHR::eDevice, asBuildGeomInfo, maxPrimitiveCounts);
+
+	// TODO: use a single scratch buffer based on the maximum requirements of the scene BVH\
+	// approach: create a decent sized one (in Device probably)
+	// access it from within AS construction
+	// if memReqs.size > Device->scratchBufferAs.capab.size then we need to update it (rebuild it)
+	scratchBuffer = { asBuildSizes.buildScratchSize,
+		vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	asBuffer = { asBuildSizes.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR,
+		vk::MemoryPropertyFlagBits::eDeviceLocal };
+
 	vk::AccelerationStructureCreateInfoKHR asCreateInfo{};
 	asCreateInfo
-		.setFlags(buildFlags) //
-		.setGeometryInfos(asCreateGeomInfos)
+		.setBuffer(asBuffer.handle()) // is the buffer on which the acceleration structure will be stored.
+		.setOffset(0u) // is an offset in bytes from the base address of the buffer at which the acceleration structure
+					   // will be stored, and must be a multiple of 256.
+		.setSize(asBuildSizes.accelerationStructureSize) // is the size required for the acceleration structure.
 		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel);
 
 	uHandle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
 	DEBUG_NAME(uHandle, "Blas");
 
-	AllocateMemory();
-
-	// Compute the amount of scratch memory required by the acceleration structure builder
-	vk::AccelerationStructureMemoryRequirementsInfoKHR asMemReqsInfo{};
-	asMemReqsInfo
-		.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch) //
-		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
-		.setAccelerationStructure(uHandle.get());
-
-	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
-
-	// Acceleration structure build requires some scratch space to store temporary information
-	const auto scratchBufferSize = memReqs.memoryRequirements.size;
-
-	// TODO: use a single scratch buffer based on the maximum requirements of the scene BVH\
-	// approach: create a decent sized one (in Device probably)
-	// access it from within AS construction
-	// if memReqs.size > Device->scratchBufferAs.capab.size then we need to update it (rebuild it)
-	scratchBuffer
-		= { scratchBufferSize, vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
-			  vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
-
-	auto scratchAddress = Device->getBufferAddress(scratchBuffer.handle());
-
-	const vk::AccelerationStructureGeometryKHR* pGeometry = asGeoms.data();
-	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
 	asBuildGeomInfo
-		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace) //
-		.setUpdate(VK_FALSE)
+		.setScratchData(scratchBuffer.address()) //
 		.setSrcAccelerationStructure({})
-		.setDstAccelerationStructure(uHandle.get())
-		.setGeometryCount(static_cast<uint32>(asGeoms.size()))
-		.setGeometryArrayOfPointers(VK_FALSE)
-		.setType(vk::AccelerationStructureTypeKHR::eBottomLevel)
-		.setPpGeometries(&pGeometry)
-		.setScratchData(scratchAddress);
+		.setDstAccelerationStructure(uHandle.get());
 
 	// Pointers of offset
-	std::vector<const vk::AccelerationStructureBuildOffsetInfoKHR*> pBuildOffset(asBuildOffsetInfos.size());
-	for (size_t i = 0; i < asBuildOffsetInfos.size(); ++i) {
-		pBuildOffset[i] = &asBuildOffsetInfos[i];
+	std::vector<const vk::AccelerationStructureBuildRangeInfoKHR*> pBuildRange(asBuildRangeInfos.size());
+	for (size_t i = 0; i < asBuildRangeInfos.size(); ++i) {
+		pBuildRange[i] = &asBuildRangeInfos[i];
 	}
 
 	{
 		ScopedOneTimeSubmitCmdBuffer<Compute> cmdBuffer{};
 
-		cmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
+		cmdBuffer.buildAccelerationStructuresKHR(asBuildGeomInfo, pBuildRange);
 
 		vk::MemoryBarrier memoryBarrier{};
 		memoryBarrier
@@ -211,7 +186,7 @@ void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 
 		cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR,
 			vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, memoryBarrier, {}, {});
-		// TODO: compacting
+		// TODO: compacting - for those that don't update often
 	}
 }
 

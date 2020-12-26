@@ -147,14 +147,14 @@ void main() {
 	float opacity = sampledBaseColor.a;
 	// mask mode and cutoff
 	if(mat.mask == 1 && opacity < mat.alphaCutoff) {
-		ignoreIntersectionEXT();
+		ignoreIntersectionEXT;
 	}
 
 	// filtering, hack for tinted glass
 //	if(mat.mask == 2) { 
 //		if(rand(prd.seed) > opacity) {
 //			prd.filt *= sampledBaseColor.rgb;
-//			ignoreIntersectionEXT();
+//			ignoreIntersectionEXT;
 //		}
 //	}
 
