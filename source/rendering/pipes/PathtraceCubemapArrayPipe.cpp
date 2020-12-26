@@ -113,10 +113,10 @@ vk::UniquePipeline PathtraceCubemapArrayPipe::MakePipeline()
 		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop formulation
 		// instead.
 
-		.setMaxRecursionDepth(10) // Ray depth TODO:
+		.setMaxPipelineRayRecursionDepth(10) // Ray depth TODO:
 		.setLayout(layout());
 
-	auto pipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
+	auto pipeline = Device->createRayTracingPipelineKHRUnique({}, {}, rayPipelineInfo);
 
 	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size());                  // 3 shaders: raygen, miss, chit
 	uint32 groupHandleSize = Device->pd.raytracingProperties.shaderGroupHandleSize;  // Size of a program identifier
@@ -129,8 +129,11 @@ vk::UniquePipeline PathtraceCubemapArrayPipe::MakePipeline()
 	Device->getRayTracingShaderGroupHandlesKHR(
 		pipeline.value.get(), 0, groupCount, sbtSize, shaderHandleStorage.data());
 	// Write the handles in the SBT
-	m_rtSBTBuffer = RBuffer{ sbtSize, vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+	m_rtSBTBuffer = RBuffer{ sbtSize,
+		vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eShaderBindingTableKHR
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	DEBUG_NAME(m_rtSBTBuffer.handle(), "Shader Binding Table");
 
@@ -196,11 +199,10 @@ void PathtraceCubemapArrayPipe::Draw(
 
 	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
 
-	const vk::StridedBufferRegionKHR raygenShaderBindingTable{ m_rtSBTBuffer.handle(), rayGenOffset, progSize,
-		sbtSize };
-	const vk::StridedBufferRegionKHR missShaderBindingTable{ m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+	const vk::StridedDeviceAddressRegionKHR raygenShaderBindingTable{ m_rtSBTBuffer.address(), progSize, progSize };
+	const vk::StridedDeviceAddressRegionKHR missShaderBindingTable{ m_rtSBTBuffer.address(), progSize, progSize };
+	const vk::StridedDeviceAddressRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.address(), progSize, progSize };
+	const vk::StridedDeviceAddressRegionKHR callableShaderBindingTable;
 
 	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 

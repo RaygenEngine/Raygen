@@ -18,8 +18,8 @@ struct BottomLevelAs : public RAccelerationStructure {
 
 private:
 	void Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
-		const std::vector<vk::AccelerationStructureCreateGeometryTypeInfoKHR>& asCreateGeomInfos,
 		const std::vector<vk::AccelerationStructureGeometryKHR>& asGeoms,
-		const std::vector<vk::AccelerationStructureBuildOffsetInfoKHR>& asBuildOffsetInfos);
+		const std::vector<vk::AccelerationStructureBuildRangeInfoKHR>& asBuildRangeInfos,
+		const std::vector<uint32>& maxPrimitiveCounts);
 };
 } // namespace vl

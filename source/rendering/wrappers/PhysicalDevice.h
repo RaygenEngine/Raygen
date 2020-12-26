@@ -6,11 +6,12 @@ namespace vl {
 // Info about a physical device and a given surface (support details)
 struct RPhysicalDevice : vk::PhysicalDevice {
 	vk::PhysicalDeviceProperties2 generalProperties;
-	vk::PhysicalDeviceRayTracingPropertiesKHR raytracingProperties;
+	vk::PhysicalDeviceRayTracingPipelinePropertiesKHR raytracingProperties;
 
 	vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceBufferDeviceAddressFeatures,
 		vk::PhysicalDeviceDescriptorIndexingFeatures, vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
-		vk::PhysicalDeviceRayTracingFeaturesKHR>
+		vk::PhysicalDeviceAccelerationStructureFeaturesKHR, vk::PhysicalDeviceRayTracingPipelineFeaturesKHR,
+		vk::PhysicalDeviceRayQueryFeaturesKHR>
 		featuresChain;
 
 	std::vector<const char*> extensions;

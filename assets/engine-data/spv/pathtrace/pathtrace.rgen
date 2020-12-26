@@ -27,6 +27,7 @@ struct hitPayload
 	// sampleWeight has the sample weigth of light based on the MIS balanced heuristic
 	// 3-miss
 	// 4-mirror
+	// do not direct light sample
 	// 10-debug
 	int hitType; 
 	uint seed;

@@ -42,6 +42,7 @@ vk::AccelerationStructureInstanceKHR AsInstanceToVkGeometryInstanceKHR(const vl:
 
 	return gInst;
 }
+
 } // namespace
 
 
@@ -101,7 +102,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 			inst.cullMask = 0x01;
 			inst.flags = !gg.blas.isMask ? vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise
 										 : vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
-			instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
+
+			AddAsInstance(inst);
 
 			sceneDesc.AddGeomGroup(gg, geom->mesh.Lock(), transform);
 			totalGroups++;
@@ -120,7 +122,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 		inst.materialId = 1;  // WIP:
 		inst.cullMask = 0x02; // cull system, lights, geom etc
 		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
-		instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(inst));
+
+		AddAsInstance(inst);
 	}
 
 	auto imgSize = GpuAssetManager->Z_GetSize();
@@ -138,7 +141,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 	sceneDesc.WriteQuadlights(scene->Get<SceneQuadlight>().condensed);
 
 	sceneDesc.WriteGeomGroups();
-	Build();
+	Build(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 	Device->waitIdle();
 	g_tempGeometryGroups.clear();
 }
@@ -235,8 +238,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 
-
-	if (spotlightCount == 0) {
+	if (spotlights.empty()) {
 		return;
 	}
 
@@ -288,13 +290,11 @@ void RtSceneDescriptor::WriteDirlights(const std::vector<SceneDirlight*>& dirlig
 
 	Device->unmapMemory(dirlightsBuffer.memory());
 
-
 	vk::DescriptorBufferInfo bufInfo{};
 	bufInfo
 		.setOffset(0) //
 		.setRange(VK_WHOLE_SIZE)
 		.setBuffer(dirlightsBuffer.handle());
-
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
@@ -308,8 +308,7 @@ void RtSceneDescriptor::WriteDirlights(const std::vector<SceneDirlight*>& dirlig
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 
-
-	if (dirlightCount == 0) {
+	if (dirlights.empty()) {
 		return;
 	}
 
@@ -428,6 +427,9 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 
+	if (reflprobes.empty()) {
+		return;
+	}
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
@@ -446,15 +448,7 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 			cubeImages.emplace_back(viewInfoDefault);
 		}
 
-		if (reflprobes.empty()) {
-			auto view = GpuAssetManager->GetGpuHandle(PodHandle<Cubemap>()).Lock().cubemap.view();
-			viewInfoDefault.setImageView(view);
-			cubeImages.emplace_back(viewInfoDefault);
-			viewInfoDefault.setImageView(view);
-			cubeImages.emplace_back(viewInfoDefault);
-		}
 		DEBUG_NAME_AUTO(descSetReflprobes[i]);
-
 
 		vk::WriteDescriptorSet depthWrite{};
 		depthWrite
@@ -491,7 +485,6 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragr
 
 	Device->unmapMemory(irragridsBuffer.memory());
 
-
 	vk::DescriptorBufferInfo bufInfo{};
 	bufInfo
 		.setOffset(0) //
@@ -511,6 +504,10 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragr
 		Device->updateDescriptorSets({ bufWriteSet }, nullptr);
 	}
 
+	if (irragrids.empty()) {
+		return;
+	}
+
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
@@ -527,13 +524,7 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragr
 			cubeArrayImages.emplace_back(viewInfoDefault);
 		}
 
-		if (irragrids.empty()) {
-			auto view = GpuAssetManager->GetGpuHandle(PodHandle<Cubemap>()).Lock().cubemap.view();
-			viewInfoDefault.setImageView(view);
-			cubeArrayImages.emplace_back(viewInfoDefault);
-		}
 		DEBUG_NAME_AUTO(descSetIrragrids[i]);
-
 
 		vk::WriteDescriptorSet depthWrite{};
 		depthWrite
@@ -631,14 +622,24 @@ void TopLevelAs::AddAsInstance(AsInstance&& instance)
 	instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(instance));
 }
 
+void TopLevelAs::AddAsInstance(const AsInstance& instance)
+{
+	instances.emplace_back(AsInstanceToVkGeometryInstanceKHR(instance));
+}
+
 void TopLevelAs::Clear()
 {
 	instances.clear();
 }
 
-void TopLevelAs::Build()
+void TopLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags)
 {
 	vk::DeviceSize instanceDescsSizeInBytes = instances.size() * sizeof(VkAccelerationStructureInstanceKHR);
+
+	instanceBuffer = { instanceDescsSizeInBytes,
+		vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress | vk::BufferUsageFlagBits::eTransferDst,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	RBuffer stagingbuffer{ instanceDescsSizeInBytes, vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
@@ -646,87 +647,67 @@ void TopLevelAs::Build()
 	// copy data to buffer
 	stagingbuffer.UploadData(instances.data(), instanceDescsSizeInBytes);
 
-	instanceBuffer = { instanceDescsSizeInBytes,
-		vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress
-			| vk::BufferUsageFlagBits::eTransferDst,
-		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
-
 	instanceBuffer.CopyBuffer(stagingbuffer);
 
 	auto instanceAddress = Device->getBufferAddress(instanceBuffer.handle());
 
 	DEBUG_NAME(instanceBuffer, "TLASInstances");
 
-	vk::AccelerationStructureGeometryDataKHR geometry{};
-	geometry.instances.setArrayOfPointers(VK_FALSE);
-	geometry.instances.data.setDeviceAddress(instanceAddress);
+	vk::AccelerationStructureGeometryInstancesDataKHR insts{};
+	insts
+		.setArrayOfPointers(VK_FALSE) // an array of instances
+		.data.setDeviceAddress(instanceAddress);
 
-	vk::AccelerationStructureGeometryKHR asGeoms{};
-	asGeoms
+	vk::AccelerationStructureGeometryKHR asGeom{};
+	asGeom
 		.setGeometryType(vk::GeometryTypeKHR::eInstances) //
-		.setGeometry(geometry);
+		.geometry.setInstances(insts);
 
-	vk::AccelerationStructureCreateGeometryTypeInfoKHR geometryCreate{};
-	geometryCreate
-		.setGeometryType(vk::GeometryTypeKHR::eInstances) //
-		.setMaxPrimitiveCount(static_cast<uint32>(instances.size()))
-		.setAllowsTransforms(VK_TRUE);
+	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
+	asBuildGeomInfo
+		.setFlags(buildFlags) //
+		.setType(vk::AccelerationStructureTypeKHR::eTopLevel)
+		.setGeometries(asGeom) // one geometry count for top level - contains array with instances that point to blases
+		.setMode(vk::BuildAccelerationStructureModeKHR::eBuild);
+
+	auto asBuildSizes = Device->getAccelerationStructureBuildSizesKHR(
+		vk::AccelerationStructureBuildTypeKHR::eDevice, asBuildGeomInfo, 1u);
+
+	// TODO: use a single scratch buffer based on the maximum requirements of the scene BVH
+	scratchBuffer = { asBuildSizes.buildScratchSize,
+		vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
+
+	asBuffer = { asBuildSizes.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR,
+		vk::MemoryPropertyFlagBits::eDeviceLocal };
 
 	vk::AccelerationStructureCreateInfoKHR asCreateInfo{};
 	asCreateInfo
-		.setType(vk::AccelerationStructureTypeKHR::eTopLevel) //
-		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace)
-		.setGeometryInfos(geometryCreate);
-
+		.setBuffer(asBuffer.handle()) // is the buffer on which the acceleration structure will be stored.
+		.setOffset(0u) // is an offset in bytes from the base address of the buffer at which the acceleration structure
+					   // will be stored, and must be a multiple of 256.
+		.setSize(asBuildSizes.accelerationStructureSize) // is the size required for the acceleration structure.
+		.setType(vk::AccelerationStructureTypeKHR::eTopLevel);
 
 	uHandle = Device->createAccelerationStructureKHRUnique(asCreateInfo);
 
 	DEBUG_NAME(uHandle, "Scene Tlas");
 
-	AllocateMemory();
-
-	// Compute the amount of scratch memory required by the acceleration structure builder
-	vk::AccelerationStructureMemoryRequirementsInfoKHR asMemReqsInfo{};
-	asMemReqsInfo
-		.setType(vk::AccelerationStructureMemoryRequirementsTypeKHR::eBuildScratch) //
-		.setBuildType(vk::AccelerationStructureBuildTypeKHR::eDevice)
-		.setAccelerationStructure(uHandle.get());
-
-	auto memReqs = Device->getAccelerationStructureMemoryRequirementsKHR(asMemReqsInfo);
-
-	// Acceleration structure build requires some scratch space to store temporary information
-	const auto scratchBufferSize = memReqs.memoryRequirements.size;
-
-	// TODO: use a single scratch buffer based on the maximum requirements of the scene BVH
-	scratchBuffer
-		= { scratchBufferSize, vk::BufferUsageFlagBits::eRayTracingKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
-			  vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
-
-	auto scratchAddress = Device->getBufferAddress(scratchBuffer.handle());
-
-	vk::AccelerationStructureGeometryKHR* pGeometry = &asGeoms;
-	vk::AccelerationStructureBuildGeometryInfoKHR asBuildGeomInfo{};
-	asBuildGeomInfo
-		.setFlags(vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace) //
-		.setUpdate(VK_FALSE)
+	asBuildGeomInfo.setScratchData(scratchBuffer.address())
 		.setSrcAccelerationStructure({})
-		.setDstAccelerationStructure(uHandle.get())
-		.setGeometryCount(1u)
-		.setGeometryArrayOfPointers(VK_FALSE)
-		.setType(vk::AccelerationStructureTypeKHR::eTopLevel)
-		.setPpGeometries(&pGeometry)
-		.setScratchData(scratchAddress);
+		.setDstAccelerationStructure(uHandle.get());
 
 	// Build Offsets info: n instances
-	vk::AccelerationStructureBuildOffsetInfoKHR buildOffsetInfo{};
-	buildOffsetInfo
+	vk::AccelerationStructureBuildRangeInfoKHR buildRangeInfo{};
+	buildRangeInfo
 		.setFirstVertex(0) //
-		.setPrimitiveCount(static_cast<uint32_t>(instances.size()))
+		.setPrimitiveCount(static_cast<uint32>(instances.size()))
 		.setPrimitiveOffset(0)
 		.setTransformOffset(0);
 
-	std::vector<const vk::AccelerationStructureBuildOffsetInfoKHR*> pBuildOffset;
-	pBuildOffset.push_back(&buildOffsetInfo);
+	std::vector<const vk::AccelerationStructureBuildRangeInfoKHR*> pBuildRange;
+	pBuildRange.push_back(&buildRangeInfo);
 
 	{
 		ScopedOneTimeSubmitCmdBuffer<Compute> cmdBuffer;
@@ -741,7 +722,7 @@ void TopLevelAs::Build()
 		cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
 			vk::PipelineStageFlagBits::eAccelerationStructureBuildKHR, vk::DependencyFlags{ 0 }, barrier, {}, {});
 
-		cmdBuffer.buildAccelerationStructureKHR(asBuildGeomInfo, pBuildOffset);
+		cmdBuffer.buildAccelerationStructuresKHR(asBuildGeomInfo, pBuildRange);
 	}
 }
 } // namespace vl

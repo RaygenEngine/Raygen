@@ -134,10 +134,10 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop
 		// formulation instead.
 
-		.setMaxRecursionDepth(10) // Ray depth TODO:
+		.setMaxPipelineRayRecursionDepth(10) // Ray depth TODO:
 		.setLayout(layout());
 
-	auto pipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
+	auto pipeline = Device->createRayTracingPipelineKHRUnique({}, {}, rayPipelineInfo);
 
 	auto groupCount = static_cast<uint32>(m_rtShaderGroups.size()); // 4 shaders: raygen, miss, chit, chit2
 	uint32 groupHandleSize = Device->pd.raytracingProperties.shaderGroupHandleSize;  // Size of a program identifier
@@ -150,8 +150,11 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 	Device->getRayTracingShaderGroupHandlesKHR(
 		pipeline.value.get(), 0, groupCount, sbtSize, shaderHandleStorage.data());
 	// Write the handles in the SBT
-	m_rtSBTBuffer = RBuffer{ sbtSize, vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+	m_rtSBTBuffer = RBuffer{ sbtSize,
+		vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eShaderBindingTableKHR
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+		vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	DEBUG_NAME(m_rtSBTBuffer.handle(), "Shader Binding Table");
 
@@ -218,33 +221,18 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 
 	vk::DeviceSize progSize = Device->pd.raytracingProperties.shaderGroupBaseAlignment; // Size of a program identifier
 
-	// RayGen index
-	vk::DeviceSize rayGenOffset = 0u * progSize; // Start at the beginning of m_sbtBuffer
-
 	// Miss index
 	vk::DeviceSize missOffset = 1u * progSize; // Jump over raygen
-	vk::DeviceSize missStride = progSize;
 
 	// Hit index
 	vk::DeviceSize hitGroupOffset = 2u * progSize; // Jump over the previous shaders
-	vk::DeviceSize hitGroupStride = progSize;
 
-
-	// We can finally call traceRaysKHR that will add the ray tracing launch in the command buffer. Note that the
-	// SBT buffer is mentioned several times. This is due to the possibility of separating the SBT into several
-	// buffers, one for each type: ray generation, miss shaders, hit groups, and callable shaders (outside the scope
-	// of this tutorial). The last three parameters are equivalent to the grid size of a compute launch, and
-	// represent the total number of threads. Since we want to trace one ray per pixel, the grid size has the width
-	// and height of the output image, and a depth of 1.
-
-	vk::DeviceSize sbtSize = progSize * (vk::DeviceSize)m_rtShaderGroups.size();
-
-	const vk::StridedBufferRegionKHR raygenShaderBindingTable
-		= { m_rtSBTBuffer.handle(), rayGenOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR missShaderBindingTable = { m_rtSBTBuffer.handle(), missOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR hitShaderBindingTable
-		= { m_rtSBTBuffer.handle(), hitGroupOffset, progSize, sbtSize };
-	const vk::StridedBufferRegionKHR callableShaderBindingTable;
+	const vk::StridedDeviceAddressRegionKHR raygenShaderBindingTable{ m_rtSBTBuffer.address(), progSize, progSize };
+	const vk::StridedDeviceAddressRegionKHR missShaderBindingTable{ m_rtSBTBuffer.address() + missOffset, progSize,
+		progSize };
+	const vk::StridedDeviceAddressRegionKHR hitShaderBindingTable{ m_rtSBTBuffer.address() + hitGroupOffset, progSize,
+		progSize };
+	const vk::StridedDeviceAddressRegionKHR callableShaderBindingTable;
 
 	cmdBuffer.traceRaysKHR(&raygenShaderBindingTable, &missShaderBindingTable, &hitShaderBindingTable,
 		&callableShaderBindingTable, extent.width, extent.height, 1);

@@ -96,6 +96,7 @@ void Layer_::DrawFrame()
 		}
 		Device->waitIdle();
 		swapOutput->SetAttachedRenderer(renderer);
+		Device->waitIdle();
 	}
 
 	// DOC:

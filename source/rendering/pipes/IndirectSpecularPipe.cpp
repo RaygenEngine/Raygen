@@ -121,9 +121,9 @@
 //		// Note that it is preferable to keep the recursion level as low as possible, replacing it by a loop
 //		// formulation instead.
 //
-//		.setMaxRecursionDepth(10) // Ray depth TODO:
+//		.setMaxPipelineRayRecursionDepth(10) // Ray depth TODO:
 //		.setLayout(m_rtPipelineLayout.get());
-//	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, rayPipelineInfo);
+//	m_rtPipeline = Device->createRayTracingPipelineKHRUnique({}, {}, rayPipelineInfo);
 //
 //	CreateRtShaderBindingTable();
 //

@@ -24,8 +24,8 @@ vec3 PtLights_ShadowRayFilter(accelerationStructureEXT topLevelAs, vec3 origin, 
 	// trace ray
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFD,           // cullMask - nothing
-				2,              // sbtRecordOffset
+				0xFD,           // cullMask - quadlights
+				2,              // sbtRecordOffset - shadow shaders offset
 				0,              // sbtRecordStride
 				1,              // shadow missIndex
 				origin,         // ray origin
