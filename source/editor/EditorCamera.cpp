@@ -185,8 +185,9 @@ void EditorCamera::TeleportToCamera(Entity entity)
 	if (!entity) {
 		return;
 	}
-	// BUG: filter scale
-	entity->SetNodeTransformWCS(transform.transform);
+
+	entity->SetNodeTransformWCS(
+		math::transformMat(entity.Basic().world().scale, transform.orientation, transform.position));
 }
 
 void EditorCamera::Pilot(Entity entity)
