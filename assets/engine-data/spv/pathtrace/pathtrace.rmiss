@@ -21,16 +21,6 @@ struct hitPayload
 	uint seed;
 };
 
-layout(push_constant) uniform PC
-{
-	int bounces;
-	int frame;
-	int pointlightCount;
-	int spotlightCount;
-	int dirlightCount;
-	int quadlightCount;
-};
-
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
