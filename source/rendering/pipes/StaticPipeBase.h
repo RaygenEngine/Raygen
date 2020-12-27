@@ -1,4 +1,6 @@
 #pragma once
+#include "rendering/wrappers/Buffer.h"
+
 // Fwd declared here for subclasses
 struct SceneRenderDesc;
 
@@ -28,4 +30,26 @@ public:
 	vk::Pipeline pipeline() const { return *m_pipeline; }
 	vk::PipelineLayout layout() const { return *m_layout; }
 };
+
+
+class StaticRaytracingPipeBase : public StaticPipeBase {
+
+	RBuffer m_rtSBTBuffer;
+	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
+	std::vector<vk::PipelineShaderStageCreateInfo> m_stages;
+	size_t missCount{};
+
+
+protected:
+	vk::StridedDeviceAddressRegionKHR m_raygenShaderBindingTable;
+	vk::StridedDeviceAddressRegionKHR m_missShaderBindingTable;
+	vk::StridedDeviceAddressRegionKHR m_hitShaderBindingTable;
+	vk::StridedDeviceAddressRegionKHR m_callableShaderBindingTable;
+
+	void AddRaygenGroup(vk::ShaderModule shader);
+	void AddMissGroup(vk::ShaderModule shader);
+	void AddHitGroup(vk::ShaderModule chit, vk::ShaderModule ahit = {});
+	vk::UniquePipeline MakeRtPipeline(vk::RayTracingPipelineCreateInfoKHR& createInfo);
+};
+
 } // namespace vl
