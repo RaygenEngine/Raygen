@@ -1,4 +1,4 @@
-#include "PathtracePipe.h"
+#include "StochasticPathtracePipe.h"
 
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/Renderer.h"
@@ -9,8 +9,6 @@
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
 
-
-ConsoleVariable<int32> cons_pathtraceBounces{ "r.pathtrace.bounces", 1, "Set pathtrace bounces" };
 
 namespace {
 struct PushConstant {
@@ -26,7 +24,7 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniquePipelineLayout PathtracePipe::MakePipelineLayout()
+vk::UniquePipelineLayout StochasticPathtracePipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
@@ -42,21 +40,21 @@ vk::UniquePipelineLayout PathtracePipe::MakePipelineLayout()
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
 }
 
-vk::UniquePipeline PathtracePipe::MakePipeline()
+vk::UniquePipeline StochasticPathtracePipe::MakePipeline()
 {
 	auto getShader = [](const auto& path) -> auto&
 	{
 		GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader(path);
 		gpuShader.onCompile = [&]() {
-			StaticPipes::Recompile<PathtracePipe>();
+			StaticPipes::Recompile<StochasticPathtracePipe>();
 		};
 		return gpuShader;
 	};
 
 	// all rt shaders here
-	auto& ptshader = getShader("engine-data/spv/pathtrace/pathtrace.shader");
-	auto& ptQuadlightShader = getShader("engine-data/spv/pathtrace/pathtrace-quadlight.shader");
-	auto& ptShadowShadow = getShader("engine-data/spv/pathtrace/pathtrace-shadow.shader");
+	auto& ptshader = getShader("engine-data/spv/pathtrace/stochastic/spt.shader");
+	auto& ptQuadlightShader = getShader("engine-data/spv/pathtrace/stochastic/spt-quadlight.shader");
+	auto& ptShadowShadow = getShader("engine-data/spv/pathtrace/stochastic/spt-shadow.shader");
 
 	auto get = [](auto shader) {
 		return *shader.Lock().module;
@@ -78,8 +76,8 @@ vk::UniquePipeline PathtracePipe::MakePipeline()
 	return MakeRtPipeline(rayPipelineInfo);
 }
 
-void PathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame) const
+void StochasticPathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
+	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame, int32 bounces) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
 
@@ -108,7 +106,7 @@ void PathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
 
 	PushConstant pc{
-		std::max(*cons_pathtraceBounces, 0),
+		bounces,
 		frame,
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,

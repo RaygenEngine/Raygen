@@ -87,6 +87,8 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
+	PROFILE_SCOPE(Renderer);
+
 	if (Input.IsJustPressed(Key::Tab)) {
 		if (renderer == Renderer) {
 			renderer = Pathtracer;

@@ -12,21 +12,16 @@
 #include "pathtrace/lights.glsl"
 #include "surface.glsl"
 
-// Values before being filled
 struct hitPayload
 {
 	vec3 radiance; // previous radiance
 
-	vec3 origin; // origin and dir of THIS ray
+	vec3 origin; // this ray stuff
 	vec3 direction;
+	vec3 attenuation; 
+	float pdf;
 
-	vec3 attenuation;  // attenuation of THIS ray
-	float sampleWeight;
-
-	//float etaI; // eta of inner medium THIS ray travels
-	//float etaO; // eta of outer medium IF THIS ray exits
-
-	int hitType; // previous hit type
+	int hitType; 
 	uint seed;
 };
 
@@ -219,56 +214,6 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	vec3 radiance = vec3(0.f);
-
-	// DIRECT 
-	{
-		int totalLights = pointlightCount + quadlightCount + spotlightCount + dirlightCount;
-		float u = rand(prd.seed);
-		int i = int(floor(u * totalLights));
-		float p_selectLight = 1.0 / float(totalLights); // pick one of the lights
-
-#define pIndex i
-#define qIndex pIndex - pointlightCount
-#define sIndex qIndex - quadlightCount
-#define dIndex sIndex - spotlightCount
-
-		// PERF:
-		// pointlights // WIP: aperture of effect
-		if(pIndex < pointlightCount) {
-		    Pointlight pl = pointlights.light[pIndex];
-
-			radiance += Pointlight_LightSample(topLevelAs, pl, surface, prd.seed) / p_selectLight; 
-		}
-
-		// quadlights WIP: area - sphere
-		else if (qIndex < quadlightCount) {
-			Quadlight ql = quadlights.light[qIndex];
-			// direct light sample, brdf sample from hit shader and MIS
-			radiance += Quadlight_LightSample(topLevelAs, ql, surface, prd.seed) / p_selectLight; 
-		}
-
-		// spotlights WIP: area - hemisphere
-		else if (sIndex < spotlightCount) {
-			Spotlight sl = spotlights.light[sIndex];
-
-			radiance += Spotlight_LightSample(topLevelAs, sl, surface, prd.seed) / p_selectLight;  
-		}
-
-		// dirlights WIP: area - disk for each position
-		else if (dIndex < dirlightCount) {
-			Dirlight dl = dirlights.light[dIndex];
-
-			radiance += Dirlight_LightSample(topLevelAs, dl, surface, prd.seed) / p_selectLight;  
-		}
-
-		// add emissive
-		radiance += surface.emissive;
-
-	}
-
-	prd.radiance = radiance;
-
 	// INDIRECT - next step
 	{
 		// mirror H = N 
@@ -294,9 +239,8 @@ void main() {
 
 			// diffuse
 			if(rand(prd.seed) > p_transparency) {
-				prd.attenuation = kt * SampleDiffuseDirection(surface, prd.seed, prd.sampleWeight);
-				prd.sampleWeight /= (1 - p_transparency);
-				prd.hitType = 1;
+				prd.attenuation = kt * SampleDiffuseDirection(surface, prd.seed, prd.pdf);
+				prd.pdf *= (1 - p_transparency);
 			}
 
 			// transmission
@@ -312,18 +256,17 @@ void main() {
 		
 				float iorRatio = etaI / etaO;
 
-
 				// specular
 				if(surface.a < SPEC_THRESHOLD) {
 					prd.attenuation =  kt * SampleSpecularTransmissionDirection(surface, iorRatio);
-					prd.sampleWeight = 1.f;
-					prd.hitType = 4; // mirror
+					prd.pdf = 1.f;
+
 				}
 
 				// glossy
 				else {
 					surface.l =  refract(-surface.v, H, iorRatio);		
-					cacheBackSurfaceDots(surface);
+					cacheSurfaceDots(surface);
 
 					float pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 					if(pdf < BIAS) {
@@ -334,12 +277,11 @@ void main() {
 					float brdfr_nol = microfacetBtdfNoL(surface, iorRatio);
 
 					prd.attenuation = kt * brdfr_nol;
-					prd.sampleWeight = 1.f / pdf;
-					prd.hitType = 1;
+					prd.pdf = pdf;
 				}
 			}
 
-			prd.sampleWeight /= (1 - p_specular);
+			prd.pdf *= (1 - p_specular);
 		}
 
 		// reflection
@@ -348,8 +290,7 @@ void main() {
 			// mirror
 			if(surface.a < SPEC_THRESHOLD){
 				prd.attenuation = kr * SampleSpecularReflectionDirection(surface);
-				prd.sampleWeight = 1.f;
-				prd.hitType = 4; // mirror
+				prd.pdf = 1.f;
 			}
 
 			// glossy
@@ -366,13 +307,13 @@ void main() {
 				float btdfr_nol = microfacetBrdfNoL(surface);
 
 				prd.attenuation = kr * btdfr_nol;
-				prd.sampleWeight = 1.f / pdf;
-				prd.hitType = 1;
+				prd.pdf = pdf;
 			}
 
-			prd.sampleWeight /= p_specular;
+			prd.pdf *= p_specular;
 		}
 
+		prd.hitType = 1; // general
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);
 	}

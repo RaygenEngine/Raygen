@@ -11,14 +11,21 @@
 
 #include "random.glsl"
 
-struct shadowHitPayload
+struct hitPayload
 {
-	vec3 filt; 
+	vec3 radiance; // previous radiance
+
+	vec3 origin; // stuff of THIS ray
+	vec3 direction;
+	vec3 attenuation; 
+	float weightedPdf;
+
+	int hitType; // previous hit type
 	uint seed;
 };
 
 hitAttributeEXT vec2 baryCoord;
-layout(location = 1) rayPayloadInEXT shadowHitPayload prd;
+layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 struct Vertex
 {
@@ -139,13 +146,4 @@ void main() {
 	if(mat.mask == 1 && opacity < mat.alphaCutoff) {
 		ignoreIntersectionEXT;
 	}
-
-	// filtering, hack for tinted glass
-//	if(mat.mask == 2) { 
-//		if(rand(prd.seed) > opacity) {
-//			prd.filt *= sampledBaseColor.rgb;
-//			ignoreIntersectionEXT;
-//		}
-//	}
-
 }

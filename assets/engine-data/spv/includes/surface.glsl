@@ -11,6 +11,8 @@ struct Surface {
     // surface
     Onb basis;
 
+    vec3 ng;
+    
     vec3 v;
     vec3 l; 
     vec3 h;
@@ -44,19 +46,18 @@ vec3 surfaceOutgoingLightDir(Surface surface)
     return outOnbSpace(surface.basis, surface.v);
 }
 
-void cacheSurfaceDots(inout Surface surface)
+bool isIncidentLightDirAboveSurfaceGeometry(Surface surface)
 {
-    surface.h = normalize(surface.v + surface.l); 
-    surface.noh = max(Ndot(surface.h), BIAS);
-    surface.loh = max(dot(surface.l, surface.h), BIAS);
-    surface.nol = max(Ndot(surface.l), BIAS);
+    return dot(surface.ng, surface.l) > 0;
 }
 
-// caches as if the light direction hits the frontface
-void cacheBackSurfaceDots(inout Surface surface)
+void cacheSurfaceDots(inout Surface surface)
 {
     vec3 l = surface.l;
-    l.z *= -1;
+    // if l and v are not in the same hemisphere 
+    if(!sameHemisphere(surface.v, surface.l)) {
+        l.z *= -1; // bring l in the same for correct dot calculation
+    }
 
     surface.h = normalize(surface.v + l); 
     surface.noh = max(Ndot(surface.h), BIAS);
@@ -198,14 +199,14 @@ float microfacetBrdfNoL(Surface surface)
     return numerator / max(denominator, 0.001); 
 }
 
-float microfacetBtdfNoL(Surface surface, float iorRation) 
+// SMATH:
+float microfacetBtdfNoL(Surface surface, float iorRatio) 
 {
     float NDF = D_GGX(surface.noh, surface.a);
     float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
 
-    // SMATH:
     float numerator = NDF * G * surface.loh * surface.loh;
-    float denominator =  (surface.loh + iorRation * surface.loh); 
+    float denominator =  (surface.loh + iorRatio * surface.loh); 
     denominator *= denominator;
     denominator *= surface.nov;// omit nol
 
@@ -229,22 +230,22 @@ vec3 SampleWorldDirection(inout Surface surface, vec3 L)
 }
 
 // returns specular transmission brdf * nol
-float SampleSpecularTransmissionDirection(inout Surface surface, float iorRation)
+float SampleSpecularTransmissionDirection(inout Surface surface, float iorRatio)
 {
-    surface.l = refract(-surface.v, iorRation);
-    cacheBackSurfaceDots(surface);
+    surface.l = refract(-surface.v, iorRatio);
+    cacheSurfaceDots(surface);
 
-    return iorRation * iorRation; // omit nol
+    return iorRatio * iorRatio; // omit nol
 }
 
 // diffuse brdf * nol
-vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     vec2 u = rand2(seed); 
     surface.l = cosineSampleHemisphere(u);
     cacheSurfaceDots(surface);
 
-    sampleWeight = 1.0 / cosineHemispherePdf(surface.nol);
+    pdf = cosineHemispherePdf(surface.nol);
 
     vec3 brdf_d = DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo);
 	
@@ -261,10 +262,10 @@ float SampleSpecularReflectionDirection(inout Surface surface)
 }
 
 // returns microfacet brdf * nol
-float ImportanceSampleReflectionDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+float ImportanceSampleReflectionDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     if(surface.a < SPEC_THRESHOLD){
-        sampleWeight = 1.0;
+        pdf = 1.0;
         return SampleSpecularReflectionDirection(surface);
     }
 
@@ -274,19 +275,16 @@ float ImportanceSampleReflectionDirection(inout Surface surface, inout uint seed
     surface.l =  reflect(-surface.v, H);
     cacheSurfaceDots(surface);
 
-	float pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
-    pdf = max(pdf, BIAS); // WIP: if small... notify to stop
-
-    sampleWeight = 1 / pdf;
+    pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 
     return microfacetBrdfNoL(surface); 
 }
 
 // returns microfacet brdf * nol
-float SampleReflectionDirection(inout Surface surface, inout uint seed, out float sampleWeight)
+float SampleReflectionDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     if(surface.a < SPEC_THRESHOLD){
-        sampleWeight = 1.0;
+        pdf = 1.0;
         return SampleSpecularReflectionDirection(surface);
     }
 
@@ -294,9 +292,46 @@ float SampleReflectionDirection(inout Surface surface, inout uint seed, out floa
     surface.l = cosineSampleHemisphere(u);
     cacheSurfaceDots(surface);
 
-    sampleWeight = 1.0 / cosineHemispherePdf(surface.nol);
+    pdf = cosineHemispherePdf(surface.nol);
 
     return microfacetBrdfNoL(surface); 
+}
+
+// returns microfacet btdf * nol
+float ImportanceSampleTransmissionDirection(inout Surface surface, inout uint seed, float iorRatio, out float pdf)
+{
+    if(surface.a < SPEC_THRESHOLD){
+        pdf = 1.0;
+        return SampleSpecularTransmissionDirection(surface, iorRatio);
+    }
+
+    vec2 u = rand2(seed);
+    vec3 H = importanceSampleGGX(u, surface.a);
+
+    surface.l = refract(-surface.v, H, iorRatio);
+    cacheSurfaceDots(surface);
+
+    pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
+
+    return microfacetBtdfNoL(surface, iorRatio); 
+}
+
+// returns microfacet btdf * nol
+float SampleTransmissionDirection(inout Surface surface, inout uint seed, float iorRatio, out float pdf)
+{
+    if(surface.a < SPEC_THRESHOLD){
+        pdf = 1.0;
+        return SampleSpecularTransmissionDirection(surface, iorRatio);
+    }
+
+    vec2 u = rand2(seed); 
+    surface.l = cosineSampleHemisphere(u);
+    surface.l.z *= -1;
+    cacheSurfaceDots(surface);
+
+    pdf = cosineHemispherePdf(surface.nol);
+
+    return microfacetBtdfNoL(surface, iorRatio); 
 }
 
 #endif

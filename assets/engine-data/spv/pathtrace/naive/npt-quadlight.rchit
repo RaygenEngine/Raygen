@@ -5,18 +5,15 @@
 #define RAY
 #include "global.glsl"
 
-// Values before being filled
 struct hitPayload
 {
-	vec3 radiance; // previous radiance
+	vec3 radiance; // to be filled
 
-	vec3 origin; // origin and dir of THIS ray
+	vec3 origin; // this ray stuff
 	vec3 direction;
+	vec3 attenuation; 
 
-	vec3 attenuation;  // attenuation of THIS ray
-	float sampleWeight;
-
-	int hitType; // previous hit type
+	int hitType; 
 	uint seed;
 };
 
@@ -48,37 +45,14 @@ void main() {
 		return;
 	}
 
-	LnoL = abs(LnoL);
+	prd.radiance = ql.color * ql.intensity;  
 
 	// direct hit 
 	if(prd.hitType == 0) {
-		prd.radiance = ql.color * ql.intensity;  
 		prd.radiance = vec3(max(prd.radiance.x, 0.0),
 		                    max(prd.radiance.y, 0.0),
 							max(prd.radiance.z, 0.0)) / vec3(max(max(prd.radiance), 1.0));
-		prd.hitType = 2;
-		return;
 	}
 
-//	// mirror WIP: what do?
-//	if(prd.hitType == 4) {
-//	}
-
-	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
-	
-	float dist = distance(hitpoint, gl_WorldRayOriginEXT);
-
-
-	float attenuation = (ql.constantTerm + ql.linearTerm * dist + 
-  			     ql.quadraticTerm * (dist * dist));
-
-	float pdf_light = (attenuation) / (ql.width * ql.height * LnoL); 
-	float pdf_brdf = 1.0 / prd.sampleWeight;
-	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
-
-	vec3 Le = ql.color * ql.intensity; 
-
-	prd.radiance = Le;
-	prd.sampleWeight = mis_weight;
 	prd.hitType = 2;
 }
