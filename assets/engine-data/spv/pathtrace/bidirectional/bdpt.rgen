@@ -13,13 +13,11 @@ struct hitPayload
 	vec3 origin; // next ray stuff
 	vec3 direction;
 	vec3 attenuation; 
-	float pdf;
 
 	int hitType; 
 	// 0 - direct
 	// 1 - general
-	// 2 - light surface 
-	// 3 - miss
+	// 2 - hits radiant surface \ stop
 	uint seed;
 };
 
@@ -37,6 +35,7 @@ layout(set = 0, binding = 0, rgba32f) uniform image2D image;
 layout(set = 0, binding = 1, rgba32f) uniform image2D progressive;
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
@@ -58,17 +57,12 @@ void TraceRay() {
 				tMax,           // ray max range
 				0               // payload (location = 0)
 	);
-
-	// CHECK:
-    if(isnan(prd.radiance.x) || isnan(prd.radiance.y) || isnan(prd.radiance.z)){
-    	prd.radiance = vec3(0,0,0);
-    }
 }
 
 bool RRTerminationCheck(inout vec3 totalAttenuation) {
 
 	// work with total atten for now
-	float p_spawn = max(max(totalAttenuation), 0.1);
+	float p_spawn = max(max(totalAttenuation), 0.0);
 	if(rand(prd.seed) > p_spawn) {
 		return true; 
 	}
@@ -77,55 +71,96 @@ bool RRTerminationCheck(inout vec3 totalAttenuation) {
 	return false;
 }
 
+struct LightPathVertex {
+	vec3 position;
+	vec3 normal;
+	vec3 value; // attenuated light value
+};
+
 void main() {
-
 	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
-	float r1 = rand(prd.seed);
-    float r2 = rand(prd.seed);
+			
+	LightPathVertex lightpath[4];
+	// LIGHT PATH
+	{
 
-	vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+		int totalLights = quadlightCount;
+		float u = rand(prd.seed);
+		int i = int(floor(u * totalLights));
+		float p_selectLight = 1.0 / float(totalLights); // pick one of the lights
 
-	const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
-	const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
-	vec2       d           = inUV * 2.0 - 1.0;
+		Quadlight ql = quadlights.light[i];
+		
+		prd.radiance = ql.color * ql.intensity; 
+		prd.origin = ql.center; // WIP: random vertex on surface
+		prd.direction = ql.normal; // WIP: random direction on hemishpere 
 
-	vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
-	vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
-	vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
+		prd.attenuation = vec3(1.f);
+		prd.hitType = 0; // direct
 
-	int hitType; 
+		vec3 currentTotalAttenuation = vec3(1);
+		for(int depth = 0; depth < 4; ++depth) {
+			lightpath[depth].position = prd.origin;
+			// WIP: normal
+			currentTotalAttenuation *= prd.attenuation;
 
-	prd.radiance = vec3(0.f);
+			TraceRay(); 
 
-	prd.origin = origin.xyz;
-	prd.direction = direction.xyz;
-
-	prd.attenuation = vec3(1.f);
-	prd.pdf = 1.f;
-
-	prd.hitType = 0; // direct
+			lightpath[depth].value = prd.radiance * currentTotalAttenuation;
+		}
+	}
 
 	vec3 accumColor = vec3(0.f);
-	vec3 currentTotalAttenuation = vec3(1);
-	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 2 && prd.hitType != 3); ++depth)
+	// CAMERA PATH
 	{
-		currentTotalAttenuation *= prd.attenuation / prd.pdf;
-
-		TraceRay(); 
 		
-		accumColor += prd.radiance * currentTotalAttenuation;
+		float r1 = rand(prd.seed);
+		float r2 = rand(prd.seed);
 
-		// evaluate only if depth > 5
-		if(depth > 5 && RRTerminationCheck(currentTotalAttenuation)) {
-			break;
+		vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+
+		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
+		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+		vec2       d           = inUV * 2.0 - 1.0;
+
+		vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
+		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+		vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
+
+		
+
+		prd.origin = origin.xyz;
+		prd.direction = direction.xyz;
+
+		prd.attenuation = vec3(1.f);
+
+		prd.hitType = 0; // direct
+
+		
+		vec3 currentTotalAttenuation = vec3(1);
+		for(int depth = 0; depth < bounces + 1 && prd.hitType != 2; ++depth) {
+
+			currentTotalAttenuation *= prd.attenuation;
+
+			prd.radiance = vec3(0.f);
+			TraceRay(); // WIP: MIS the pdf 
+
+			// merge with all light subpaths
+			for(int i = 0; i < 4; ++i) { 
+				// test contribution - visibility with light vertex use prd.origin
+				//prd.radiance += // add light vertex contribution
+			}
+
+			accumColor += prd.radiance * currentTotalAttenuation;
+
+			if(RRTerminationCheck(currentTotalAttenuation)) {
+				break;
+			}
 		}
-
-		// if RR is evaluated and we reach here: nextTotalAttenuation /= p_spawn;
 	}
 
 	// Do accumulation
-	if(frame > 0)
-	{
+	if(frame > 0) {
 		float a = 1.0f / float(frame);
 		vec3 old_color = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy)).xyz;
 		accumColor = mix(old_color, accumColor, a);

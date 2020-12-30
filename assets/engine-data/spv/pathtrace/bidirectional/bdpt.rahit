@@ -13,12 +13,11 @@
 
 struct hitPayload
 {
-	vec3 radiance; // previous radiance
+	vec3 radiance; // to be filled
 
 	vec3 origin; // this ray stuff
 	vec3 direction;
 	vec3 attenuation; 
-	float pdf;
 
 	int hitType; 
 	uint seed;
