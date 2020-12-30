@@ -9,6 +9,7 @@
 #define RAY
 #include "global.glsl"
 
+#include "pathtrace/fresnelpath.glsl"
 #include "pathtrace/lights.glsl"
 #include "surface.glsl"
 
@@ -129,6 +130,7 @@ vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
 }
 
+// WIP:
 bool exits = false;
 Surface surfaceFromGeometryGroup(
     GeometryGroup gg)
@@ -187,22 +189,10 @@ Surface surfaceFromGeometryGroup(
 
 	vec3 V = normalize(-gl_WorldRayDirectionEXT);
 
-	if(dot(V, Ng) < 0) { // exits if refraction
-	    Ng = -Ng;
-		N = -N; 
-		exits = true;
-	}
-
 	Surface surface;
 
-	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
-	surface.basis = branchlessOnb(N);
 
-	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
-
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
-
+	// Material stuff
 	surface.albedo = mix(baseColor, vec3(0.0), metallic);
     surface.opacity = mat.mask != 1 ? sampledBaseColor.a : 1.0f; // if mask is discard mode, ignore opacity
 
@@ -210,7 +200,37 @@ Surface surfaceFromGeometryGroup(
 	surface.a = roughness * roughness;
 
     surface.emissive = sampledEmissive.rgb;
-    surface.occlusion = sampledEmissive.a;			
+    surface.occlusion = sampledEmissive.a;		
+	
+	// Geometric stuff
+	float f0 = max(surface.f0);
+	float sqrtf0 = sqrt(f0);
+	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
+
+	// WIP: use of current medium, not vacuum (1.0)
+	float etaI = 1.0; // vacuum (recursive)
+	float etaT = eta; // material
+		
+	// if behind actual surface flip the normals
+	if(dot(V, Ng) < 0) { 
+	    Ng = -Ng;
+		N = -N; 
+		// swap
+		float t = etaI; 
+		etaI = etaT;
+		etaT = t;
+		exits = true;
+	}
+
+	surface.eta = etaI / etaT;
+		
+	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
+	surface.basis = branchlessOnb(N);
+
+	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
+
+    surface.v = normalize(toOnbSpace(surface.basis, V));
+    surface.nov = max(Ndot(surface.v), BIAS);
 
     return surface;
 }
@@ -244,108 +264,20 @@ void main() {
 
 	// INDIRECT - next step
 	{
-		// chance for path selected
-		float pdf = 1.0f;
+		bool isRefl;
+		float pathPdf;
+		FresnelPath(surface, prd.attenuation, pathPdf, prd.weightedPdf, isRefl, prd.seed);
 
-		float f0 = max(surface.f0);
-		float sqrtf0 = sqrt(f0);
-		float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
-
-		// WIP: recursive
-		float etaI = exits ? eta : 1.0;
-		float etaO = exits ? 1.0 : eta;
-		
-		float iorRatio = etaI / etaO;
-
-		// mirror H = N 
-		float LoH = max(Ndot(surface.v), BIAS);
-		vec3 H = vec3(0, 0, 1); // surface space N
-		float k = 1.0 - iorRatio * iorRatio * (1.0 - surface.nov * surface.nov);
-
-		if(surface.a >= SPEC_THRESHOLD) {
-			vec2 u = rand2(prd.seed);
-			H = importanceSampleGGX(u, surface.a);
-			LoH = max(dot(surface.v, H), BIAS);
-			k = 1.0 - iorRatio * iorRatio * (1.0 - LoH * LoH); // NoH = LoH
-		}
-
-		vec3 kr = F_Schlick(LoH, surface.f0);
-
-		float p_reflect = k < 0.0 ? 1.0 : sum(kr) / 3.f;
-
-		bool refl = true;
-
-		// transmission
-		if(rand(prd.seed) > p_reflect) {
-
-			float p_transparency = 1.0 - surface.opacity;
-
-			// diffuse 
-			if(rand(prd.seed) > p_transparency) {
-				prd.attenuation = SampleDiffuseDirection(surface, prd.seed, prd.weightedPdf);
-				pdf *= 1 - p_transparency;
-			}
-
-			// refraction
-			else {
-
-				// specular
-				if(surface.a < SPEC_THRESHOLD) {
-					prd.attenuation =  vec3(SampleSpecularTransmissionDirection(surface, iorRatio));
-					prd.weightedPdf = 1.f;
-				}
-
-				// glossy
-				else {
-					surface.l = refract(-surface.v, H, iorRatio);		
-					cacheSurfaceDots(surface);
-
-					prd.attenuation = vec3(microfacetBtdfNoL(surface, iorRatio));
-					prd.weightedPdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
-				}
-
-				pdf *= p_transparency;
-				refl = false;
-			}
-
-			vec3 kt = 1.0 - kr;
-
-			prd.attenuation *= kt;
-			pdf *= 1 - p_reflect;
-		}
-
-		// reflection
-		else {
-
-			// mirror
-			if(surface.a < SPEC_THRESHOLD){
-				prd.attenuation = vec3(SampleSpecularReflectionDirection(surface));
-				prd.weightedPdf = 1.f;
-			}
-
-			// glossy
-			else {
-				surface.l =  reflect(-surface.v, H);		
-				cacheSurfaceDots(surface);
-
-				prd.attenuation = vec3(microfacetBrdfNoL(surface));
-				prd.weightedPdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
-			}
-
-			prd.attenuation *= kr;
-			pdf *= p_reflect;
-		}
-		
 		// BIAS: stop erroneous paths
-		if(refl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
-		  !refl &&  isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-		   pdf * prd.weightedPdf < BIAS) {                             // very small pdf
+		if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
+		   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
+		   pathPdf * prd.weightedPdf < BIAS) {                                                 // very small pdf
 			prd.attenuation = vec3(0);
 			prd.hitType = 3;
 			return;
 		}
 
-		prd.attenuation /= pdf;
+		prd.attenuation /= pathPdf;
 		prd.hitType = 1; // general
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);	

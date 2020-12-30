@@ -17,7 +17,7 @@ struct hitPayload
 	int hitType; 
 	// 0 - direct
 	// 1 - general
-	// 2 - miss / light surface - stop
+	// 2 - hits radiant surface \ stop
 	uint seed;
 };
 
@@ -104,12 +104,12 @@ void main() {
 
 		TraceRay(); 
 		
-		accumColor += prd.radiance * currentTotalAttenuation;
-
 		if(RRTerminationCheck(currentTotalAttenuation)) {
 			break;
 		}
 	}
+
+	accumColor = prd.radiance * currentTotalAttenuation;
 
 	// Do accumulation
 	if(frame > 0) {

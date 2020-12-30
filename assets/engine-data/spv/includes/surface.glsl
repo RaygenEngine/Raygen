@@ -27,6 +27,7 @@ struct Surface {
     vec3 f0;
     vec3 emissive;
     float a;
+    float eta; // of interaction, depends on current medium
     float opacity;
     float occlusion;
 
@@ -200,13 +201,13 @@ float microfacetBrdfNoL(Surface surface)
 }
 
 // SMATH:
-float microfacetBtdfNoL(Surface surface, float iorRatio) 
+float microfacetBtdfNoL(Surface surface) 
 {
     float NDF = D_GGX(surface.noh, surface.a);
     float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
 
     float numerator = NDF * G * surface.loh * surface.loh;
-    float denominator =  (surface.loh + iorRatio * surface.loh); 
+    float denominator =  (surface.loh + surface.eta * surface.loh); 
     denominator *= denominator;
     denominator *= surface.nov;// omit nol
 
@@ -230,12 +231,12 @@ vec3 SampleWorldDirection(inout Surface surface, vec3 L)
 }
 
 // returns specular transmission brdf * nol
-float SampleSpecularTransmissionDirection(inout Surface surface, float iorRatio)
+float SampleSpecularTransmissionDirection(inout Surface surface)
 {
-    surface.l = refract(-surface.v, iorRatio);
+    surface.l = refract(-surface.v, surface.eta);
     cacheSurfaceDots(surface);
 
-    return iorRatio * iorRatio; // omit nol
+    return surface.eta * surface.eta; // omit nol
 }
 
 // diffuse brdf * nol
@@ -298,30 +299,30 @@ float SampleReflectionDirection(inout Surface surface, inout uint seed, out floa
 }
 
 // returns microfacet btdf * nol
-float ImportanceSampleTransmissionDirection(inout Surface surface, inout uint seed, float iorRatio, out float pdf)
+float ImportanceSampleTransmissionDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     if(surface.a < SPEC_THRESHOLD){
         pdf = 1.0;
-        return SampleSpecularTransmissionDirection(surface, iorRatio);
+        return SampleSpecularTransmissionDirection(surface);
     }
 
     vec2 u = rand2(seed);
     vec3 H = importanceSampleGGX(u, surface.a);
 
-    surface.l = refract(-surface.v, H, iorRatio);
+    surface.l = refract(-surface.v, H, surface.eta);
     cacheSurfaceDots(surface);
 
     pdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 
-    return microfacetBtdfNoL(surface, iorRatio); 
+    return microfacetBtdfNoL(surface); 
 }
 
 // returns microfacet btdf * nol
-float SampleTransmissionDirection(inout Surface surface, inout uint seed, float iorRatio, out float pdf)
+float SampleTransmissionDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     if(surface.a < SPEC_THRESHOLD){
         pdf = 1.0;
-        return SampleSpecularTransmissionDirection(surface, iorRatio);
+        return SampleSpecularTransmissionDirection(surface);
     }
 
     vec2 u = rand2(seed); 
@@ -331,7 +332,7 @@ float SampleTransmissionDirection(inout Surface surface, inout uint seed, float 
 
     pdf = cosineHemispherePdf(surface.nol);
 
-    return microfacetBtdfNoL(surface, iorRatio); 
+    return microfacetBtdfNoL(surface); 
 }
 
 #endif

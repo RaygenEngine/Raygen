@@ -8,12 +8,11 @@
 
 struct hitPayload
 {
-	vec3 radiance; // previous radiance
+	vec3 radiance; // to be filled
 
 	vec3 origin; // this ray stuff
 	vec3 direction;
 	vec3 attenuation; 
-	float pdf;
 
 	int hitType; 
 	uint seed;
@@ -22,6 +21,6 @@ struct hitPayload
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
-	prd.radiance = GetSkyColor(gl_WorldRayOriginEXT, gl_WorldRayDirectionEXT);
-	prd.hitType = 3; 
+	prd.radiance = GetSkyColor(prd.origin, prd.direction);
+	prd.hitType = 2; 
 }
