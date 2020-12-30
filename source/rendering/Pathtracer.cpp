@@ -42,7 +42,7 @@ InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
 
 void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
 {
-	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc);
+	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, frame++);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

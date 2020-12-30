@@ -30,6 +30,8 @@ public:
 	// non-static techniques
 	ProgressivePathtrace m_progressivePathtrace;
 
+	int32 frame{ 0 };
+
 private:
 	vk::Extent2D m_extent{};
 

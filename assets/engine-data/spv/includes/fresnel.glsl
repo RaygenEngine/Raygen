@@ -32,4 +32,5 @@ vec3 F_SchlickRoss(float cosTheta, vec3 f0, float a)
     return f0 + (1 - f0) * pow(1 - cosTheta, 5 * exp(-2.69 * a)) / (1.0 + 22.7 * pow(a, 1.5));
 }
 
+
 #endif

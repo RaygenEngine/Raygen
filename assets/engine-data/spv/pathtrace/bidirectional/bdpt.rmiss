@@ -6,18 +6,16 @@
 
 #include "sky.glsl"
 
-// Values before being filled
 struct hitPayload
 {
 	vec3 radiance; // previous radiance
 
-	vec3 origin; // origin and dir of THIS ray
+	vec3 origin; // this ray stuff
 	vec3 direction;
+	vec3 attenuation; 
+	float pdf;
 
-	vec3 attenuation; // attenuation and weight of THIS ray
-	float sampleWeight;
-
-	int hitType; // previous hit type
+	int hitType; 
 	uint seed;
 };
 

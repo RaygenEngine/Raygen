@@ -1,0 +1,123 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : require
+
+#include "global.glsl"
+#include "random.glsl"
+
+// Values after being filled
+struct hitPayload
+{
+	vec3 radiance; // radiance of traced ray
+
+	vec3 origin; // next ray stuff
+	vec3 direction;
+	vec3 attenuation; 
+
+	int hitType; 
+	// 0 - direct
+	// 1 - general
+	// 2 - miss / light surface - stop
+	uint seed;
+};
+
+layout(push_constant) uniform PC
+{
+	int bounces;
+	int frame;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
+	int quadlightCount;
+};
+
+layout(set = 0, binding = 0, rgba32f) uniform image2D image;
+layout(set = 0, binding = 1, rgba32f) uniform image2D progressive;
+layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
+
+layout(location = 0) rayPayloadEXT hitPayload prd;
+
+void TraceRay() {
+	prd.radiance = vec3(0.f);
+
+    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+
+	// trace ray
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFF,           // cullMask - nothing
+				0,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				0,              // missIndex
+				prd.origin,     // ray origin
+				tMin,           // ray min range
+				prd.direction,  // ray direction
+				tMax,           // ray max range
+				0               // payload (location = 0)
+	);
+}
+
+bool RRTerminationCheck(inout vec3 totalAttenuation) {
+
+	// work with total atten for now
+	float p_spawn = max(max(totalAttenuation), 0.0);
+	if(rand(prd.seed) > p_spawn) {
+		return true; 
+	}
+
+	totalAttenuation /= p_spawn;
+	return false;
+}
+
+
+void main() {
+
+	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
+	float r1 = rand(prd.seed);
+    float r2 = rand(prd.seed);
+
+	vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+
+	const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
+	const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+	vec2       d           = inUV * 2.0 - 1.0;
+
+	vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
+	vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+	vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
+
+	prd.origin = origin.xyz;
+	prd.direction = direction.xyz;
+
+	prd.attenuation = vec3(1.f);
+
+	prd.hitType = 0; // direct
+
+	vec3 accumColor = vec3(0.f);
+	vec3 currentTotalAttenuation = vec3(1);
+	for(int depth = 0; depth < bounces + 1 && prd.hitType != 2; ++depth) {
+
+		currentTotalAttenuation *= prd.attenuation;
+
+		TraceRay(); 
+		
+		accumColor += prd.radiance * currentTotalAttenuation;
+
+		if(RRTerminationCheck(currentTotalAttenuation)) {
+			break;
+		}
+	}
+
+	// Do accumulation
+	if(frame > 0) {
+		float a = 1.0f / float(frame);
+		vec3 old_color = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy)).xyz;
+		accumColor = mix(old_color, accumColor, a);
+	}
+	
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(accumColor, 1.f));
+	imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(accumColor, 1.f));
+}

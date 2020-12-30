@@ -1,14 +1,29 @@
 #include "ProgressivePathtrace.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/pipes/PathtracePipe.h"
+#include "rendering/pipes/BdptPipe.h"
+#include "rendering/pipes/NaivePathtracePipe.h"
 #include "rendering/pipes/StaticPipes.h"
+#include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/util/WriteDescriptorSets.h"
 
-// TODO: use specific for each technique instance and waitIdle() resize
+namespace {
+enum class PtMode
+{
+	Naive,
+	Stochastic,
+	Bdpt,
+};
+};
+
 ConsoleVariable<float> cons_pathtraceScale{ "r.pathtrace.scale", 1.f, "Set pathtrace scale" };
+ConsoleVariable<int32> cons_pathtraceBounces{ "r.pathtrace.bounces", 1, "Set pathtrace bounces" };
+ConsoleVariable<PtMode> const_pathtraceMode{ "r.pathtrace.mode", PtMode::Naive,
+	"Set pathtrace mode. Naive: unidirectional, not entirely naive, it just lacks direct light sampling,"
+	"Stochastic: similar to naive but uses direct light and light MIS,"
+	"Bpdt: Bidirectional:... WIP" };
 
 namespace vl {
 ProgressivePathtrace::ProgressivePathtrace()
@@ -19,7 +34,7 @@ ProgressivePathtrace::ProgressivePathtrace()
 	}
 }
 
-void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 frame)
 {
 	result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
@@ -27,7 +42,20 @@ void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRen
 
 	auto extent = result[sceneDesc.frameIndex].extent;
 
-	StaticPipes::Get<PathtracePipe>().Draw(cmdBuffer, sceneDesc, descSet[sceneDesc.frameIndex], extent, frame++);
+	switch (const_pathtraceMode) {
+		case PtMode::Naive:
+			StaticPipes::Get<NaivePathtracePipe>().Draw(cmdBuffer, sceneDesc, descSet[sceneDesc.frameIndex], extent,
+				frame, std::max(*cons_pathtraceBounces, 0));
+			break;
+		case PtMode::Stochastic:
+			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, descSet[sceneDesc.frameIndex],
+				extent, frame, std::max(*cons_pathtraceBounces, 0));
+			break;
+		case PtMode::Bdpt:
+			StaticPipes::Get<BdptPipe>().Draw(cmdBuffer, sceneDesc, descSet[sceneDesc.frameIndex], extent, frame,
+				std::max(*cons_pathtraceBounces, 0));
+			break;
+	}
 
 	result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,

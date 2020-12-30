@@ -58,14 +58,15 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 
 	addIncomingLightDirection(surface, L);
 
+	if(dot(surface.basis.normal, L) < 0){
+		return vec3(0.0);
+	}
+
 	float dist = distance(samplePoint, surface.position);
 	vec3 sfilter = PtLights_ShadowRayFilter(topLevelAs, surface.position, L, 0.01, dist, seed); 
 
-	float attenuation = (ql.constantTerm + ql.linearTerm * dist + 
-	ql.quadraticTerm * (dist * dist));
-
 	// Conversion of the uniform pdf 1/|A| from the area measure (dA) to the solid angle measure (dw)
-	float pdf_light = (attenuation) / (ql.width * ql.height * LnoL);
+	float pdf_light = (dist * dist) / (ql.width * ql.height * LnoL);
 	float pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
 

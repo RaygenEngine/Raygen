@@ -2,20 +2,22 @@
 
 #include "rendering/pipes/AmbientPipe.h"
 #include "rendering/pipes/ArealightsPipe.h"
+#include "rendering/pipes/BdptPipe.h"
 #include "rendering/pipes/BillboardPipe.h"
 #include "rendering/pipes/CubemapArrayConvolutionPipe.h"
 #include "rendering/pipes/CubemapConvolutionPipe.h"
 #include "rendering/pipes/DirlightPipe.h"
 #include "rendering/pipes/IrragridPipe.h"
 #include "rendering/pipes/MirrorPipe.h"
+#include "rendering/pipes/NaivePathtracePipe.h"
 #include "rendering/pipes/PathtraceCubemapArrayPipe.h"
 #include "rendering/pipes/PathtraceCubemapPipe.h"
-#include "rendering/pipes/PathtracePipe.h"
 #include "rendering/pipes/PointlightPipe.h"
 #include "rendering/pipes/PrefilteredConvolutionPipe.h"
 #include "rendering/pipes/ReflprobePipe.h"
 #include "rendering/pipes/SelectionStencilPipe.h"
 #include "rendering/pipes/SpotlightPipe.h"
+#include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/pipes/VolumePipe.h"
 
 
@@ -40,6 +42,8 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<VolumeLinesPipe>();
 	StaticPipes::Init<VolumeTrianglesPipe>();
 	StaticPipes::Init<ArealightsPipe>();
-	StaticPipes::Init<PathtracePipe>();
+	StaticPipes::Init<StochasticPathtracePipe>();
+	StaticPipes::Init<BdptPipe>();
+	StaticPipes::Init<NaivePathtracePipe>();
 }
 } // namespace vl

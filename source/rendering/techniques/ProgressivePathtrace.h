@@ -12,9 +12,7 @@ struct ProgressivePathtrace {
 	InFlightResources<RImage2D> result;
 	InFlightResources<vk::DescriptorSet> descSet;
 
-	int32 frame{ 0 };
-
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 frame);
 	void Resize(vk::Extent2D extent);
 };
 
