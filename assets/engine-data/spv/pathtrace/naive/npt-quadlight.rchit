@@ -49,9 +49,7 @@ void main() {
 
 	// direct hit 
 	if(prd.hitType == 0) {
-		prd.radiance = vec3(max(prd.radiance.x, 0.0),
-		                    max(prd.radiance.y, 0.0),
-							max(prd.radiance.z, 0.0)) / vec3(max(max(prd.radiance), 1.0));
+		prd.radiance = ql.color;
 	}
 
 	prd.hitType = 2;

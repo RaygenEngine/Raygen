@@ -6,6 +6,12 @@
 
 #include "sky.glsl"
 
+struct LightPathVertex {
+	vec3 position;
+	vec3 normal;
+	vec3 value; 
+};
+
 struct hitPayload
 {
 	vec3 radiance; // to be filled
@@ -16,6 +22,9 @@ struct hitPayload
 
 	int hitType; 
 	uint seed;
+	
+	uint lightPathDepth;
+	LightPathVertex lightpath[4];
 };
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
