@@ -52,6 +52,7 @@ vk::UniquePipeline BdptPipe::MakePipeline()
 
 	// all rt shaders here
 	auto& ptshader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt.shader");
+	auto& ptLightPathShader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt-lightpath.shader");
 	auto& ptQuadlightShader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt-quadlight.shader");
 
 	auto get = [](auto shader) {
@@ -60,8 +61,10 @@ vk::UniquePipeline BdptPipe::MakePipeline()
 
 	AddRaygenGroup(get(ptshader.rayGen));
 	AddMissGroup(get(ptshader.miss));                            // miss general 0
+	AddMissGroup(get(ptLightPathShader.miss));                   // miss lightpath 1
 	AddHitGroup(get(ptshader.closestHit), get(ptshader.anyHit)); // gltf mat 0, ahit for mask
 	AddHitGroup(get(ptQuadlightShader.closestHit));              // quad lights 1
+	AddHitGroup(get(ptLightPathShader.closestHit));              // lightpath 2
 
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
 	rayPipelineInfo

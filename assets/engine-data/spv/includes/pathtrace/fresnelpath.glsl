@@ -3,6 +3,7 @@
 
 #include "surface.glsl"
 
+// split bsdf pdf from other pdfs for MIS use
 void FresnelPath(inout Surface surface, out vec3 attenuation, out float pathPdf, out float bsdfPdf, out bool isRefl, inout uint seed) {
 	// mirror H = N 
 	float LoH = max(Ndot(surface.v), BIAS);

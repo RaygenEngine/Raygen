@@ -4,9 +4,17 @@
 
 #include "global.glsl"
 #include "random.glsl"
+#include "sampling.glsl"
 
-// Values after being filled
-struct hitPayload
+#define MAX_LIGHTPATH_DEPTH 4 
+
+struct LightPathVertex {
+	vec3 position;
+	vec3 normal;
+	vec3 value; // attenuated light value
+};
+
+struct camera_hitPayload
 {
 	vec3 radiance; // radiance of traced ray
 
@@ -18,6 +26,23 @@ struct hitPayload
 	// 0 - direct
 	// 1 - general
 	// 2 - hits radiant surface \ stop
+	uint seed;
+	
+	uint lightPathDepth;
+	LightPathVertex lightpath[MAX_LIGHTPATH_DEPTH];
+};
+
+struct light_hitPayload
+{
+	vec3 origin; // next ray stuff
+	vec3 direction;
+	vec3 normal;
+	vec3 attenuation;
+
+
+	int hitType; 
+	// 0 - continue
+	// 1 - break;
 	uint seed;
 };
 
@@ -37,9 +62,32 @@ layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
-layout(location = 0) rayPayloadEXT hitPayload prd;
+layout(location = 0) rayPayloadEXT camera_hitPayload camera_prd;
+layout(location = 1) rayPayloadEXT light_hitPayload light_prd;
 
-void TraceRay() {
+void TraceLightRay() {
+    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+
+	// trace ray
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFE,           // cullMask - lights
+				2,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				1,              // missIndex
+				light_prd.origin,     // ray origin
+				tMin,                 // ray min range
+				light_prd.direction,  // ray direction
+				tMax,           // ray max range
+				1               // payload (location = 1)
+	);
+}
+
+void TraceCameraRay() {
+	camera_prd.radiance = vec3(0.f);
+
     uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
     float tMax     = 10000.0;
@@ -51,9 +99,9 @@ void TraceRay() {
 				0,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				0,              // missIndex
-				prd.origin,     // ray origin
-				tMin,           // ray min range
-				prd.direction,  // ray direction
+				camera_prd.origin,     // ray origin
+				tMin,                  // ray min range
+				camera_prd.direction,  // ray direction
 				tMax,           // ray max range
 				0               // payload (location = 0)
 	);
@@ -63,7 +111,7 @@ bool RRTerminationCheck(inout vec3 totalAttenuation) {
 
 	// work with total atten for now
 	float p_spawn = max(max(totalAttenuation), 0.0);
-	if(rand(prd.seed) > p_spawn) {
+	if(rand(camera_prd.seed) > p_spawn) {
 		return true; 
 	}
 
@@ -71,51 +119,73 @@ bool RRTerminationCheck(inout vec3 totalAttenuation) {
 	return false;
 }
 
-struct LightPathVertex {
-	vec3 position;
-	vec3 normal;
-	vec3 value; // attenuated light value
-};
+
 
 void main() {
-	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
+	light_prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
 			
-	LightPathVertex lightpath[4];
 	// LIGHT PATH
 	{
-
+		// pick one of the lights
 		int totalLights = quadlightCount;
-		float u = rand(prd.seed);
+		float u = rand(light_prd.seed);
 		int i = int(floor(u * totalLights));
-		float p_selectLight = 1.0 / float(totalLights); // pick one of the lights
+		float p_selectLight = 1.0 / float(totalLights); 
 
 		Quadlight ql = quadlights.light[i];
 		
-		prd.radiance = ql.color * ql.intensity; 
-		prd.origin = ql.center; // WIP: random vertex on surface
-		prd.direction = ql.normal; // WIP: random direction on hemishpere 
+		vec2 u2 = rand2(light_prd.seed) * 2 - 1;
+		u2.x *= ql.width / 2.f;
+		u2.y *= ql.height / 2.f;
 
-		prd.attenuation = vec3(1.f);
-		prd.hitType = 0; // direct
+		// pick origin on surface
+		light_prd.origin =  ql.center + u2.x * ql.right + u2.y * ql.up;
 
-		vec3 currentTotalAttenuation = vec3(1);
-		for(int depth = 0; depth < 4; ++depth) {
-			lightpath[depth].position = prd.origin;
-			// WIP: normal
-			currentTotalAttenuation *= prd.attenuation;
+		u2 = rand2(light_prd.seed);
 
-			TraceRay(); 
+		// random hemisphere direction
+		vec3 v = uniformSampleHemisphere(u2); // WIP: biased at edges (see quadlight bias)
+		light_prd.direction =
 
-			lightpath[depth].value = prd.radiance * currentTotalAttenuation;
+		vec3(ql.right.x * v.x + ql.up.x * v.y + ql.normal.x * v.z,
+			 ql.right.y * v.x + ql.up.y * v.y + ql.normal.y * v.z,
+			 ql.right.z * v.x + ql.up.z * v.y + ql.normal.z * v.z);
+
+
+		vec3 radiance = ql.color * ql.intensity;
+
+		light_prd.hitType = 0; // direct
+
+		light_prd.normal = ql.normal;
+
+		light_prd.attenuation = vec3(1.0) / uniformHemispherePdf();
+
+		vec3 currentTotalAttenuation = vec3(1.0) / p_selectLight;
+
+		int depth = 0;
+		for(;depth < MAX_LIGHTPATH_DEPTH && light_prd.hitType != 1; ++depth) {
+			
+			camera_prd.lightpath[depth].position = light_prd.origin;
+			camera_prd.lightpath[depth].normal = light_prd.normal;
+			camera_prd.lightpath[depth].value = radiance * currentTotalAttenuation;
+
+			if(depth < MAX_LIGHTPATH_DEPTH - 1) {
+				currentTotalAttenuation *= light_prd.attenuation; // attenuates value of next vertex
+
+				TraceLightRay(); // calculate next origin and normal and attenuation of 2 x next vertex
+			}
 		}
+		
+		camera_prd.lightPathDepth = depth + 1;
 	}
+
+	camera_prd.seed = light_prd.seed;
 
 	vec3 accumColor = vec3(0.f);
 	// CAMERA PATH
 	{
-		
-		float r1 = rand(prd.seed);
-		float r2 = rand(prd.seed);
+		float r1 = rand(camera_prd.seed);
+		float r2 = rand(camera_prd.seed);
 
 		vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
 
@@ -127,31 +197,22 @@ void main() {
 		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
 		vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
 
-		
+		camera_prd.origin = origin.xyz;
+		camera_prd.direction = direction.xyz;
 
-		prd.origin = origin.xyz;
-		prd.direction = direction.xyz;
+		camera_prd.attenuation = vec3(1.f);
 
-		prd.attenuation = vec3(1.f);
+		camera_prd.hitType = 0; // direct
 
-		prd.hitType = 0; // direct
-
-		
+	
 		vec3 currentTotalAttenuation = vec3(1);
-		for(int depth = 0; depth < bounces + 1 && prd.hitType != 2; ++depth) {
+		for(int depth = 0; depth < bounces + 1 && camera_prd.hitType != 2; ++depth) {
 
-			currentTotalAttenuation *= prd.attenuation;
+			currentTotalAttenuation *= camera_prd.attenuation;
 
-			prd.radiance = vec3(0.f);
-			TraceRay(); // WIP: MIS the pdf 
+			TraceCameraRay(); // WIP: MIS the pdf 
 
-			// merge with all light subpaths
-			for(int i = 0; i < 4; ++i) { 
-				// test contribution - visibility with light vertex use prd.origin
-				//prd.radiance += // add light vertex contribution
-			}
-
-			accumColor += prd.radiance * currentTotalAttenuation;
+			accumColor += camera_prd.radiance * currentTotalAttenuation;
 
 			if(RRTerminationCheck(currentTotalAttenuation)) {
 				break;

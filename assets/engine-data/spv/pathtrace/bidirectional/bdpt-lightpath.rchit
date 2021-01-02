@@ -4,35 +4,23 @@
 #extension GL_EXT_scalar_block_layout : enable
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference2 : enable
-#extension GL_EXT_ray_query: require
 
 // TODO:
 #define RAY
 #include "global.glsl"
 
 #include "pathtrace/fresnelpath.glsl"
-#include "pathtrace/lights.glsl"
 #include "surface.glsl"
-
-struct LightPathVertex {
-	vec3 position;
-	vec3 normal;
-	vec3 value; 
-};
 
 struct hitPayload
 {
-	vec3 radiance; // to be filled
-
-	vec3 origin; // this ray stuff
+	vec3 origin; 
 	vec3 direction;
-	vec3 attenuation; 
+	vec3 normal;
+	vec3 attenuation;
 
 	int hitType; 
 	uint seed;
-	
-	uint lightPathDepth;
-	LightPathVertex lightpath[4];
 };
 
 layout(push_constant) uniform PC
@@ -46,7 +34,7 @@ layout(push_constant) uniform PC
 };
 
 hitAttributeEXT vec2 baryCoord;
-layout(location = 0) rayPayloadInEXT hitPayload prd;
+layout(location = 1) rayPayloadInEXT hitPayload prd;
 
 
 struct Vertex
@@ -241,32 +229,6 @@ Surface surfaceFromGeometryGroup(
     return surface;
 }
 
-float VisibilityOfVertex(vec3 origin, vec3 direction, float tMin, float tMax) {
-
-	// Initializes a ray query object but does not start traversal
-	rayQueryEXT rayQuery;
-	rayQueryInitializeEXT(rayQuery, 
-							topLevelAs, 
-							gl_RayFlagsTerminateOnFirstHitEXT, 
-							0xFF, 
-							origin, 
-							tMin,
-							direction, 
-							tMax);
-
-	// Start traversal: return false if traversal is complete
-	while(rayQueryProceedEXT(rayQuery)) {
-	}
-      
-	// Returns type of committed (true) intersection
-	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-		// Got an intersection == Shadow
-		return 0.0;
-	}
-
-	return 1.0;
-}
-
 void main() {
 	
 	int matId = gl_InstanceCustomIndexEXT;
@@ -275,31 +237,9 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	prd.radiance += surface.emissive;
-
-	// merge with all light subpaths
-	for(int i = 0; i < prd.lightPathDepth; ++i) { 
-
-		vec3 L = normalize(prd.lightpath[i].position - surface.position);
-
-		// for direct light on surface WIP:
-		if(i == 0 && dot(prd.lightpath[i].normal, -L) < BIAS) {
-			continue; // hard for visibility to give a non false positive on a 2D surface
-		}
-
-		float dist = distance(prd.lightpath[i].position - L * 0.01, surface.position);
-
-		float vis = VisibilityOfVertex(surface.position, L, 0.001, dist);
-
-		vec3 Li = prd.lightpath[i].value;
-		float attenuation = 1.0 / (dist * dist);
-			
-		// pdf = 1.0 since it is explicitly chosen
-		prd.radiance += vis * Li * attenuation * SampleWorldDirection(surface, L); 
-	}
-
 	bool isRefl;
 	float pathPdf, bsdfPdf;
+	vec3 attenuation;
 	FresnelPath(surface, prd.attenuation, pathPdf, bsdfPdf, isRefl, prd.seed);
 
 	float pdf = pathPdf * bsdfPdf;
@@ -308,13 +248,13 @@ void main() {
 	if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
 	   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
 	   pdf < BIAS) {                                               // very small pdf
-		prd.attenuation = vec3(0);
-		prd.hitType = 2;
+		prd.hitType = 1; // break;
 		return;
 	}
 
+	prd.normal = surface.basis.normal;
 	prd.attenuation /= pdf;
-	prd.hitType = 1; // general
+	prd.hitType = 0; // continue
 	prd.origin = surface.position;
 	prd.direction = surfaceIncidentLightDir(surface);	
 }
