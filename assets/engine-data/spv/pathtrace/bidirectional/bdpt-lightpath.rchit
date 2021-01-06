@@ -17,10 +17,16 @@ struct hitPayload
 	vec3 origin; 
 	vec3 direction;
 	vec3 normal;
-	vec3 attenuation;
+	vec3 throughput;
 
 	int hitType; 
 	uint seed;
+
+	// WIP:
+	vec3 albedo;
+	vec3 f0;
+	float opacity;
+	float a;
 };
 
 layout(push_constant) uniform PC
@@ -239,8 +245,7 @@ void main() {
 
 	bool isRefl;
 	float pathPdf, bsdfPdf;
-	vec3 attenuation;
-	FresnelPath(surface, prd.attenuation, pathPdf, bsdfPdf, isRefl, prd.seed);
+	FresnelPath(surface, prd.throughput, pathPdf, bsdfPdf, isRefl, prd.seed);
 
 	float pdf = pathPdf * bsdfPdf;
 
@@ -253,8 +258,15 @@ void main() {
 	}
 
 	prd.normal = surface.basis.normal;
-	prd.attenuation /= pdf;
+	prd.throughput /= pdf; // WIP: should be area form
 	prd.hitType = 0; // continue
 	prd.origin = surface.position;
-	prd.direction = surfaceIncidentLightDir(surface);	
+	prd.direction = surfaceIncidentLightDir(surface);
+	
+
+	// WIP:
+	prd.albedo = surface.albedo;
+	prd.f0 = surface.f0;
+	prd.opacity = surface.opacity;
+	prd.a = surface.a;
 }

@@ -7,14 +7,19 @@
 
 struct hitPayload
 {
-	vec3 radiance; // to be filled
-
-	vec3 origin; // this ray stuff
+	vec3 origin; 
 	vec3 direction;
-	vec3 attenuation; 
+	vec3 normal;
+	vec3 throughput;
 
 	int hitType; 
 	uint seed;
+
+	// WIP:
+	vec3 albedo;
+	vec3 f0;
+	float opacity;
+	float a;
 };
 
 layout(push_constant) uniform PC
@@ -40,18 +45,16 @@ void main() {
 	float LnoL = dot(ql.normal, -gl_WorldRayDirectionEXT);
 
 	if (LnoL < BIAS) {
-		prd.radiance = vec3(0); 
+		prd.throughput = vec3(0); 
 		prd.hitType = 2;
 		return;
 	}
 
-	prd.radiance = ql.color * ql.intensity;  
+	prd.throughput = ql.color * ql.intensity;  
 
 	// direct hit 
 	if(prd.hitType == 0) {
-		prd.radiance = vec3(max(prd.radiance.x, 0.0),
-		                    max(prd.radiance.y, 0.0),
-							max(prd.radiance.z, 0.0)) / vec3(max(max(prd.radiance), 1.0));
+		prd.throughput = ql.color;
 	}
 
 	prd.hitType = 2;
