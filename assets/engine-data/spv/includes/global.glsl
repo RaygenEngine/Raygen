@@ -116,6 +116,8 @@ struct Camera {
 	mat4 viewInv;
 	mat4 projInv;
 	mat4 viewProjInv;
+
+	float filmArea;
 };
 
 struct GltfMaterial {

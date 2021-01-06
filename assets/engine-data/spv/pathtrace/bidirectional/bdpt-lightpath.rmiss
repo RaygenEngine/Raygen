@@ -11,10 +11,16 @@ struct hitPayload
 	vec3 origin; 
 	vec3 direction;
 	vec3 normal;
-	vec3 attenuation;
+	vec3 throughput;
 
 	int hitType; 
 	uint seed;
+
+	// WIP:
+	vec3 albedo;
+	vec3 f0;
+	float opacity;
+	float a;
 };
 
 layout(location = 1) rayPayloadInEXT hitPayload prd;

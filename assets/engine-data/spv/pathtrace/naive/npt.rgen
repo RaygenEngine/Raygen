@@ -103,13 +103,13 @@ void main() {
 		currentTotalAttenuation *= prd.attenuation;
 
 		TraceRay(); 
+
+		accumColor += prd.radiance * currentTotalAttenuation;
 		
 		if(RRTerminationCheck(currentTotalAttenuation)) {
 			break;
 		}
 	}
-
-	accumColor = prd.radiance * currentTotalAttenuation;
 
 	// Do accumulation
 	if(frame > 0) {

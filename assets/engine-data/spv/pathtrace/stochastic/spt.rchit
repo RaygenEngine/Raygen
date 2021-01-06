@@ -250,11 +250,11 @@ void main() {
 		int totalLights = quadlightCount;
 		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
-		float p_selectLight = 1.0 / float(totalLights); // pick one of the lights
+		float pdf_pickLight = 1.0 / float(totalLights); // pick one of the lights
 
 		Quadlight ql = quadlights.light[i];
 		// direct light sample, brdf sample from hit shader and MIS
-		radiance += Quadlight_LightSample(topLevelAs, ql, surface, prd.seed) / p_selectLight; 
+		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, prd.seed, pdf_pickLight); 
 		
 		// add emissive
 		radiance += surface.emissive;

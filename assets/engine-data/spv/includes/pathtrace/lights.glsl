@@ -38,7 +38,7 @@ vec3 PtLights_ShadowRayFilter(accelerationStructureEXT topLevelAs, vec3 origin, 
 	return prdShadow.filt;
 }
 
-vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, inout uint seed)
+vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, inout uint seed, float pdf_pickLight)
 {
 	vec2 u = rand2(seed) * 2 - 1;
 	u.x *= ql.width / 2.f;
@@ -63,15 +63,19 @@ vec3 Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	}
 
 	float dist = distance(samplePoint, surface.position);
-	vec3 sfilter = PtLights_ShadowRayFilter(topLevelAs, surface.position, L, 0.01, dist, seed); 
+	vec3 V = PtLights_ShadowRayFilter(topLevelAs, surface.position, L, 0.01, dist, seed); // V
 
-	// Conversion of the uniform pdf 1/|A| from the area measure (dA) to the solid angle measure (dw)
-	float pdf_light = (dist * dist) / (ql.width * ql.height * LnoL);
+	// pdfw = pdfA / (cosTheta_o / r^2) = r^2 * pdfA / cosTheta_o
+	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * LnoL);
+	float pdf_light = pdf_pickLight * pdf_lightArea;
 	float pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
-	float mis_weight = 1.0 / (pdf_light + pdf_brdf);
+	float weightedPdf = pdf_light + pdf_brdf;
 
-	vec3 Li = ql.color * ql.intensity * sfilter;
-	return Li * SampleWorldDirection(surface, L) * mis_weight;
+	vec3 fs_cosTheta = SampleWorldDirection(surface, L);
+
+	// solid angle form to match the pdfs | dA = (r^2 / cosTheta_o) * dw
+	vec3 Li = ql.color * ql.intensity * V;
+	return Li * fs_cosTheta / weightedPdf;
 }
 
 vec3 Pointlight_LightSample(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, inout uint seed)

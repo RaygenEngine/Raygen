@@ -1,53 +1,51 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-
+#extension GL_EXT_ray_query: require
+// TODO:
+#define RAY
 #include "global.glsl"
+
+
+
 #include "random.glsl"
 #include "sampling.glsl"
+#include "surface.glsl"
 
-#define MAX_LIGHTPATH_DEPTH 4 
-
-struct LightPathVertex {
+struct PathVertex {
 	vec3 position;
 	vec3 normal;
-	vec3 value; // attenuated light value
+	vec3 throughput; // attenuated light value
+
+	// WIP:
+	vec3 albedo;
+	vec3 f0;
+	float opacity;
+	float a;
 };
 
-struct camera_hitPayload
-{
-	vec3 radiance; // radiance of traced ray
-
-	vec3 origin; // next ray stuff
-	vec3 direction;
-	vec3 attenuation; 
-
-	int hitType; 
-	// 0 - direct
-	// 1 - general
-	// 2 - hits radiant surface \ stop
-	uint seed;
-	
-	uint lightPathDepth;
-	LightPathVertex lightpath[MAX_LIGHTPATH_DEPTH];
-};
-
-struct light_hitPayload
+struct hitPayload
 {
 	vec3 origin; // next ray stuff
 	vec3 direction;
 	vec3 normal;
-	vec3 attenuation;
-
+	vec3 throughput;
 
 	int hitType; 
 	// 0 - continue
 	// 1 - break;
 	uint seed;
+
+	// WIP:
+	vec3 albedo;
+	vec3 f0;
+	float opacity;
+	float a;
 };
 
 layout(push_constant) uniform PC
 {
+	// WIP: max length path
 	int bounces;
 	int frame;
 	int pointlightCount;
@@ -62,171 +60,295 @@ layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
-layout(location = 0) rayPayloadEXT camera_hitPayload camera_prd;
-layout(location = 1) rayPayloadEXT light_hitPayload light_prd;
+layout(location = 0) rayPayloadEXT hitPayload prd;
+
+
+#ifndef pt_bdpt_glsl
+#define pt_bdpt_glsl
+
+void addSample(float imageX, float imageY, vec3 L) {
+
+	float dImageX = imageX - 0.5f;
+    float dImageY = imageY - 0.5f;
+    // calculate the pixel range covered by filter center at sample
+    float xWidth = float(gl_LaunchSizeEXT.x);//mFilter->getXWidth();
+    float yWidth = float(gl_LaunchSizeEXT.y);//mFilter->getYWidth();
+    int x0 = int(ceil(dImageX - xWidth));
+    int x1 = int(floor(dImageX + xWidth));
+    int y0 = int(ceil(dImageY - yWidth));
+    int y1 = int(floor(dImageY + yWidth));
+    //x0 = max(x0, mXStart);
+    //x1 = min(x1, mXStart + mXCount - 1);
+    //y0 = max(y0, mYStart);
+    //y1 = min(y1, mYStart + mYCount - 1);
+    
+    for(int y = y0; y <= y1; ++y) {
+        float fy = abs(gl_LaunchSizeEXT.x * (y - dImageY) / yWidth);
+        int iy = min(int(floor(fy)), int(gl_LaunchSizeEXT.x - 1));
+        for(int x = x0; x <= x1; ++x) {
+            float fx = abs(gl_LaunchSizeEXT.x * (x - dImageX) / xWidth);
+            int ix = min(int(floor(fx)), int(gl_LaunchSizeEXT.x - 1));
+            float weight = 1.0;
+
+            vec3 color = weight * L;
+
+            if(frame > 0) {
+		    	float a = 1.0f / float(frame);
+		    	vec3 old_color = imageLoad(image, ivec2(x,y)).xyz;
+		    	color = mix(old_color, color, a);
+		    }
+            imageStore(image, ivec2(x,y), vec4(color, 1.f));
+        }
+    }
+
+}
+
+#endif
+
+
 
 void TraceLightRay() {
     uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
-	// trace ray
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFE,           // cullMask - lights
+				0xFF,           // cullMask - lights
 				2,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				1,              // missIndex
-				light_prd.origin,     // ray origin
-				tMin,                 // ray min range
-				light_prd.direction,  // ray direction
+				prd.origin,     // ray origin
+				tMin,           // ray min range
+				prd.direction,  // ray direction
 				tMax,           // ray max range
-				1               // payload (location = 1)
+				0               // payload (location = 0)
 	);
 }
 
 void TraceCameraRay() {
-	camera_prd.radiance = vec3(0.f);
-
     uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
     float tMax     = 10000.0;
 
-	// trace ray
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
 				0xFF,           // cullMask - nothing
 				0,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				0,              // missIndex
-				camera_prd.origin,     // ray origin
-				tMin,                  // ray min range
-				camera_prd.direction,  // ray direction
+				prd.origin,     // ray origin
+				tMin,           // ray min range
+				prd.direction,  // ray direction
 				tMax,           // ray max range
 				0               // payload (location = 0)
 	);
 }
 
-bool RRTerminationCheck(inout vec3 totalAttenuation) {
+bool VisibilityOfVertex(vec3 origin, vec3 direction, float tMin, float tMax) {
 
-	// work with total atten for now
-	float p_spawn = max(max(totalAttenuation), 0.0);
-	if(rand(camera_prd.seed) > p_spawn) {
-		return true; 
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, 
+							topLevelAs, 
+							gl_RayFlagsTerminateOnFirstHitEXT, 
+							0xFF, 
+							origin, 
+							tMin,
+							direction, 
+							tMax);
+
+	// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery)) {
+	}
+      
+	// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+		// Got an intersection == Shadow
+		return false;
 	}
 
-	totalAttenuation /= p_spawn;
-	return false;
+	return true;
 }
 
+bool IsValidPixel(vec3 pCamera, vec3 pWorld, out ivec2 pixel) {
 
+	vec4 pView = cam.view * vec4(pWorld, 1.0f);
+	vec4 pLensLocal = cam.view * vec4(pCamera, 1.0f);
+	vec4 dir = pView - pLensLocal;
+	vec4 pFocus = pLensLocal + (/*cam.focalLength*/1.0 / dir.z) * dir; 
+	vec4 clipFocus = cam.proj * pFocus;
+
+	vec3 ndc = clipFocus.xyz / clipFocus.w; // NDC
+	ndc.y *= -1;
+	ndc.xyz = ndc.xyz * 0.5 + 0.5; // 0 to 1
+
+	// WIP:
+	pixel = ivec2(floor(ndc.x * gl_LaunchSizeEXT.x), floor(ndc.y * gl_LaunchSizeEXT.y));
+
+	return (ndc.x < 0 || ndc.x > 1 || ndc.y < 0 || ndc.y > 1);
+}
+
+float evalWe(vec3 pCamera, vec3 pWorld) {
+
+	vec4 pView = cam.view * vec4(pWorld, 1.0f);
+	vec4 pLensLocal = cam.view * vec4(pCamera, 1.0f);
+	vec4 dir = pView - pLensLocal;
+	vec4 pFocus = pLensLocal + (/*cam.focalLength*/1.0 / dir.z) * dir; 
+    vec3 lensToFilm = pFocus.xyz - pLensLocal.xyz;
+
+    float lensToFilmDistance2 = dot(lensToFilm, lensToFilm);
+    float cosTheta = normalize(lensToFilm).z;
+    float G = cosTheta * cosTheta / lensToFilmDistance2;
+    //float lensArea = mLensRadius * mLensRadius * PI; 
+    float We = //mLensRadius > 0.0f ?
+        //1.0f / (mFilmArea * lensArea * G) 
+        1.0f / (cam.filmArea * G); // pinhole
+    return We;
+}
 
 void main() {
-	light_prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
+
+#define maxLightPath 4
+
+	// picked light
+	Quadlight ql;
+
+	int lightVertex;
+	PathVertex lightVertices[maxLightPath];
+	
+	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
 			
 	// LIGHT PATH
 	{
 		// pick one of the lights
 		int totalLights = quadlightCount;
-		float u = rand(light_prd.seed);
+		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
-		float p_selectLight = 1.0 / float(totalLights); 
 
-		Quadlight ql = quadlights.light[i];
+		ql = quadlights.light[i];
+
+		float pdf_pickLight = 1.0 / float(totalLights); 
+		float pdf_lightArea = 1.0 / (ql.width * ql.height);
 		
-		vec2 u2 = rand2(light_prd.seed) * 2 - 1;
+		vec2 u2 = rand2(prd.seed) * 2 - 1;
 		u2.x *= ql.width / 2.f;
 		u2.y *= ql.height / 2.f;
 
 		// pick origin on surface
-		light_prd.origin =  ql.center + u2.x * ql.right + u2.y * ql.up;
+		prd.origin = ql.center + u2.x * ql.right + u2.y * ql.up + ql.normal * BIAS;
 
-		u2 = rand2(light_prd.seed);
+		prd.normal = ql.normal;
 
-		// random hemisphere direction
+		// on surface of light
+		lightVertices[0].position = prd.origin;
+		lightVertices[0].normal = prd.normal;
+		lightVertices[0].throughput = vec3(1.0) / (pdf_pickLight * pdf_lightArea);
+
+		// random hemisphere direction 
+		u2 = rand2(prd.seed);
+
 		vec3 v = uniformSampleHemisphere(u2); // WIP: biased at edges (see quadlight bias)
-		light_prd.direction =
+		prd.direction =
 
 		vec3(ql.right.x * v.x + ql.up.x * v.y + ql.normal.x * v.z,
 			 ql.right.y * v.x + ql.up.y * v.y + ql.normal.y * v.z,
 			 ql.right.z * v.x + ql.up.z * v.y + ql.normal.z * v.z);
 
-
-		vec3 radiance = ql.color * ql.intensity;
-
-		light_prd.hitType = 0; // direct
-
-		light_prd.normal = ql.normal;
-
-		light_prd.attenuation = vec3(1.0) / uniformHemispherePdf();
-
-		vec3 currentTotalAttenuation = vec3(1.0) / p_selectLight;
-
-		int depth = 0;
-		for(;depth < MAX_LIGHTPATH_DEPTH && light_prd.hitType != 1; ++depth) {
-			
-			camera_prd.lightpath[depth].position = light_prd.origin;
-			camera_prd.lightpath[depth].normal = light_prd.normal;
-			camera_prd.lightpath[depth].value = radiance * currentTotalAttenuation;
-
-			if(depth < MAX_LIGHTPATH_DEPTH - 1) {
-				currentTotalAttenuation *= light_prd.attenuation; // attenuates value of next vertex
-
-				TraceLightRay(); // calculate next origin and normal and attenuation of 2 x next vertex
-			}
-		}
+		float pdf_lightDirection = uniformHemispherePdf();
 		
-		camera_prd.lightPathDepth = depth + 1;
-	}
+		// area form
+		vec3 throughput = lightVertices[0].throughput * abs(dot(ql.normal, prd.direction)) / pdf_lightDirection;
 
-	camera_prd.seed = light_prd.seed;
+		lightVertex = 1;
+		for(;lightVertex < maxLightPath; ++lightVertex) {
+			
+			lightVertices[lightVertex].throughput = throughput;
 
-	vec3 accumColor = vec3(0.f);
-	// CAMERA PATH
-	{
-		float r1 = rand(camera_prd.seed);
-		float r2 = rand(camera_prd.seed);
+			TraceLightRay(); 
 
-		vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
-
-		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
-		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
-		vec2       d           = inUV * 2.0 - 1.0;
-
-		vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
-		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
-		vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
-
-		camera_prd.origin = origin.xyz;
-		camera_prd.direction = direction.xyz;
-
-		camera_prd.attenuation = vec3(1.f);
-
-		camera_prd.hitType = 0; // direct
-
-	
-		vec3 currentTotalAttenuation = vec3(1);
-		for(int depth = 0; depth < bounces + 1 && camera_prd.hitType != 2; ++depth) {
-
-			currentTotalAttenuation *= camera_prd.attenuation;
-
-			TraceCameraRay(); // WIP: MIS the pdf 
-
-			accumColor += camera_prd.radiance * currentTotalAttenuation;
-
-			if(RRTerminationCheck(currentTotalAttenuation)) {
+			if(prd.hitType == 1) {
 				break;
 			}
+
+			lightVertices[lightVertex].position = prd.origin;
+			lightVertices[lightVertex].normal = prd.normal;
+			lightVertices[lightVertex].albedo = prd.albedo;
+			lightVertices[lightVertex].f0 = prd.f0;
+			lightVertices[lightVertex].opacity = prd.opacity;
+			lightVertices[lightVertex].a = prd.a;
+
+			throughput *= prd.throughput;
 		}
 	}
 
-	// Do accumulation
+	// same as light sample
+	PathVertex cameraVertices[1];
+
+	// on the lens - pinhole
+	cameraVertices[0].position = cam.position;
+	cameraVertices[0].normal = -vec3(cam.view[0][2], cam.view[1][2], cam.view[2][2]);
+	cameraVertices[0].throughput = vec3(1.0);
+
+	// CAMERA PATH WIP:
+	{
+//		float r1 = rand(prd.seed);
+//		float r2 = rand(prd.seed);
+//
+//		vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+//
+//		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
+//		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+//		vec2       d           = inUV * 2.0 - 1.0;
+//
+//		vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
+//		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+//		vec4 direction = cam.viewInv * vec4(target.xyz, 0);
+//
+//		// pixelWidth * pixelHeight SMATH:
+//		float pdf_pixelArea = 1.0 / (1.0 * 1.0);
+	}
+
+	if(frame == 0) {
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0));
+		imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(0));
+	}
+
+	// merge t = 1 s = 2 - ie merge 
+
+	vec3 color = vec3(0);
+	ivec2 pixel;
+
+	// merge light vertex directly with camera aperture
+	const PathVertex lv = lightVertices[1];
+	const PathVertex cv = cameraVertices[0];
+
+	if(IsValidPixel(cv.position, lv.position, pixel)) {
+		return; // WIP:
+	}
+
+	vec3 occludeDir = lv.position - cv.position;
+	float dist = length(occludeDir);
+
+	if(VisibilityOfVertex(cv.position, normalize(occludeDir), 0.001, dist - BIAS)) {
+
+		vec3 wo = normalize(cv.position - lv.position);
+
+		vec3 fsL = ql.color * ql.intensity;
+
+		float fsE = evalWe(cv.position, lv.position);
+
+		float G = abs(dot(lv.normal, wo)) * abs(dot(cv.normal, wo)) / (dist * dist);
+
+		color = fsL * fsE * G * lv.throughput * cv.throughput;
+	}
+
 	if(frame > 0) {
 		float a = 1.0f / float(frame);
-		vec3 old_color = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy)).xyz;
-		accumColor = mix(old_color, accumColor, a);
+		vec3 old_color = imageLoad(image, pixel).xyz;
+		color = mix(old_color, color, a);
 	}
-	
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(accumColor, 1.f));
-	imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(accumColor, 1.f));
+
+	imageStore(image, pixel, vec4(color, 1.f));
+	imageStore(progressive, pixel, vec4(color, 1.f));
 }

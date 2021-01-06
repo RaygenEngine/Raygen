@@ -6,30 +6,26 @@
 
 #include "sky.glsl"
 
-struct LightPathVertex {
-	vec3 position;
-	vec3 normal;
-	vec3 value; 
-};
-
 struct hitPayload
 {
-	vec3 radiance; // to be filled
-
-	vec3 origin; // this ray stuff
+	vec3 origin; 
 	vec3 direction;
-	vec3 attenuation; 
+	vec3 normal;
+	vec3 throughput;
 
 	int hitType; 
 	uint seed;
-	
-	uint lightPathDepth;
-	LightPathVertex lightpath[4];
+
+	// WIP:
+	vec3 albedo;
+	vec3 f0;
+	float opacity;
+	float a;
 };
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
-	prd.radiance = GetSkyColor(prd.origin, prd.direction);
+	prd.throughput = GetSkyColor(prd.origin, prd.direction);
 	prd.hitType = 2; 
 }
