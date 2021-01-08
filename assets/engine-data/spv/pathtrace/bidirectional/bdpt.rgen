@@ -1,12 +1,9 @@
 #version 460
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
-#extension GL_EXT_ray_query: require
 // TODO:
 #define RAY
 #include "global.glsl"
-
-
 
 #include "random.glsl"
 #include "sampling.glsl"
@@ -16,12 +13,6 @@ struct PathVertex {
 	vec3 position;
 	vec3 normal;
 	vec3 throughput; // attenuated light value
-
-	// WIP:
-	vec3 albedo;
-	vec3 f0;
-	float opacity;
-	float a;
 };
 
 struct hitPayload
@@ -35,12 +26,16 @@ struct hitPayload
 	// 0 - continue
 	// 1 - break;
 	uint seed;
+};
 
-	// WIP:
-	vec3 albedo;
-	vec3 f0;
-	float opacity;
-	float a;
+struct mergePayload
+{
+	vec3 target;
+	vec3 wi;
+
+	vec3 connectionFactor;
+
+	int visible;
 };
 
 layout(push_constant) uniform PC
@@ -61,51 +56,7 @@ layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
-
-
-#ifndef pt_bdpt_glsl
-#define pt_bdpt_glsl
-
-void addSample(float imageX, float imageY, vec3 L) {
-
-	float dImageX = imageX - 0.5f;
-    float dImageY = imageY - 0.5f;
-    // calculate the pixel range covered by filter center at sample
-    float xWidth = float(gl_LaunchSizeEXT.x);//mFilter->getXWidth();
-    float yWidth = float(gl_LaunchSizeEXT.y);//mFilter->getYWidth();
-    int x0 = int(ceil(dImageX - xWidth));
-    int x1 = int(floor(dImageX + xWidth));
-    int y0 = int(ceil(dImageY - yWidth));
-    int y1 = int(floor(dImageY + yWidth));
-    //x0 = max(x0, mXStart);
-    //x1 = min(x1, mXStart + mXCount - 1);
-    //y0 = max(y0, mYStart);
-    //y1 = min(y1, mYStart + mYCount - 1);
-    
-    for(int y = y0; y <= y1; ++y) {
-        float fy = abs(gl_LaunchSizeEXT.x * (y - dImageY) / yWidth);
-        int iy = min(int(floor(fy)), int(gl_LaunchSizeEXT.x - 1));
-        for(int x = x0; x <= x1; ++x) {
-            float fx = abs(gl_LaunchSizeEXT.x * (x - dImageX) / xWidth);
-            int ix = min(int(floor(fx)), int(gl_LaunchSizeEXT.x - 1));
-            float weight = 1.0;
-
-            vec3 color = weight * L;
-
-            if(frame > 0) {
-		    	float a = 1.0f / float(frame);
-		    	vec3 old_color = imageLoad(image, ivec2(x,y)).xyz;
-		    	color = mix(old_color, color, a);
-		    }
-            imageStore(image, ivec2(x,y), vec4(color, 1.f));
-        }
-    }
-
-}
-
-#endif
-
-
+layout(location = 1) rayPayloadEXT mergePayload mprd;
 
 void TraceLightRay() {
     uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
@@ -114,7 +65,7 @@ void TraceLightRay() {
 
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFF,           // cullMask - lights
+				0xFD,           // cullMask - quadlights WIP: if we hit light again, end path
 				2,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				1,              // missIndex
@@ -133,7 +84,7 @@ void TraceCameraRay() {
 
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFF,           // cullMask - nothing
+				0xFF,           // cullMask - none
 				0,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				0,              // missIndex
@@ -145,30 +96,39 @@ void TraceCameraRay() {
 	);
 }
 
-bool VisibilityOfVertex(vec3 origin, vec3 direction, float tMin, float tMax) {
+bool PathMergeRay(PathVertex pstart, PathVertex ptarget, PathVertex pnext, out vec3 connectionFactor) {
+    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
 
-	// Initializes a ray query object but does not start traversal
-	rayQueryEXT rayQuery;
-	rayQueryInitializeEXT(rayQuery, 
-							topLevelAs, 
-							gl_RayFlagsTerminateOnFirstHitEXT, 
-							0xFF, 
-							origin, 
-							tMin,
-							direction, 
-							tMax);
+	vec3 direction = normalize(ptarget.position - pstart.position);
 
-	// Start traversal: return false if traversal is complete
-	while(rayQueryProceedEXT(rayQuery)) {
-	}
-      
-	// Returns type of committed (true) intersection
-	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
-		// Got an intersection == Shadow
-		return false;
-	}
+	// bias offset based on normal and direction. 
+	float k = dot(direction, pstart.normal);
+	float sign = sign(k) + (1.0 - abs(sign(k))); 
 
-	return true;
+	// always offset above surface
+	vec3 origin = pstart.position;//WIP: + sign * direction * BIAS; 
+	
+	mprd.target = ptarget.position;
+	mprd.wi = normalize(pnext.position - ptarget.position); // wo\ /wi
+
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFF,           // cullMask - none
+				3,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				2,              // missIndex
+				origin,         // ray origin
+				tMin,           // ray min range
+				direction,      // ray direction
+				tMax,           // ray max range
+				1               // payload (location = 1)
+	);
+
+	connectionFactor = mprd.connectionFactor;
+
+	return mprd.visible == 1;
 }
 
 bool IsValidPixel(vec3 pCamera, vec3 pWorld, out ivec2 pixel) {
@@ -186,7 +146,8 @@ bool IsValidPixel(vec3 pCamera, vec3 pWorld, out ivec2 pixel) {
 	// WIP:
 	pixel = ivec2(floor(ndc.x * gl_LaunchSizeEXT.x), floor(ndc.y * gl_LaunchSizeEXT.y));
 
-	return (ndc.x < 0 || ndc.x > 1 || ndc.y < 0 || ndc.y > 1);
+	return (pixel.x >= 0 && pixel.x < gl_LaunchSizeEXT.x &&
+	        pixel.y >= 0 && pixel.y < gl_LaunchSizeEXT.y);
 }
 
 float evalWe(vec3 pCamera, vec3 pWorld) {
@@ -200,16 +161,15 @@ float evalWe(vec3 pCamera, vec3 pWorld) {
     float lensToFilmDistance2 = dot(lensToFilm, lensToFilm);
     float cosTheta = normalize(lensToFilm).z;
     float G = cosTheta * cosTheta / lensToFilmDistance2;
-    //float lensArea = mLensRadius * mLensRadius * PI; 
-    float We = //mLensRadius > 0.0f ?
-        //1.0f / (mFilmArea * lensArea * G) 
-        1.0f / (cam.filmArea * G); // pinhole
+	float pdf_lens = 1;
+	float pdf_film = 1.0 / cam.filmArea;
+    float We = pdf_lens * pdf_film / G; // see importance...
     return We;
 }
 
 void main() {
 
-#define maxLightPath 4
+#define maxLightPath 1
 
 	// picked light
 	Quadlight ql;
@@ -236,7 +196,7 @@ void main() {
 		u2.y *= ql.height / 2.f;
 
 		// pick origin on surface
-		prd.origin = ql.center + u2.x * ql.right + u2.y * ql.up + ql.normal * BIAS;
+		prd.origin = ql.center + u2.x * ql.right + u2.y * ql.up;
 
 		prd.normal = ql.normal;
 
@@ -255,10 +215,10 @@ void main() {
 			 ql.right.y * v.x + ql.up.y * v.y + ql.normal.y * v.z,
 			 ql.right.z * v.x + ql.up.z * v.y + ql.normal.z * v.z);
 
-		float pdf_lightDirection = uniformHemispherePdf();
+		// projection solid angle form
+		float pdf_lightDirection = uniformHemispherePdf() / abs(dot(ql.normal, prd.direction)); // WIP: check abs
 		
-		// area form
-		vec3 throughput = lightVertices[0].throughput * abs(dot(ql.normal, prd.direction)) / pdf_lightDirection;
+		vec3 throughput = lightVertices[0].throughput / pdf_lightDirection;
 
 		lightVertex = 1;
 		for(;lightVertex < maxLightPath; ++lightVertex) {
@@ -273,10 +233,6 @@ void main() {
 
 			lightVertices[lightVertex].position = prd.origin;
 			lightVertices[lightVertex].normal = prd.normal;
-			lightVertices[lightVertex].albedo = prd.albedo;
-			lightVertices[lightVertex].f0 = prd.f0;
-			lightVertices[lightVertex].opacity = prd.opacity;
-			lightVertices[lightVertex].a = prd.a;
 
 			throughput *= prd.throughput;
 		}
@@ -309,46 +265,76 @@ void main() {
 //		float pdf_pixelArea = 1.0 / (1.0 * 1.0);
 	}
 
-	if(frame == 0) {
+
+	if(frame == 0)
+	{
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0));
 		imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(0));
 	}
 
-	// merge t = 1 s = 2 - ie merge 
-
 	vec3 color = vec3(0);
 	ivec2 pixel;
+	
+	// merge t = 1 s = 1 - ie merge 
+	for (int s = 1; s <= lightVertex; ++s) {
 
-	// merge light vertex directly with camera aperture
-	const PathVertex lv = lightVertices[1];
-	const PathVertex cv = cameraVertices[0];
+		// merge light vertex directly with camera lens vertex
+		const PathVertex lv = lightVertices[s - 1]; // light vertex
+		const PathVertex pv = s > 1 ? lightVertices[s - 2] : lv; // previous light vertex
+		const PathVertex cv = cameraVertices[0]; // camera vertex
 
-	if(IsValidPixel(cv.position, lv.position, pixel)) {
-		return; // WIP:
-	}
+		if(!IsValidPixel(cv.position, lv.position, pixel)) {
+			continue; // WIP:
+		}
 
-	vec3 occludeDir = lv.position - cv.position;
-	float dist = length(occludeDir);
-
-	if(VisibilityOfVertex(cv.position, normalize(occludeDir), 0.001, dist - BIAS)) {
+		vec3 connectionFactor = vec3(1);
+		if(!PathMergeRay(cv, lv, pv, connectionFactor)) {
+			continue; // WIP:
+		}
 
 		vec3 wo = normalize(cv.position - lv.position);
-
+		float dist = distance(cv.position, lv.position);
 		vec3 fsL = ql.color * ql.intensity;
 
 		float fsE = evalWe(cv.position, lv.position);
 
 		float G = abs(dot(lv.normal, wo)) * abs(dot(cv.normal, wo)) / (dist * dist);
 
-		color = fsL * fsE * G * lv.throughput * cv.throughput;
+		color += fsL * lv.throughput * connectionFactor * G * cv.throughput * fsE;
 	}
 
-	if(frame > 0) {
+	color /= float(lightVertex);
+
+//	PathVertex plv = lightVertices[0]; 
+//	PathVertex lv = lightVertices[1]; 
+//	PathVertex cv = cameraVertices[0];
+//
+//	if(!IsValidPixel(cv.position, lv.position, pixel)) {
+//		return; // WIP:
+//	}
+//
+//	vec3 connectionFactor;
+//	if(!PathMergeRay(cv, lv, plv, connectionFactor)) {
+//		color = vec3(0); // WIP:
+//	}
+//	else {
+//		vec3 wo = normalize(cv.position - lv.position);
+//		float dist = distance(cv.position, lv.position);
+//		// G between end points between light path and eye path
+//		float G = abs(dot(lv.normal, wo)) * abs(dot(cv.normal, wo)) / (dist * dist);
+//		vec3 fsL = ql.color * ql.intensity;
+//		float fsE = evalWe(cv.position, lv.position);
+//		color = fsL * lv.throughput * connectionFactor * G * cv.throughput * fsE;
+//	}
+//
+
+	if(frame > 0)
+	{
 		float a = 1.0f / float(frame);
-		vec3 old_color = imageLoad(image, pixel).xyz;
+		vec3 old_color = imageLoad(progressive, pixel).xyz;
 		color = mix(old_color, color, a);
 	}
-
+	
 	imageStore(image, pixel, vec4(color, 1.f));
 	imageStore(progressive, pixel, vec4(color, 1.f));
 }

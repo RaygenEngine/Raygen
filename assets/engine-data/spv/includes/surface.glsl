@@ -199,25 +199,6 @@ float microfacetBrdf(float NoH, float NoV, float NoL, float a)
     return numerator / max(denominator, 0.001); 
 }
 
-vec3 SampleWorldDirection(vec3 N, vec3 V, vec3 L, vec3 albedo, vec3 f0, float opacity, float a)
-{
-    vec3 H = normalize(V + L); 
-    float NoH = max(dot(N, H), BIAS);
-    float NoV = max(dot(N, V), BIAS);
-    float LoH = max(dot(L, H), BIAS);
-    float NoL = max(dot(N, L), BIAS);
-
-    vec3 ks = F_Schlick(LoH, f0);
-    vec3 kt = 1.0 - ks;
-    vec3 kd = kt * opacity;
-
-    vec3 brdf_d = DisneyDiffuse(NoL, NoV, LoH, a, albedo);
-
-    float brdf_r = a < SPEC_THRESHOLD ?  BlinnPhongSpecular(NoH, a) : microfacetBrdf(NoH, NoV, NoL, a);
-    
-    return kd * brdf_d + ks * brdf_r;
-}
-
 // SMATH:
 float microfacetBrdfNoL(Surface surface) 
 {
