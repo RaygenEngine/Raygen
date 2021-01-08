@@ -14,12 +14,6 @@ struct hitPayload
 
 	int hitType; 
 	uint seed;
-
-	// WIP:
-	vec3 albedo;
-	vec3 f0;
-	float opacity;
-	float a;
 };
 
 layout(push_constant) uniform PC

@@ -54,17 +54,22 @@ vk::UniquePipeline BdptPipe::MakePipeline()
 	auto& ptshader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt.shader");
 	auto& ptLightPathShader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt-lightpath.shader");
 	auto& ptQuadlightShader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt-quadlight.shader");
+	auto& ptMergePathShader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt-merge.shader");
+	auto& ptMergePathQuadlightShader = getShader("engine-data/spv/pathtrace/bidirectional/bdpt-merge-quadlight.shader");
 
 	auto get = [](auto shader) {
 		return *shader.Lock().module;
 	};
 
 	AddRaygenGroup(get(ptshader.rayGen));
-	AddMissGroup(get(ptshader.miss));                            // miss general 0
-	AddMissGroup(get(ptLightPathShader.miss));                   // miss lightpath 1
-	AddHitGroup(get(ptshader.closestHit), get(ptshader.anyHit)); // gltf mat 0, ahit for mask
-	AddHitGroup(get(ptQuadlightShader.closestHit));              // quad lights 1
-	AddHitGroup(get(ptLightPathShader.closestHit));              // lightpath 2
+	AddMissGroup(get(ptshader.miss));                                              // miss general 0
+	AddMissGroup(get(ptLightPathShader.miss));                                     // miss lightpath 1
+	AddMissGroup(get(ptMergePathShader.miss));                                     // miss merge 2
+	AddHitGroup(get(ptshader.closestHit), get(ptshader.anyHit));                   // gltf mat 0, ahit for mask
+	AddHitGroup(get(ptQuadlightShader.closestHit));                                // quad lights 0 + 1
+	AddHitGroup(get(ptLightPathShader.closestHit));                                // lightpath 2
+	AddHitGroup(get(ptMergePathShader.closestHit), get(ptMergePathShader.anyHit)); // merge 3, ahit for mask
+	AddHitGroup(get(ptMergePathQuadlightShader.closestHit));                       // merge quadlight 3 + 1
 
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
 	rayPipelineInfo

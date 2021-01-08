@@ -9,18 +9,16 @@
 #define RAY
 #include "global.glsl"
 
-#include "pathtrace/fresnelpath.glsl"
 #include "surface.glsl"
 
-struct hitPayload
+struct mergePayload
 {
-	vec3 origin; 
-	vec3 direction;
-	vec3 normal;
-	vec3 throughput;
+	vec3 target;
+	vec3 wi;
 
-	int hitType; 
-	uint seed;
+	vec3 connectionFactor;
+
+	int visible;
 };
 
 layout(push_constant) uniform PC
@@ -34,7 +32,7 @@ layout(push_constant) uniform PC
 };
 
 hitAttributeEXT vec2 baryCoord;
-layout(location = 1) rayPayloadInEXT hitPayload prd;
+layout(location = 1) rayPayloadInEXT mergePayload prd;
 
 
 struct Vertex
@@ -231,32 +229,19 @@ Surface surfaceFromGeometryGroup(
 
 void main() {
 	
+	// PERF:
+	vec3 tempPos = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
+	if(distance(prd.target, tempPos) > BIAS) {
+		prd.visible = 0;
+		return;
+	}
+
 	int matId = gl_InstanceCustomIndexEXT;
 
 	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	bool isRefl;
-	float pathPdf, bsdfPdf;
-	FresnelPath(surface, prd.throughput, pathPdf, bsdfPdf, isRefl, prd.seed);
-
-	float pdf = pathPdf * bsdfPdf;
-
-	// BIAS: stop erroneous paths
-	if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
-	   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-	   pdf < BIAS) {                                               // very small pdf
-		prd.hitType = 1; // break;
-		return;
-	}
-
-	// projection solid angle form - WIP: nols come from throughput, invgestigate
-	//pdf /= abs(dot(surface.normal, prd.direction)); // WIP: check abs
-
-	prd.normal = surface.basis.normal;
-	prd.throughput /= pdf;
-	prd.hitType = 0; // continue
-	prd.origin = surface.position;
-	prd.direction = surfaceIncidentLightDir(surface);
+	prd.connectionFactor = SampleWorldDirection(surface, prd.wi); // WIP: contains nol
+	prd.visible = 1;
 }
