@@ -106,7 +106,7 @@ void main() {
 
 		accumColor += prd.radiance * currentTotalAttenuation;
 		
-		if(RRTerminationCheck(currentTotalAttenuation)) {
+		if(depth > 5 && RRTerminationCheck(currentTotalAttenuation)) {
 			break;
 		}
 	}

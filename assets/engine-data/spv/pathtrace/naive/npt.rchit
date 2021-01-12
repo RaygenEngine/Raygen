@@ -9,7 +9,7 @@
 #define RAY
 #include "global.glsl"
 
-#include "pathtrace/fresnelpath.glsl"
+#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -203,7 +203,9 @@ Surface surfaceFromGeometryGroup(
 	float etaI = 1.0; // vacuum (recursive)
 	float etaT = eta; // material
 		
-	// if behind actual surface flip the normals
+	//vec3 n = normalize(cross(v1.position - v0.position, v2.position - v0.position));
+
+	// if we view backface flip the normals
 	if(dot(V, Ng) < 0) { 
 	    Ng = -Ng;
 		N = -N; 
@@ -221,7 +223,7 @@ Surface surfaceFromGeometryGroup(
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
     surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.nov = absNdot(surface.v);
 
     return surface;
 }
@@ -238,7 +240,7 @@ void main() {
 
 	bool isRefl;
 	float pathPdf, bsdfPdf;
-	FresnelPath(surface, prd.attenuation, pathPdf, bsdfPdf, isRefl, prd.seed);
+	SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isRefl, prd.seed);
 
 	float pdf = pathPdf * bsdfPdf;
 	
@@ -251,7 +253,7 @@ void main() {
 		return;
 	}
 
-	prd.attenuation /= pdf;
+	prd.attenuation = prd.attenuation * surface.nol / pdf;
 	prd.hitType = 1; // general
 	prd.origin = surface.position;
 	prd.direction = surfaceIncidentLightDir(surface);	

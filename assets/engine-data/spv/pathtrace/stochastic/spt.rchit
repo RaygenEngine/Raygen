@@ -9,8 +9,8 @@
 #define RAY
 #include "global.glsl"
 
-#include "pathtrace/fresnelpath.glsl"
 #include "pathtrace/lights.glsl"
+#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -219,7 +219,6 @@ Surface surfaceFromGeometryGroup(
 		float t = etaI; 
 		etaI = etaT;
 		etaT = t;
-		exits = true;
 	}
 
 	surface.eta = etaI / etaT;
@@ -230,7 +229,7 @@ Surface surfaceFromGeometryGroup(
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
     surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.nov = absNdot(surface.v);
 
     return surface;
 }
@@ -266,18 +265,18 @@ void main() {
 	{
 		bool isRefl;
 		float pathPdf;
-		FresnelPath(surface, prd.attenuation, pathPdf, prd.weightedPdf, isRefl, prd.seed);
+		SampleBSDF(surface, prd.attenuation, pathPdf, prd.weightedPdf, isRefl, prd.seed);
 
 		// BIAS: stop erroneous paths
 		if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
 		   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-		   pathPdf * prd.weightedPdf < BIAS) {                                                 // very small pdf
+		   pathPdf * prd.weightedPdf < BIAS) {                           // very small pdf
 			prd.attenuation = vec3(0);
 			prd.hitType = 3;
 			return;
 		}
 
-		prd.attenuation /= pathPdf;
+		prd.attenuation = prd.attenuation * surface.nol / pathPdf;
 		prd.hitType = 1; // general
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);	

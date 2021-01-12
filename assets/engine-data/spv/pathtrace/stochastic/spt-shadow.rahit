@@ -9,16 +9,8 @@
 #define RAY
 #include "global.glsl"
 
-#include "random.glsl"
-
-struct shadowHitPayload
-{
-	vec3 filt; 
-	uint seed;
-};
-
 hitAttributeEXT vec2 baryCoord;
-layout(location = 1) rayPayloadInEXT shadowHitPayload prd;
+layout(location = 1) rayPayloadInEXT bool prd;
 
 struct Vertex
 {

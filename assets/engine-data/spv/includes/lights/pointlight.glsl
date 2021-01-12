@@ -1,7 +1,7 @@
 #ifndef pointlight_glsl
 #define pointlight_glsl
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
@@ -39,7 +39,7 @@ vec3 Pointlight_Sample(accelerationStructureEXT topLevelAs, Pointlight pl, Surfa
   			     pl.quadraticTerm * (dist * dist));
 
 	vec3 Li = pl.color * pl.intensity * attenuation;  
-	return Li * SampleWorldDirection(surface, L);
+	return Li * explicitBrdf(surface, L);
 }
 
 vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)

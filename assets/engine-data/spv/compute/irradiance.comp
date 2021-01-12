@@ -3,7 +3,7 @@
 
 #include "global.glsl"
 #include "onb.glsl"
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "hammersley.glsl"
 #include "sampling.glsl"
 

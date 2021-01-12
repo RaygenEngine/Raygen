@@ -1,5 +1,5 @@
-#ifndef bsdf_glsl
-#define bsdf_glsl
+#ifndef bsdfs_glsl
+#define bsdfs_glsl
 
 #include "fresnel.glsl"
 

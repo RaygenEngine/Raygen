@@ -2,7 +2,7 @@
 #define irragrid_glsl
 
 #include "aabb.glsl"
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "fresnel.glsl"
 #include "onb.glsl"
 #include "random.glsl"

@@ -1,7 +1,7 @@
 #ifndef dirlight_glsl
 #define dirlight_glsl
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "shadowmap.glsl"
 #include "surface.glsl"
 
@@ -10,7 +10,7 @@ vec3 Dirlight_Contribution(Dirlight dl, sampler2DShadow shadowmap, Surface surfa
 	vec3 L = normalize(-dl.front); 
 
 	vec3 Li = (1.0 - shadow) * dl.color * dl.intensity; 
-	return Li * SampleWorldDirection(surface, L);
+	return Li * explicitBrdf(surface, L);
 }
 
 vec3 Dirlight_FastContribution(Dirlight dl, sampler2DShadow shadowmap, Surface surface)

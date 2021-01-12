@@ -1,7 +1,7 @@
 #ifndef sampling_glsl
 #define sampling_glsl
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 
 vec3 uniformSampleHemisphere(vec2 u) 
 {

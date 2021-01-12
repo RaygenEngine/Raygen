@@ -81,6 +81,7 @@ vec3 outOnbSpace(Onb orthoBasis, vec3 v)
 
 // cosTheta = n o w = (0,0,1) o w = w.z
 float Ndot(vec3 w) { return w.z; }
+float absNdot(vec3 w) { return abs(w.z); }
 float CosTheta(vec3 w) { return w.z; }
 float Cos2Theta(vec3 w) { return w.z * w.z; }
 float AbsCosTheta(vec3 w) { return abs(w.z); }

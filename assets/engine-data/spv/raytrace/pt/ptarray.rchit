@@ -11,7 +11,7 @@
 
 #include "global.glsl"
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "lights/dirlight.glsl"
 #include "lights/pointlight.glsl"
 #include "lights/quadlight.glsl"

@@ -222,7 +222,7 @@ Surface surfaceFromGeometryGroup(
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
     surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.nov = absNdot(surface.v);
 
     return surface;
 }
@@ -242,6 +242,6 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	prd.connectionFactor = SampleWorldDirection(surface, prd.wi); // WIP: contains nol
+	prd.connectionFactor = explicitBrdf(surface, prd.wi);
 	prd.visible = 1;
 }
