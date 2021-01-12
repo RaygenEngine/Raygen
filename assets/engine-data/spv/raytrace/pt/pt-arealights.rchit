@@ -12,7 +12,7 @@
 #include "global-descset.glsl"
 
 #include "aabb.glsl"
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "lights/quadlight.glsl"
 #include "onb.glsl"
 #include "random.glsl"

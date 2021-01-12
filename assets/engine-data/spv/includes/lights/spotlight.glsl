@@ -1,7 +1,7 @@
 #ifndef spotlight_glsl
 #define spotlight_glsl
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "shadowmap.glsl"
 #include "surface.glsl"
 
@@ -19,7 +19,7 @@ vec3 Spotlight_Contribution(Spotlight sl, sampler2DShadow shadowmap, Surface sur
     float spotEffect = clamp((theta - sl.outerCutOff) / epsilon, 0.0, 1.0);
 
 	vec3 Li = (1.0 - shadow) * sl.color * sl.intensity * attenuation * spotEffect; 
-	return Li * SampleWorldDirection(surface, L);
+	return Li * explicitBrdf(surface, L);
 }
 
 vec3 Spotlight_FastContribution(Spotlight sl, sampler2DShadow shadowmap, Surface surface)

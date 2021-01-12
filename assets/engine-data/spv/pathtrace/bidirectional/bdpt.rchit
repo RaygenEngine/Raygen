@@ -9,8 +9,8 @@
 #define RAY
 #include "global.glsl"
 
-#include "pathtrace/fresnelpath.glsl"
 #include "pathtrace/lights.glsl"
+#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -225,59 +225,11 @@ Surface surfaceFromGeometryGroup(
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
     surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.nov = absNdot(surface.v);
 
     return surface;
 }
 
 void main() {
-	
-//	int matId = gl_InstanceCustomIndexEXT;
-//
-//	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
-//
-//	Surface surface = surfaceFromGeometryGroup(gg);
-//
-//	prd.radiance += surface.emissive;
-//
-//	// merge with all light subpaths
-//	for(int i = 0; i < prd.lightPathDepth; ++i) { 
-//
-//		vec3 L = normalize(prd.lightpath[i].position - surface.position);
-//
-//		// for direct light on surface WIP:
-//		if(i == 0 && dot(prd.lightpath[i].normal, -L) < BIAS) {
-//			continue; // hard for visibility to give a non false positive on a 2D surface
-//		}
-//
-//		float dist = distance(prd.lightpath[i].position - L * 0.01, surface.position);
-//
-//		float vis = VisibilityOfVertex(surface.position, L, 0.001, dist);
-//
-//		vec3 Li = prd.lightpath[i].value;
-//		float attenuation = 1.0 / (dist * dist);
-//			
-//		// pdf = 1.0 since it is explicitly chosen
-//		prd.radiance += vis * Li * attenuation * SampleWorldDirection(surface, L); 
-//	}
-//
-//	bool isRefl;
-//	float pathPdf, bsdfPdf;
-//	FresnelPath(surface, prd.attenuation, pathPdf, bsdfPdf, isRefl, prd.seed);
-//
-//	float pdf = pathPdf * bsdfPdf;
-//
-//	// BIAS: stop erroneous paths
-//	if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
-//	   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-//	   pdf < BIAS) {                                               // very small pdf
-//		prd.attenuation = vec3(0);
-//		prd.hitType = 2;
-//		return;
-//	}
-//
-//	prd.attenuation /= pdf;
-//	prd.hitType = 1; // general
-//	prd.origin = surface.position;
-//	prd.direction = surfaceIncidentLightDir(surface);	
+	// TODO:	
 }

@@ -9,7 +9,7 @@
 #define RAY
 #include "global.glsl"
 
-#include "pathtrace/fresnelpath.glsl"
+#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -224,7 +224,7 @@ Surface surfaceFromGeometryGroup(
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
     surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.nov = absNdot(surface.v);
 
     return surface;
 }
@@ -239,7 +239,7 @@ void main() {
 
 	bool isRefl;
 	float pathPdf, bsdfPdf;
-	FresnelPath(surface, prd.throughput, pathPdf, bsdfPdf, isRefl, prd.seed);
+	SampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isRefl, prd.seed);
 
 	float pdf = pathPdf * bsdfPdf;
 
@@ -247,12 +247,12 @@ void main() {
 	if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
 	   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
 	   pdf < BIAS) {                                               // very small pdf
-		prd.hitType = 1; // break;
+	   prd.hitType = 1; // break;
 		return;
 	}
 
-	// projection solid angle form - WIP: nols come from throughput, invgestigate
-	//pdf /= abs(dot(surface.normal, prd.direction)); // WIP: check abs
+	// projection solid angle form
+	pdf /= surface.nol;
 
 	prd.normal = surface.basis.normal;
 	prd.throughput /= pdf;

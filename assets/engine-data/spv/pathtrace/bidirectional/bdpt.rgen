@@ -58,25 +58,6 @@ layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight ligh
 layout(location = 0) rayPayloadEXT hitPayload prd;
 layout(location = 1) rayPayloadEXT mergePayload mprd;
 
-void TraceLightRay() {
-    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
-    float tMin     = 0.001;
-    float tMax     = 10000.0;
-
-	traceRayEXT(topLevelAs,     // acceleration structure
-				rayFlags,       // rayFlags
-				0xFD,           // cullMask - quadlights WIP: if we hit light again, end path
-				2,              // sbtRecordOffset
-				0,              // sbtRecordStride
-				1,              // missIndex
-				prd.origin,     // ray origin
-				tMin,           // ray min range
-				prd.direction,  // ray direction
-				tMax,           // ray max range
-				0               // payload (location = 0)
-	);
-}
-
 void TraceCameraRay() {
     uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
@@ -96,7 +77,26 @@ void TraceCameraRay() {
 	);
 }
 
-bool PathMergeRay(PathVertex pstart, PathVertex ptarget, PathVertex pnext, out vec3 connectionFactor) {
+void TraceLightRay() {
+    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFD,           // cullMask - quadlights WIP: if we hit light again, end path
+				2,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				1,              // missIndex
+				prd.origin,     // ray origin
+				tMin,           // ray min range
+				prd.direction,  // ray direction
+				tMax,           // ray max range
+				0               // payload (location = 0)
+	);
+}
+
+bool PathMergeRay(PathVertex pstart, PathVertex ptarget, PathVertex pnext, inout vec3 connectionFactor) {
     uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.001;
     float tMax     = 10000.0;
@@ -131,22 +131,31 @@ bool PathMergeRay(PathVertex pstart, PathVertex ptarget, PathVertex pnext, out v
 	return mprd.visible == 1;
 }
 
-bool IsValidPixel(vec3 pCamera, vec3 pWorld, out ivec2 pixel) {
+bool IsValidPixel(vec3 pLens, vec3 pWorld, out ivec2 pixel) {
 
 	vec4 pView = cam.view * vec4(pWorld, 1.0f);
-	vec4 pLensLocal = cam.view * vec4(pCamera, 1.0f);
-	vec4 dir = pView - pLensLocal;
-	vec4 pFocus = pLensLocal + (/*cam.focalLength*/1.0 / dir.z) * dir; 
-	vec4 clipFocus = cam.proj * pFocus;
+    vec4 pLensLocal = cam.view * vec4(pLens, 1.0f);
 
-	vec3 ndc = clipFocus.xyz / clipFocus.w; // NDC
-	ndc.y *= -1;
-	ndc.xyz = ndc.xyz * 0.5 + 0.5; // 0 to 1
+    // pWorld is behind camera lens
+    if (pView.z > 0.0f) {
+        return false;
+    }
+    vec4 dir = vec4(pView - pLensLocal);
+    // pWorld is on the plane of of lens, it won't be in the screen
+    if (abs(dir.z) < BIAS) {
+        return false;
+    }
+    vec4 pFocus = pLensLocal + (1.f/*WIP desc set mFocalDistance*/ / dir.z) * dir;
+    vec4 pNDC = cam.proj * pFocus;
+    pNDC /= pNDC.w;
+    float screenX = (pNDC.x + 1.0f) * 0.5f * gl_LaunchSizeEXT.x;
+    float screenY = (1.0f - pNDC.y) * 0.5f * gl_LaunchSizeEXT.y;
 
 	// WIP:
-	pixel = ivec2(floor(ndc.x * gl_LaunchSizeEXT.x), floor(ndc.y * gl_LaunchSizeEXT.y));
+	pixel = ivec2(ceil(screenX), ceil(screenY));
 
-	return (pixel.x >= 0 && pixel.x < gl_LaunchSizeEXT.x &&
+	return //pixel.x == gl_LaunchIDEXT.x && pixel.y == gl_LaunchIDEXT.y;
+	       (pixel.x >= 0 && pixel.x < gl_LaunchSizeEXT.x &&
 	        pixel.y >= 0 && pixel.y < gl_LaunchSizeEXT.y);
 }
 
@@ -167,12 +176,48 @@ float evalWe(vec3 pCamera, vec3 pWorld) {
     return We;
 }
 
+vec3 evalLe(Quadlight ql, vec3 direction) {
+    
+    return dot(ql.normal, direction) < BIAS ? vec3(0) : ql.intensity * ql.color;
+}
+
 void main() {
 
-#define maxLightPath 1
+	// same as light sample
+	PathVertex cameraVertices[1];
+
+	vec3 pCamera = cam.position; // pinhole
+
+	// on the lens - pinhole
+	cameraVertices[0].position = pCamera;
+	cameraVertices[0].normal = -vec3(cam.view[0][2], cam.view[1][2], cam.view[2][2]);
+	cameraVertices[0].throughput = vec3(1.0);
+
+	// CAMERA PATH WIP:
+	{
+//		float r1 = rand(prd.seed);
+//		float r2 = rand(prd.seed);
+//
+//		vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+//
+//		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
+//		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+//		vec2       d           = inUV * 2.0 - 1.0;
+//
+//		vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
+//		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+//		vec4 direction = cam.viewInv * vec4(target.xyz, 0);
+//
+//		// pixelWidth * pixelHeight SMATH:
+//		float pdf_pixelArea = 1.0 / (1.0 * 1.0);
+	}
+
+#define maxLightPath 15
 
 	// picked light
 	Quadlight ql;
+	vec3 pLight;
+
 
 	int lightVertex;
 	PathVertex lightVertices[maxLightPath];
@@ -196,8 +241,9 @@ void main() {
 		u2.y *= ql.height / 2.f;
 
 		// pick origin on surface
-		prd.origin = ql.center + u2.x * ql.right + u2.y * ql.up;
+		pLight = ql.center + u2.x * ql.right + u2.y * ql.up;
 
+		prd.origin = pLight;
 		prd.normal = ql.normal;
 
 		// on surface of light
@@ -216,7 +262,7 @@ void main() {
 			 ql.right.z * v.x + ql.up.z * v.y + ql.normal.z * v.z);
 
 		// projection solid angle form
-		float pdf_lightDirection = uniformHemispherePdf() / abs(dot(ql.normal, prd.direction)); // WIP: check abs
+		float pdf_lightDirection = uniformHemispherePdf() / absdot(ql.normal, prd.direction);
 		
 		vec3 throughput = lightVertices[0].throughput / pdf_lightDirection;
 
@@ -238,43 +284,14 @@ void main() {
 		}
 	}
 
-	// same as light sample
-	PathVertex cameraVertices[1];
-
-	// on the lens - pinhole
-	cameraVertices[0].position = cam.position;
-	cameraVertices[0].normal = -vec3(cam.view[0][2], cam.view[1][2], cam.view[2][2]);
-	cameraVertices[0].throughput = vec3(1.0);
-
-	// CAMERA PATH WIP:
-	{
-//		float r1 = rand(prd.seed);
-//		float r2 = rand(prd.seed);
-//
-//		vec2 subpixel_jitter = frame == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
-//
-//		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
-//		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
-//		vec2       d           = inUV * 2.0 - 1.0;
-//
-//		vec4 origin    = cam.viewInv * vec4(0, 0, 0, 1);
-//		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
-//		vec4 direction = cam.viewInv * vec4(target.xyz, 0);
-//
-//		// pixelWidth * pixelHeight SMATH:
-//		float pdf_pixelArea = 1.0 / (1.0 * 1.0);
-	}
-
 
 	if(frame == 0)
 	{
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0));
 		imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(0));
+		return;
 	}
 
-	vec3 color = vec3(0);
-	ivec2 pixel;
-	
 	// merge t = 1 s = 1 - ie merge 
 	for (int s = 1; s <= lightVertex; ++s) {
 
@@ -283,6 +300,7 @@ void main() {
 		const PathVertex pv = s > 1 ? lightVertices[s - 2] : lv; // previous light vertex
 		const PathVertex cv = cameraVertices[0]; // camera vertex
 
+		ivec2 pixel;
 		if(!IsValidPixel(cv.position, lv.position, pixel)) {
 			continue; // WIP:
 		}
@@ -294,47 +312,62 @@ void main() {
 
 		vec3 wo = normalize(cv.position - lv.position);
 		float dist = distance(cv.position, lv.position);
-		vec3 fsL = ql.color * ql.intensity;
+		// G between end points between light path and eye path
+		float G = absdot(lv.normal, wo) * absdot(cv.normal, wo) / (dist * dist);
+		vec3 fsL;
+		if(s > 1) {
+			fsL = connectionFactor * evalLe(ql, normalize(lv.position - pLight));
 
+		}
+		else {
+			fsL = evalLe(ql, normalize(lv.position - pLight));
+		}
 		float fsE = evalWe(cv.position, lv.position);
+		vec3 color = fsL * lv.throughput * G * cv.throughput * fsE;
 
-		float G = abs(dot(lv.normal, wo)) * abs(dot(cv.normal, wo)) / (dist * dist);
+		vec4 data = imageLoad(image, pixel);
+		
+		if(data.a > 0) {
+			float a = 1.0f / float(data.a);
+			color = mix(data.xyz, color, a);
+		}
 
-		color += fsL * lv.throughput * connectionFactor * G * cv.throughput * fsE;
+		vec4 val = vec4(color, data.a + 1.f);
+		imageStore(image, pixel, val); // WIP: race conditions
 	}
 
-	color /= float(lightVertex);
+	//imageStore(image, pixel, vec4(color, 1.f));
 
-//	PathVertex plv = lightVertices[0]; 
-//	PathVertex lv = lightVertices[1]; 
+//	color /= float(lightVertex);
+
+//	PathVertex plv = lightVertices[2]; 
+//	PathVertex lv = lightVertices[3]; 
 //	PathVertex cv = cameraVertices[0];
 //
 //	if(!IsValidPixel(cv.position, lv.position, pixel)) {
 //		return; // WIP:
 //	}
 //
-//	vec3 connectionFactor;
+//	vec3 connectionFactor = vec3(1);
 //	if(!PathMergeRay(cv, lv, plv, connectionFactor)) {
-//		color = vec3(0); // WIP:
-//	}
-//	else {
-//		vec3 wo = normalize(cv.position - lv.position);
-//		float dist = distance(cv.position, lv.position);
-//		// G between end points between light path and eye path
-//		float G = abs(dot(lv.normal, wo)) * abs(dot(cv.normal, wo)) / (dist * dist);
-//		vec3 fsL = ql.color * ql.intensity;
-//		float fsE = evalWe(cv.position, lv.position);
-//		color = fsL * lv.throughput * connectionFactor * G * cv.throughput * fsE;
+//		return; // WIP:
 //	}
 //
-
-	if(frame > 0)
-	{
-		float a = 1.0f / float(frame);
-		vec3 old_color = imageLoad(progressive, pixel).xyz;
-		color = mix(old_color, color, a);
-	}
+//	vec3 wo = normalize(cv.position - lv.position);
+//	float dist = distance(cv.position, lv.position);
+//	// G between end points between light path and eye path
+//	float G = absdot(lv.normal, wo) * absdot(cv.normal, wo) / (dist * dist);
+//	vec3 fsL = evalLe(ql, normalize(lv.position - pLight));
+//	float fsE = evalWe(cv.position, lv.position);
+//	color = fsL * lv.throughput * connectionFactor * G * cv.throughput * fsE;
 	
-	imageStore(image, pixel, vec4(color, 1.f));
-	imageStore(progressive, pixel, vec4(color, 1.f));
+//	if(frame > 0)
+//	{
+//		float a = 1.0f / float(frame);
+//		vec3 old_color = imageLoad(progressive, pixel).xyz;
+//		color = mix(old_color, color, a);
+//	}
+//	
+//	imageStore(image, pixel, vec4(color, 1.f));
+//	imageStore(progressive, pixel, vec4(color, 1.f));
 }

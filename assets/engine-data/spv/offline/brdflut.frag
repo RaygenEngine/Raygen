@@ -3,8 +3,8 @@
 
 #include "global.glsl"
 
+#include "bsdfs.glsl"
 #include "hammersley.glsl"
-#include "bsdf.glsl"
 
 // out
 

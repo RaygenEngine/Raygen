@@ -1,7 +1,7 @@
 #ifndef quadlight_glsl
 #define quadlight_glsl
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
@@ -165,7 +165,7 @@ vec3 Quadlight_FastContribution(accelerationStructureEXT topLevelAs, Quadlight q
   	ql.quadraticTerm * (dist * dist));
 
 	vec3 Li = ql.color * ql.intensity * attenuation;  
-	return Li * SampleWorldDirection(surface, L);
+	return Li * explicitBrdf(surface, L);
 }
 
 #endif

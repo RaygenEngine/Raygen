@@ -89,6 +89,10 @@ float luminance(vec3 rgb) {
 	return dot(rgb, vec3(0.2126f, 0.7152f, 0.0722f));
 }
 
+float absdot(vec3 v0, vec3 v1) {
+	return abs(dot(v0, v1));
+}
+
 struct Pointlight {                                                                                                                  
 	vec3 position;                                                                                               
 	float pad0;  

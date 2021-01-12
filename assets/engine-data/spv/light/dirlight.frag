@@ -4,7 +4,7 @@
 
 #include "global-descset.glsl"
 
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "lights/dirlight.glsl"
 #include "onb.glsl"
 #include "sampling.glsl"

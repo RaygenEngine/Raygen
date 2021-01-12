@@ -14,7 +14,7 @@
 
 #include "aabb.glsl"
 #include "attachments.glsl"
-#include "bsdf.glsl"
+#include "bsdfs.glsl"
 #include "lights/dirlight.glsl"
 #include "lights/irragrid.glsl"
 #include "lights/pointlight.glsl"

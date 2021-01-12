@@ -4,23 +4,8 @@
 
 #include "global.glsl"
 
-struct shadowHitPayload
-{
-	vec3 filt;
-	uint seed;
-};
-
-layout(location = 1) rayPayloadInEXT shadowHitPayload prd;
-
-layout(push_constant) uniform PC
-{
-	int bounces;
-	int frame;
-	int pointlightCount;
-	int spotlightCount;
-	int dirlightCount;
-	int quadlightCount;
-};
+layout(location = 1) rayPayloadInEXT bool prd;
 
 void main() {
+	prd = true;
 }
