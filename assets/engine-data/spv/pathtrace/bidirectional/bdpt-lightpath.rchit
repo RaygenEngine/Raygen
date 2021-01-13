@@ -237,19 +237,15 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	bool isRefl;
+	bool isSpecular;
 	float pathPdf, bsdfPdf;
-	SampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isRefl, prd.seed);
-
-	float pdf = pathPdf * bsdfPdf;
-
-	// BIAS: stop erroneous paths
-	if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
-	   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-	   pdf < BIAS) {                                               // very small pdf
-	   prd.hitType = 1; // break;
+	if(!SampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isSpecular, prd.seed)) {
+		prd.throughput = vec3(0);
+		prd.hitType = 1;
 		return;
 	}
+
+	float pdf = pathPdf * bsdfPdf;
 
 	// projection solid angle form
 	pdf /= surface.nol;

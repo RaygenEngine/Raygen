@@ -17,8 +17,9 @@ struct hitPayload
 	int hitType; 
 	// 0 - direct
 	// 1 - general
-	// 2 - light surface - stop
-	// 3 - stop
+	// 2 - mirror
+	// 3 - light
+	// 4 - stop
 	uint seed;
 };
 
@@ -63,9 +64,8 @@ void TraceRay() {
 
 bool RRTerminationCheck(inout vec3 totalAttenuation) {
 
-	// work with total atten for now
-	float p_spawn = max(max(totalAttenuation), 0.0);
-	if(rand(prd.seed) > p_spawn) {
+	float p_spawn = max(max(totalAttenuation), 0.01);
+	if(rand(prd.seed) >= p_spawn) {
 		return true; 
 	}
 
@@ -99,23 +99,22 @@ void main() {
 
 	vec3 accumColor = vec3(0.f);
 	vec3 currentTotalAttenuation = vec3(1);
-	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 2 && prd.hitType != 3); ++depth)
+	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 4); ++depth)
 	{
 		vec3 segmentAttenuation = prd.attenuation;
-		float segmentWeightedPdf = prd.weightedPdf;
-		
+		float segmentPdf = prd.weightedPdf;
+
 		TraceRay(); 
-		
-		// light surface
-		if(prd.hitType == 2) {
+
+		if(prd.hitType == 3) {
 			currentTotalAttenuation *= segmentAttenuation / prd.weightedPdf; // use final mis weighted pdf
 		}
 		else {
-			currentTotalAttenuation *= segmentAttenuation / segmentWeightedPdf;
+			currentTotalAttenuation *= segmentAttenuation / segmentPdf;
 		}
 
 		accumColor += prd.radiance * currentTotalAttenuation;
-
+		
 		if(depth > 4 && RRTerminationCheck(currentTotalAttenuation)) {
 			break;
 		}

@@ -213,6 +213,7 @@ float microfacetBtdf(Surface surface)
 }
 
 // SMATH: check opacity stuff
+// For now DO NOT use with roughness < THRESHOLD
 vec3 explicitBrdf(inout Surface surface, vec3 L)
 {
     addIncomingLightDirection(surface, L);
@@ -221,11 +222,11 @@ vec3 explicitBrdf(inout Surface surface, vec3 L)
     vec3 kt = 1.0 - ks;
     vec3 kd = kt * surface.opacity;
 
-    vec3 brdf_d = DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo);
-                                                 // SMATH: nol 
-    float brdf_s = surface.a < SPEC_THRESHOLD ?  BlinnPhongSpecular(surface.noh, surface.a) : microfacetBrdf(surface);
-    
-    return kd * brdf_d + ks * brdf_s; // WIP: check if use both terms
+    vec3 brdf_d = LambertianDiffuse(surface.albedo);
+ 
+    float brdf_r = microfacetBrdf(surface);
+
+    return kd * brdf_d + ks * brdf_r;
 }
 
 #endif

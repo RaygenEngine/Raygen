@@ -238,21 +238,17 @@ void main() {
 
 	prd.radiance = surface.emissive;
 
-	bool isRefl;
+	bool isSpecular;
 	float pathPdf, bsdfPdf;
-	SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isRefl, prd.seed);
-
-	float pdf = pathPdf * bsdfPdf;
-	
-	// BIAS: stop erroneous paths
-	if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
-	   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-	   pdf < BIAS) {                                                 // very small pdf
+	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isSpecular, prd.seed)) {
 		prd.attenuation = vec3(0);
 		prd.hitType = 2;
 		return;
 	}
 
+	float pdf = pathPdf * bsdfPdf;
+
+	// bsdf * nol / pdf
 	prd.attenuation = prd.attenuation * surface.nol / pdf;
 	prd.hitType = 1; // general
 	prd.origin = surface.position;

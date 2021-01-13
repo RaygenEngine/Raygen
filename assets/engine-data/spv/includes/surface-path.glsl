@@ -13,7 +13,7 @@ vec3 SampleDiffuseDirection(inout Surface surface, inout uint seed, out float pd
 
     pdf = cosineHemispherePdf(surface.nol);
 
-    vec3 brdf_d = DisneyDiffuse(surface.nol, surface.nov, surface.loh, surface.a, surface.albedo);
+    vec3 brdf_d = LambertianDiffuse(surface.albedo);
 	
 	return brdf_d;
 }
@@ -24,7 +24,7 @@ float SampleSpecularReflectionDirection(inout Surface surface)
     surface.l = reflect(-surface.v);
     cacheSurfaceDots(surface);
 
-    return BlinnPhongSpecular(surface.noh, surface.a); // SMATH:  
+    return 1.0 / surface.nol;
 }
 
 // returns specular transmission brdf
@@ -76,7 +76,7 @@ float ImportanceSampleTransmissionDirection(inout Surface surface, inout uint se
 
 // SMATH: check
 // split bsdf pdf from other pdfs for MIS use
-void SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out float bsdfPdf, out bool isRefl, inout uint seed) {
+bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out float bsdfPdf, out bool isSpecular, inout uint seed) {
 	// mirror H = N 
 	float LoH = absNdot(surface.v);
 	vec3 H = vec3(0, 0, 1); // surface space N
@@ -89,7 +89,8 @@ void SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 		k = 1.0 - surface.eta * surface.eta * (1.0 - LoH * LoH); 
 	}
 
-	isRefl = true;
+	bool isRefl = true;
+	isSpecular = false;
 
 	vec3 kr = F_Schlick(LoH, surface.f0);
 
@@ -120,6 +121,7 @@ void SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 			if(surface.a < SPEC_THRESHOLD) {
 				bsdf *= SampleSpecularTransmissionDirection(surface);
 				bsdfPdf = 1.f;
+				isSpecular = true;
 			}
 
 			// glossy
@@ -142,6 +144,7 @@ void SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 		if(surface.a < SPEC_THRESHOLD){
 			bsdf *= SampleSpecularReflectionDirection(surface);
 			bsdfPdf = 1.f;
+			isSpecular = true;
 		}
 
 		// glossy
@@ -153,6 +156,11 @@ void SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 			bsdfPdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 		}
 	}
+
+	// BIAS: stop erroneous paths
+	return !(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under actual geometry
+	         !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above actual geometry        
+	         pathPdf * bsdfPdf < BIAS);                                    // very small pdf
 }
 
 

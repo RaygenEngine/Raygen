@@ -3,7 +3,6 @@
 
 #include "aabb.glsl"
 #include "bsdfs.glsl"
-#include "fresnel.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"

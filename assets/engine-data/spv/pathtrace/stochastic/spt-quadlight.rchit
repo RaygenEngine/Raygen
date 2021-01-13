@@ -40,16 +40,24 @@ void main() {
 
 	float LnoL = dot(ql.normal, -gl_WorldRayDirectionEXT);
 
+	// behind
 	if(LnoL < BIAS) {
 		prd.radiance = vec3(0);
-		prd.hitType = 3;
+		prd.hitType = 4;
 		return;	
 	}
 
 	// direct hit
 	if(prd.hitType == 0) {
 		prd.radiance = ql.color;
-		prd.hitType = 3;
+		prd.hitType = 4; // TODO: continue path, tho analytic light surface has not actual material values
+		return;	
+	}
+
+	// from mirror
+	if(prd.hitType == 2) {
+		prd.radiance = ql.color * ql.intensity;
+		prd.hitType = 4;
 		return;	
 	}
 
@@ -63,5 +71,5 @@ void main() {
 
 	prd.radiance = ql.color * ql.intensity;  
 	prd.weightedPdf = pdf_light + prd.weightedPdf; // prev prd.weightedPdf = pdf_bsdf
-	prd.hitType = 2;
+	prd.hitType = 3;
 }

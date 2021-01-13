@@ -244,8 +244,16 @@ void main() {
 
 	vec3 radiance = vec3(0.f);
 
+	bool isSpecular;
+	float pathPdf, bsdfPdf;
+	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isSpecular, prd.seed)) {
+		prd.attenuation = vec3(0);
+		prd.hitType = 4;
+		return;
+	}
+
 	// DIRECT 
-	if(!exits) { // dont sample direct from inside
+	if(!exits && !isSpecular) {
 		int totalLights = quadlightCount;
 		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
@@ -256,28 +264,17 @@ void main() {
 		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, prd.seed, pdf_pickLight); 
 		
 		// add emissive
-		radiance += surface.emissive;
+		//radiance += surface.emissive; WIP:
 	}
 
 	prd.radiance = radiance;
 
 	// INDIRECT - next step
 	{
-		bool isRefl;
-		float pathPdf;
-		SampleBSDF(surface, prd.attenuation, pathPdf, prd.weightedPdf, isRefl, prd.seed);
-
-		// BIAS: stop erroneous paths
-		if(isRefl && !isIncidentLightDirAboveSurfaceGeometry(surface) || // reflect but under geometry
-		   !isRefl && isIncidentLightDirAboveSurfaceGeometry(surface) || // transmit but above geometry        
-		   pathPdf * prd.weightedPdf < BIAS) {                           // very small pdf
-			prd.attenuation = vec3(0);
-			prd.hitType = 3;
-			return;
-		}
-
-		prd.attenuation = prd.attenuation * surface.nol / pathPdf;
-		prd.hitType = 1; // general
+		// bsdf * nol
+		prd.attenuation = prd.attenuation * surface.nol;
+		prd.weightedPdf = pathPdf * bsdfPdf;
+		prd.hitType = !isSpecular ? 1 : 2; // general or from mirror
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);	
 	}
