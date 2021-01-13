@@ -22,6 +22,6 @@ struct hitPayload
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
-	prd.radiance = GetSkyColor(gl_WorldRayOriginEXT, gl_WorldRayDirectionEXT);
-	prd.hitType = 3; 
+	prd.radiance = GetSkyColor(prd.origin, prd.direction);
+	prd.hitType = 4; 
 }

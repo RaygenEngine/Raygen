@@ -38,13 +38,13 @@ vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surfac
 	
 	vec3 L = normalize(samplePoint - surface.position);
 
-	float LnoL = dot(ql.normal, -L);
+	float cosTheta_o = dot(ql.normal, -L);
 
-	if (LnoL < BIAS) {
+	if (cosTheta_o < BIAS) {
 		return vec3(0.0); // behind light
 	}
 
-	LnoL = abs(LnoL);
+	cosTheta_o = abs(cosTheta_o);
 
 	addIncomingLightDirection(surface, L);
 	
@@ -54,11 +54,11 @@ vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surfac
 
 	float dist = distance(samplePoint, surface.position);
 	if(!PtLights_ShadowRayTest(topLevelAs, surface.position, L, 0.01, dist, seed)) {
-		return vec3(0.0);
+		return vec3(0.0); // V
 	}
 
 	// pdfw = pdfA / (cosTheta_o / r^2) = r^2 * pdfA / cosTheta_o
-	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * LnoL);
+	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * cosTheta_o);
 	float pdf_light = pdf_pickLight * pdf_lightArea;
 	float pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	float weightedPdf = pdf_light + pdf_brdf;
@@ -66,8 +66,8 @@ vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surfac
 	vec3 fs = explicitBrdf(surface, L);
 
 	// solid angle form to match the pdfs | dA = (r^2 / cosTheta_o) * dw
-	vec3 Li = ql.color * ql.intensity;
-	return Li * fs * surface.nol / weightedPdf;
+	vec3 Le = ql.color * ql.intensity;
+	return Le * fs * surface.nol / weightedPdf;
 }
 
 #endif

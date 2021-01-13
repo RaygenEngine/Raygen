@@ -2,7 +2,6 @@
 #define reflprobe_glsl
 
 #include "aabb.glsl"
-#include "fresnel.glsl"
 #include "surface.glsl"
 
 // PERF:

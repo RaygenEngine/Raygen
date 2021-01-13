@@ -62,9 +62,8 @@ void TraceRay() {
 
 bool RRTerminationCheck(inout vec3 totalAttenuation) {
 
-	// work with total atten for now
-	float p_spawn = max(max(totalAttenuation), 0.0);
-	if(rand(prd.seed) > p_spawn) {
+	float p_spawn = max(max(totalAttenuation), 0.01);
+	if(rand(prd.seed) >= p_spawn) {
 		return true; 
 	}
 
@@ -98,7 +97,7 @@ void main() {
 
 	vec3 accumColor = vec3(0.f);
 	vec3 currentTotalAttenuation = vec3(1);
-	for(int depth = 0; depth < bounces + 1 && prd.hitType != 2; ++depth) {
+	for(int depth = 0; depth < bounces + 2 && prd.hitType != 2; ++depth) { 
 
 		currentTotalAttenuation *= prd.attenuation;
 
