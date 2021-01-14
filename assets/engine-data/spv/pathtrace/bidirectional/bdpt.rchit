@@ -203,7 +203,7 @@ Surface surfaceFromGeometryGroup(
 	float sqrtf0 = sqrt(f0);
 	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
 
-	// WIP: use of current medium, not vacuum (1.0)
+	// CHECK: use of current medium, not vacuum (1.0)
 	float etaI = 1.0; // vacuum (recursive)
 	float etaT = eta; // material
 		

@@ -113,6 +113,10 @@ void main() {
 			currentTotalAttenuation *= segmentAttenuation / segmentPdf;
 		}
 
+//		if(isVectorNan(prd.radiance)) {
+//			continue;
+//		}
+
 		accumColor += prd.radiance * currentTotalAttenuation;
 		
 		if(depth > 4 && RRTerminationCheck(currentTotalAttenuation)) {

@@ -50,7 +50,7 @@ void main() {
 	// direct hit
 	if(prd.hitType == 0) {
 		prd.radiance = ql.color;
-		prd.hitType = 4; // TODO: continue path, tho analytic light surface has not actual material values
+		prd.hitType = 4; // TODO: continue path, tho analytic light surface has no actual material values
 		return;	
 	}
 
@@ -65,7 +65,7 @@ void main() {
 
 	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
 	float dist = distance(hitpoint, gl_WorldRayOriginEXT);
-	float pdf_pickLight = 1.0 / float(quadlightCount); // WIP:
+	float pdf_pickLight = 1.0 / float(quadlightCount);
 	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * LnoL);
 	float pdf_light = pdf_pickLight * pdf_lightArea; 
 

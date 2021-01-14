@@ -202,7 +202,7 @@ Surface surfaceFromGeometryGroup(
 	float sqrtf0 = sqrt(f0);
 	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
 
-	// WIP: use of current medium, not vacuum (1.0)
+	// CHECK: use of current medium, not vacuum (1.0)
 	float etaI = 1.0; // vacuum (recursive)
 	float etaT = eta; // material
 		
@@ -237,9 +237,9 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	bool isSpecular;
+	bool isDiffusePath;
 	float pathPdf, bsdfPdf;
-	if(!SampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isSpecular, prd.seed)) {
+	if(!SampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
 		prd.throughput = vec3(0);
 		prd.hitType = 1;
 		return;

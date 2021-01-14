@@ -3,6 +3,7 @@
 
 #include "bsdfs.glsl"
 #include "random.glsl"
+#include "sampling.glsl"
 #include "surface.glsl"
 
 layout(location = 1) rayPayloadEXT bool prdShadow;
@@ -28,7 +29,7 @@ bool PtLights_ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, ve
 	return prdShadow;
 }
 
-vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, inout uint seed, float pdf_pickLight)
+vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, bool isDiffusePath, float pdf_pickLight, inout uint seed)
 {
 	vec2 u = rand2(seed) * 2 - 1;
 	u.x *= ql.width / 2.f;
@@ -60,7 +61,7 @@ vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surfac
 	// pdfw = pdfA / (cosTheta_o / r^2) = r^2 * pdfA / cosTheta_o
 	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * cosTheta_o);
 	float pdf_light = pdf_pickLight * pdf_lightArea;
-	float pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
+	float pdf_brdf = isDiffusePath ? cosineHemispherePdf(surface.nol) : importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	float weightedPdf = pdf_light + pdf_brdf;
 
 	vec3 fs = explicitBrdf(surface, L);

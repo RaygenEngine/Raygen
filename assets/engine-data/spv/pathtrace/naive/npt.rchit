@@ -238,9 +238,9 @@ void main() {
 
 	prd.radiance = surface.emissive;
 
-	bool isSpecular;
+	bool isDiffusePath;
 	float pathPdf, bsdfPdf;
-	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isSpecular, prd.seed)) {
+	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
 		prd.attenuation = vec3(0);
 		prd.hitType = 2;
 		return;
