@@ -130,7 +130,6 @@ vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
 }
 
-// WIP:
 bool exits = false;
 Surface surfaceFromGeometryGroup(
     GeometryGroup gg)
@@ -243,17 +242,19 @@ void main() {
 	Surface surface = surfaceFromGeometryGroup(gg);
 
 	vec3 radiance = vec3(0.f);
-
-	bool isSpecular;
+	bool isDiffusePath;
 	float pathPdf, bsdfPdf;
-	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isSpecular, prd.seed)) {
+	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
 		prd.attenuation = vec3(0);
+		prd.weightedPdf = 1;
 		prd.hitType = 4;
 		return;
 	}
 
+	bool deltaPath = surface.a < SPEC_THRESHOLD && !isDiffusePath;
+
 	// DIRECT 
-	if(!exits && !isSpecular) {
+	if(!exits && !deltaPath) {
 		int totalLights = quadlightCount;
 		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
@@ -261,20 +262,18 @@ void main() {
 
 		Quadlight ql = quadlights.light[i];
 		// direct light sample, brdf sample from hit shader and MIS
-		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, prd.seed, pdf_pickLight); 
-		
-		// add emissive
-		//radiance += surface.emissive; WIP:
+		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, isDiffusePath, pdf_pickLight, prd.seed); 
 	}
 
+	radiance += surface.emissive; // works like naive approach
 	prd.radiance = radiance;
 
 	// INDIRECT - next step
 	{
-		// bsdf * nol
-		prd.attenuation = prd.attenuation * surface.nol;
-		prd.weightedPdf = pathPdf * bsdfPdf;
-		prd.hitType = !isSpecular ? 1 : 2; // general or from mirror
+		// bsdf * nol 
+		prd.attenuation = prd.attenuation * surface.nol / pathPdf;
+		prd.weightedPdf =  bsdfPdf; // NOTE: this is why we split the pdfs
+		prd.hitType = !deltaPath ? 1 : 2; // general or delta
 		prd.origin = surface.position;
 		prd.direction = surfaceIncidentLightDir(surface);	
 	}

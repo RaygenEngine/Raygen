@@ -40,7 +40,7 @@ float SampleSpecularTransmissionDirection(inout Surface surface)
 float ImportanceSampleReflectionDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     if(surface.a < SPEC_THRESHOLD){
-        pdf = 1.0;
+        pdf = 1.0; // the pdf isn't one here, it is just canceld out with the d of the specular bsdf
         return SampleSpecularReflectionDirection(surface);
     }
 
@@ -59,7 +59,7 @@ float ImportanceSampleReflectionDirection(inout Surface surface, inout uint seed
 float ImportanceSampleTransmissionDirection(inout Surface surface, inout uint seed, out float pdf)
 {
     if(surface.a < SPEC_THRESHOLD){
-        pdf = 1.0;
+        pdf = 1.0; // the pdf isn't one here, it is just canceld out with the d of the specular bsdf
         return SampleSpecularTransmissionDirection(surface);
     }
 
@@ -76,7 +76,7 @@ float ImportanceSampleTransmissionDirection(inout Surface surface, inout uint se
 
 // SMATH: check
 // split bsdf pdf from other pdfs for MIS use
-bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out float bsdfPdf, out bool isSpecular, inout uint seed) {
+bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out float bsdfPdf, out bool isDiffusePath, inout uint seed) {
 	// mirror H = N 
 	float LoH = absNdot(surface.v);
 	vec3 H = vec3(0, 0, 1); // surface space N
@@ -90,7 +90,7 @@ bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 	}
 
 	bool isRefl = true;
-	isSpecular = false;
+	isDiffusePath = false;
 
 	vec3 kr = F_Schlick(LoH, surface.f0);
 
@@ -110,6 +110,7 @@ bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 		if(rand(seed) > p_transparency) {
 			bsdf *= SampleDiffuseDirection(surface, seed, bsdfPdf);
 			pathPdf *= 1 - p_transparency;
+			isDiffusePath = true;
 		}
 
 		// refraction
@@ -120,8 +121,7 @@ bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 			// specular
 			if(surface.a < SPEC_THRESHOLD) {
 				bsdf *= SampleSpecularTransmissionDirection(surface);
-				bsdfPdf = 1.f;
-				isSpecular = true;
+				bsdfPdf = 1.f; // the pdf isn't one here, it is just canceld out with the d of the specular bsdf
 			}
 
 			// glossy
@@ -143,8 +143,7 @@ bool SampleBSDF(inout Surface surface, out vec3 bsdf, out float pathPdf, out flo
 		// mirror
 		if(surface.a < SPEC_THRESHOLD){
 			bsdf *= SampleSpecularReflectionDirection(surface);
-			bsdfPdf = 1.f;
-			isSpecular = true;
+			bsdfPdf = 1.f; // the pdf isn't one here, it is just canceld out with the d of the specular bsdf
 		}
 
 		// glossy

@@ -93,6 +93,10 @@ float absdot(vec3 v0, vec3 v1) {
 	return abs(dot(v0, v1));
 }
 
+bool isVectorNan(vec3 v) {
+	return isnan(v.x) || isnan(v.y) || isnan(v.z);
+}
+
 struct Pointlight {                                                                                                                  
 	vec3 position;                                                                                               
 	float pad0;  
@@ -206,7 +210,7 @@ struct Irragrid {
 struct Quadlight {
 	vec3 center;
 	float pad0;
-	vec3 normal; // WIP: pass quat
+	vec3 normal;
 	float pad1;
 	vec3 right;
 	float width;

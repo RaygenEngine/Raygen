@@ -212,8 +212,7 @@ float microfacetBtdf(Surface surface)
     return numerator / max(denominator, 0.001); 
 }
 
-// SMATH: check opacity stuff
-// For now DO NOT use with roughness < THRESHOLD
+// SMATH: check opacity stuff, and specular
 vec3 explicitBrdf(inout Surface surface, vec3 L)
 {
     addIncomingLightDirection(surface, L);
@@ -224,7 +223,7 @@ vec3 explicitBrdf(inout Surface surface, vec3 L)
 
     vec3 brdf_d = LambertianDiffuse(surface.albedo);
  
-    float brdf_r = microfacetBrdf(surface);
+    float brdf_r =surface.a >= SPEC_THRESHOLD ? microfacetBrdf(surface) : 0.f;
 
     return kd * brdf_d + ks * brdf_r;
 }

@@ -40,7 +40,7 @@ struct mergePayload
 
 layout(push_constant) uniform PC
 {
-	// WIP: max length path
+	// CHECK: max length path
 	int bounces;
 	int frame;
 	int pointlightCount;
@@ -84,7 +84,7 @@ void TraceLightRay() {
 
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFD,           // cullMask - quadlights WIP: if we hit light again, end path
+				0xFD,           // cullMask - quadlights CHECK: if we hit light again, end path
 				2,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				1,              // missIndex
@@ -108,7 +108,7 @@ bool PathMergeRay(PathVertex pstart, PathVertex ptarget, PathVertex pnext, inout
 	float sign = sign(k) + (1.0 - abs(sign(k))); 
 
 	// always offset above surface
-	vec3 origin = pstart.position;//WIP: + sign * direction * BIAS; 
+	vec3 origin = pstart.position;//CHECK: + sign * direction * BIAS; 
 	
 	mprd.target = ptarget.position;
 	mprd.wi = normalize(pnext.position - ptarget.position); // wo\ /wi
@@ -151,7 +151,7 @@ bool IsValidPixel(vec3 pLens, vec3 pWorld, out ivec2 pixel) {
     float screenX = (pNDC.x + 1.0f) * 0.5f * gl_LaunchSizeEXT.x;
     float screenY = (1.0f - pNDC.y) * 0.5f * gl_LaunchSizeEXT.y;
 
-	// WIP:
+	// CHECK:
 	pixel = ivec2(ceil(screenX), ceil(screenY));
 
 	return //pixel.x == gl_LaunchIDEXT.x && pixel.y == gl_LaunchIDEXT.y;
@@ -193,7 +193,7 @@ void main() {
 	cameraVertices[0].normal = -vec3(cam.view[0][2], cam.view[1][2], cam.view[2][2]);
 	cameraVertices[0].throughput = vec3(1.0);
 
-	// CAMERA PATH WIP:
+	// CAMERA PATH CHECK:
 	{
 //		float r1 = rand(prd.seed);
 //		float r2 = rand(prd.seed);
@@ -254,7 +254,7 @@ void main() {
 		// random hemisphere direction 
 		u2 = rand2(prd.seed);
 
-		vec3 v = uniformSampleHemisphere(u2); // WIP: biased at edges (see quadlight bias)
+		vec3 v = uniformSampleHemisphere(u2); // CHECK: biased at edges (see quadlight bias)
 		prd.direction =
 
 		vec3(ql.right.x * v.x + ql.up.x * v.y + ql.normal.x * v.z,
@@ -302,12 +302,12 @@ void main() {
 
 		ivec2 pixel;
 		if(!IsValidPixel(cv.position, lv.position, pixel)) {
-			continue; // WIP:
+			continue; // CHECK:
 		}
 
 		vec3 connectionFactor = vec3(1);
 		if(!PathMergeRay(cv, lv, pv, connectionFactor)) {
-			continue; // WIP:
+			continue; // CHECK:
 		}
 
 		vec3 wo = normalize(cv.position - lv.position);
@@ -333,7 +333,7 @@ void main() {
 		}
 
 		vec4 val = vec4(color, data.a + 1.f);
-		imageStore(image, pixel, val); // WIP: race conditions
+		imageStore(image, pixel, val); // CHECK: race conditions
 	}
 
 	//imageStore(image, pixel, vec4(color, 1.f));
@@ -345,12 +345,12 @@ void main() {
 //	PathVertex cv = cameraVertices[0];
 //
 //	if(!IsValidPixel(cv.position, lv.position, pixel)) {
-//		return; // WIP:
+//		return; // CHECK:
 //	}
 //
 //	vec3 connectionFactor = vec3(1);
 //	if(!PathMergeRay(cv, lv, plv, connectionFactor)) {
-//		return; // WIP:
+//		return; // CHECK:
 //	}
 //
 //	vec3 wo = normalize(cv.position - lv.position);
