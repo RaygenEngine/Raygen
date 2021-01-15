@@ -70,6 +70,6 @@ void main() {
 	float pdf_light = pdf_pickLight * pdf_lightArea; 
 
 	prd.radiance = ql.color * ql.intensity;  
-	prd.weightedPdf = pdf_light + prd.weightedPdf; // prev prd.weightedPdf = pdf_bsdf
+	prd.weightedPdf = prd.weightedPdf + pdf_light; // prev prd.weightedPdf = pdf_bsdf
 	prd.hitType = 3;
 }
