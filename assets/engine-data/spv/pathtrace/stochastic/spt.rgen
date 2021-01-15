@@ -99,23 +99,19 @@ void main() {
 
 	vec3 accumColor = vec3(0.f);
 	vec3 currentTotalAttenuation = vec3(1);
-	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 4); ++depth)
+	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 4 && prd.hitType != 3); ++depth)
 	{
 		vec3 segmentAttenuation = prd.attenuation;
 		float segmentPdf = prd.weightedPdf;
 
-		TraceRay(); 
-
+		TraceRay();
+		
 		if(prd.hitType == 3) {
 			currentTotalAttenuation *= segmentAttenuation / prd.weightedPdf; // use final mis weighted pdf
 		}
 		else {
 			currentTotalAttenuation *= segmentAttenuation / segmentPdf;
 		}
-
-//		if(isVectorNan(prd.radiance)) {
-//			continue;
-//		}
 
 		accumColor += prd.radiance * currentTotalAttenuation;
 		

@@ -54,7 +54,7 @@ vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surfac
 	}
 
 	float dist = distance(samplePoint, surface.position);
-	if(!PtLights_ShadowRayTest(topLevelAs, surface.position, L, 0.01, dist, seed)) {
+	if(!PtLights_ShadowRayTest(topLevelAs, surface.position, L, 0.001, dist, seed)) {
 		return vec3(0.0); // V
 	}
 
@@ -64,8 +64,12 @@ vec3 Quadlight_Ldirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surfac
 	float pdf_brdf = isDiffusePath ? cosineHemispherePdf(surface.nol) : importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	float weightedPdf = pdf_light + pdf_brdf;
 
-	vec3 fs = explicitBrdf(surface, L);
+    vec3 ks = F_Schlick(surface.loh, surface.f0);
+    vec3 kt = 1.0 - ks;
+    vec3 kd = kt * surface.opacity; // WIP:
 
+    vec3 fs = isDiffusePath ? kd * LambertianDiffuse(surface.albedo) : ks * microfacetBrdf(surface);
+ 
 	// solid angle form to match the pdfs | dA = (r^2 / cosTheta_o) * dw
 	vec3 Le = ql.color * ql.intensity;
 	return Le * fs * surface.nol / weightedPdf;
