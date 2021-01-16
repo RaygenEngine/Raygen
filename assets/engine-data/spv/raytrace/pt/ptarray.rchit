@@ -11,7 +11,6 @@
 
 #include "global.glsl"
 
-#include "bsdfs.glsl"
 #include "lights/dirlight.glsl"
 #include "lights/pointlight.glsl"
 #include "lights/quadlight.glsl"
@@ -19,6 +18,7 @@
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -121,7 +121,7 @@ vec3 TraceNext(vec3 thisRayThroughput, Surface surface) {
     // Update accum throughput for the remaining of the recursion
     prd.accumThroughput = prevCumulativeThroughput * thisRayThroughput;
 
-    vec3 L = surfaceIncidentLightDir(surface);
+    vec3 L = getOutgoingDir(surface);
     vec3 result = thisRayThroughput * RadianceOfRay(surface.position, L); 
 
     // Restore accum throughput
@@ -270,8 +270,8 @@ Surface surfaceFromGeometryGroup(
 	surface.basis = branchlessOnb(ns);
 
 	vec3 V = normalize(-gl_WorldRayDirectionEXT);
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
+    //surface.nov = max(Ndot(surface.v), BIAS);
 
 	surface.albedo = (1.0 - metallic) * baseColor;
     surface.opacity = sampledBaseColor.a;

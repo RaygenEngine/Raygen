@@ -3,8 +3,8 @@
 
 #include "global.glsl"
 
-#include "bsdfs.glsl"
-#include "hammersley.glsl"
+#include "random.glsl"
+#include "shading-math.glsl"
 
 // out
 
@@ -67,7 +67,7 @@ void main( ) {
             float NoH = saturate(dot(N, H));        
             float HoV = saturate(dot(H, V)); 
 
-            float D = D_GGX(NoH, push.a); 
+            float D = D_GGX(H, push.a); 
             float pdf = (D * NoH / (4 * HoV)) + 0.0001;
              
             float saTexel = 4.0 * PI / (6.0f * push.a);

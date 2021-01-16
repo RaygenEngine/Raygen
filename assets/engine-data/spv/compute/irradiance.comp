@@ -3,9 +3,9 @@
 
 #include "global.glsl"
 #include "onb.glsl"
-#include "bsdfs.glsl"
-#include "hammersley.glsl"
+#include "shading-math.glsl"
 #include "sampling.glsl"
+#include "random.glsl"
 
 layout (local_size_x = 32, local_size_y = 32) in;
 

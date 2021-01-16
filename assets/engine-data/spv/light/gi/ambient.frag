@@ -6,7 +6,6 @@
 
 #include "global-descset.glsl"
 
-#include "hammersley.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
 #include "sky.glsl"

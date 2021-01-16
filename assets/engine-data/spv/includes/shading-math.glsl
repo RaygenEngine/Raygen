@@ -1,5 +1,7 @@
-#ifndef bsdfs_glsl
-#define bsdfs_glsl
+#ifndef shading_math_glsl
+#define shading_math_glsl
+
+// math are in local space
 
 vec3 F_Schlick(float cosTheta, vec3 f0)
 {
@@ -32,32 +34,36 @@ vec3 F_SchlickRoss(float cosTheta, vec3 f0, float a)
     return f0 + (1 - f0) * pow(1 - cosTheta, 5 * exp(-2.69 * a)) / (1.0 + 22.7 * pow(a, 1.5));
 }
 
-float D_GGX(float NoH, float a) {
-
-    float a2     = a * a;
-    float NoH2   = NoH * NoH;
+float D_GGX(vec3 H, float a) {
+    float a2        = a * a;
+    float NoH       = Ndot(H);
+    float cos4Theta = NoH * NoH * NoH * NoH;
+    float tan2Theta = Tan2Theta(H);
 	
-    float nom    = a2;
-    float denom  = (NoH2 * (a2 - 1.0) + 1.0);
-    denom        = PI * denom * denom;
+    float nom    = a2 * x_p(NoH);
+    float denom  = (a2 + tan2Theta);
+    denom        = PI * cos4Theta * denom * denom;
 	
     return nom / denom;
 }
 
-float G_SchlickGGX(float NoV, float k)
-{
-    float nom   = NoV;
-    float denom = NoV * (1.0 - k) + k;
-	
+float G1_GGX(vec3 V, vec3 H, float a) {
+    float a2  = a * a;
+
+    float VoH = dot(V, H);
+    float NoV = Ndot(V);
+
+    float tan2Theta = Tan2Theta(V);
+
+    float nom = 2 * x_p(VoH / NoV);
+    float denom = 1 + sqrt(1 + a2 * tan2Theta);
+
     return nom / denom;
 }
   
-float G_SmithSchlickGGX(float NoV, float NoL, float k)
+float G_Smith(vec3 I, vec3 H, vec3 O, float a) 
 {
-    float ggx1 = G_SchlickGGX(NoV, k);
-    float ggx2 = G_SchlickGGX(NoL, k);
-	
-    return ggx1 * ggx2;
+    return G1_GGX(I, H, a) * G1_GGX(O, H, a);
 }
 
 // Converts a square of roughness to a Phong specular power

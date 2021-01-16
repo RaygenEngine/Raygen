@@ -3,8 +3,8 @@
 
 #include "global.glsl"
 
-#include "bsdfs.glsl"
-#include "hammersley.glsl"
+#include "random.glsl"
+#include "shading-math.glsl"
 
 // out
 
@@ -29,7 +29,7 @@ void main() {
 	vec2 LUT = vec2(0.0);
 	for(uint i = 0u; i < NUM_SAMPLES; i++) {
 		vec2 Xi = hammersley(i, NUM_SAMPLES);
-		vec3 H = importanceSampleGGX(Xi, roughness);
+		vec3 H = vec3(0);//importanceSampleGGX(Xi, roughness);
 		vec3 L = 2.0 * dot(V, H) * H - V;
 
 		float NoL = saturate(dot(N, L));

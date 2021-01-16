@@ -2,10 +2,10 @@
 #define irragrid_glsl
 
 #include "aabb.glsl"
-#include "bsdfs.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 vec3 SampleIrrad(Irragrid grid, samplerCubeArray irradianceSamplers, Surface surface, float x, float y, float z) 
@@ -24,9 +24,9 @@ vec3 SampleIrrad(Irragrid grid, samplerCubeArray irradianceSamplers, Surface sur
 	vec3 reprojN = (surface.position - irrPos) + intersectionDistanceAabb(aabb, surface.position, N) * N;
 
 	// SMATH: which normal
-	vec3 kd = 1.0 - F_SchlickRoughness(surface.nov, surface.f0, surface.a);
+	//vec3 kd = 1.0 - F_SchlickRoughness(surface.nov, surface.f0, surface.a);
 
-	return kd * texture(irradianceSamplers, vec4(normalize(reprojN), i)).rgb
+	return vec3(0);//kd * texture(irradianceSamplers, vec4(normalize(reprojN), i)).rgb
 	//	 * saturate(dot(N, irrPos - surface.position));
 	;
 }

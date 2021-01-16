@@ -65,11 +65,9 @@ void main() {
 
 	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
 	float dist = distance(hitpoint, gl_WorldRayOriginEXT);
-	float pdf_pickLight = 1.0 / float(quadlightCount);
 	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * LnoL);
-	float pdf_light = pdf_pickLight * pdf_lightArea; 
 
 	prd.radiance = ql.color * ql.intensity;  
-	prd.weightedPdf = prd.weightedPdf + pdf_light; // prev prd.weightedPdf = pdf_bsdf
+	prd.weightedPdf = prd.weightedPdf + pdf_lightArea; // prev prd.weightedPdf = pdf_bsdf
 	prd.hitType = 3;
 }

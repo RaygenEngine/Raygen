@@ -2,8 +2,8 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "global.glsl"
-#include "hammersley.glsl"
-#include "bsdfs.glsl"
+#include "random.glsl"
+#include "shading-math.glsl"
 
 layout (local_size_x = 32, local_size_y = 32) in;
 

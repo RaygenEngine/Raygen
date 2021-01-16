@@ -47,7 +47,7 @@ void main( )
 	// for preview
 //	if(surface.depth == 1.0) {
 //	
-//		// Don't use surfaceOutgoingLightDirDir, change of basis breaks at inf depth
+//		// Don't use getIncomingDirDir, change of basis breaks at inf depth
 //		vec3 V = normalize(surface.position - cam.position);
 //		outColor = textureLod(prefilteredSampler, V, 0);
 //		return; 
