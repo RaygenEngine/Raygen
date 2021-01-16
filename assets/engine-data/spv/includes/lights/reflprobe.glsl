@@ -35,16 +35,16 @@ vec3 Reflprobe_Contribution(Reflprobe rp, sampler2D brdfLutSampler, samplerCube 
 		return vec3(0);
 	}
 
-	vec3 R = outOnbSpace(surface.basis, reflect(-surface.v));
+	vec3 R = outOnbSpace(surface.basis, reflect(-surface.i));
 	vec3 reprojR = (surface.position - rp.position) + hit_sphere(rp.position, rp.radius, surface.position,  R) *  R;
 
 	// CHECK: roughness / a differences
 	float lod = sqrt(surface.a) * rp.lodCount; 
 	
 	// TODO: brdf lut accesible from global desc set
-	vec3 brdfLut = (texture(brdfLutSampler, vec2(surface.nov, surface.a))).rgb;
+	vec3 brdfLut = vec3(0);//(texture(brdfLutSampler, vec2(surface.nov, surface.a))).rgb;
 
-	vec3 ks = F_SchlickRoughness(surface.nov, surface.f0, surface.a);
+	vec3 ks = vec3(0);//F_SchlickRoughness(surface.nov, surface.f0, surface.a);
 	vec3 kd = 1.0 - ks;
 
 	vec3 diffuseLight = texture(irradianceSampler, surface.basis.normal).rgb;

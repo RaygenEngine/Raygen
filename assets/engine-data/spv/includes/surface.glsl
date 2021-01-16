@@ -1,32 +1,28 @@
 #ifndef surface_glsl
 #define surface_glsl
 
-#include "bsdfs.glsl"
 #include "onb.glsl"
-#include "random.glsl"
-#include "sampling.glsl"
 
 struct Surface {
     
     // surface
-    Onb basis;
+    Onb basis; // shading normal aligned hemisphere
 
-    vec3 ng;
+    vec3 ng; // geometric normal
     
-    vec3 v;
-    vec3 l; 
-    vec3 h;
-    float nov;
-    float noh;
-    float loh;
-    float nol;
+    // we use i and surface interface to sample o directions
+    // h is calculated from i and o according to interface (refraction, reflection, etc)
+    vec3 i; // incoming
+    vec3 o; // outgoing
+    vec3 h; // microsurface normal
 
     // material
     vec3 albedo;
     vec3 f0;
     vec3 emissive;
     float a;
-    float eta; // of interaction, depends on current medium
+    float eta_i; // eta of medium of incoming ray
+    float eta_o; // eta of medium of outgoing ray
     float opacity;
     float occlusion;
 
@@ -36,41 +32,31 @@ struct Surface {
     vec2 uv;
 };
 
-vec3 surfaceIncidentLightDir(Surface surface)
+vec3 getOutgoingDir(Surface surface)
 {
-    return outOnbSpace(surface.basis, surface.l);
+    return outOnbSpace(surface.basis, surface.o);
 }
 
-vec3 surfaceOutgoingLightDir(Surface surface)
+vec3 getIncomingDir(Surface surface)
 {
-    return outOnbSpace(surface.basis, surface.v);
+    return outOnbSpace(surface.basis, surface.i);
 }
 
-bool isIncidentLightDirAboveSurfaceGeometry(Surface surface)
+void addOutgoingDir(inout Surface surface, vec3 L)
 {
-    return dot(surface.ng, surface.l) > 0; // WIP: test normals
+    surface.o = toOnbSpace(surface.basis, L);
+    surface.h = normalize(surface.i + surface.o);
 }
 
-void cacheSurfaceDots(inout Surface surface)
+bool isOutgoingDirPassingThrough(Surface surface)
 {
-    vec3 l = surface.l;
-    // if l and v are not in the same hemisphere 
-    if(!sameHemisphere(surface.v, surface.l)) {
-        l.z *= -1; // bring l in the same for correct dot calculation
-    }
-
-    surface.h = normalize(surface.v + l); 
-    surface.noh = absNdot(surface.h);
-    surface.loh = absdot(l, surface.h);
-    surface.nol = absNdot(l);
+    // not in the same side of ng -> passes through
+    return dot(surface.ng, surface.o) < 0;
 }
 
-void addIncomingLightDirection(inout Surface surface, vec3 L)
-{
-    surface.l = normalize(toOnbSpace(surface.basis, L));
-    cacheSurfaceDots(surface);
-}
+#include "surface-bsdf.glsl"
 
+// WIP: tidy those
 vec3 reconstructWorldPosition(float depth, vec2 uv, mat4 viewProjInv)
 {
 	// clip space reconstruction
@@ -116,8 +102,8 @@ Surface surfaceFromGBuffer(
     surface.basis = branchlessOnb(normal);
 
     vec3 V = normalize(cam.position - surface.position);
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
+    //surface.nov = max(Ndot(surface.v), BIAS);
 
     // rgb: albedo a: opacity
     vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
@@ -162,8 +148,8 @@ Surface surfaceFromGBuffer(
     surface.basis = branchlessOnb(normal);
 
     vec3 V = normalize(cam.position - surface.position);
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
+    //surface.nov = max(Ndot(surface.v), BIAS);
 
     // rgb: albedo a: opacity
     vec4 albedoOpacity = subpassLoad(albedoOpacitySampler);
@@ -186,46 +172,5 @@ Surface surfaceFromGBuffer(
     return surface;
 }
 #endif
-
-// SMATH: check math of microfacet functions
-float microfacetBrdf(Surface surface) 
-{
-    float NDF = D_GGX(surface.noh, surface.a);
-    float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
-
-    float numerator = NDF * G;
-    float denominator = 4.0 * surface.nov * surface.nol;
-
-    return numerator / max(denominator, 0.001); 
-}
-
-float microfacetBtdf(Surface surface) 
-{
-    float NDF = D_GGX(surface.noh, surface.a);
-    float G = G_SmithSchlickGGX(surface.nol, surface.nov, surface.a);
-
-    float numerator = NDF * G * surface.loh * surface.loh;
-    float denominator = (surface.loh + surface.eta * surface.loh); 
-    denominator *= denominator;
-    denominator *= surface.nov * surface.nol;
-
-    return numerator / max(denominator, 0.001); 
-}
-
-// SMATH: check opacity stuff, and specular
-vec3 explicitBrdf(inout Surface surface, vec3 L)
-{
-    addIncomingLightDirection(surface, L);
-
-    vec3 ks = F_Schlick(surface.loh, surface.f0);
-    vec3 kt = 1.0 - ks;
-    vec3 kd = kt * surface.opacity;
-
-    vec3 brdf_d = LambertianDiffuse(surface.albedo);
- 
-    float brdf_r =surface.a >= SPEC_THRESHOLD ? microfacetBrdf(surface) : 0.f;
-
-    return kd * brdf_d + ks * brdf_r;
-}
 
 #endif

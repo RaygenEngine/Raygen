@@ -12,11 +12,11 @@
 #include "global-descset.glsl"
 
 #include "aabb.glsl"
-#include "bsdfs.glsl"
 #include "lights/quadlight.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 struct hitPayload

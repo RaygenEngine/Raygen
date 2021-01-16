@@ -1,10 +1,10 @@
 #ifndef quadlight_glsl
 #define quadlight_glsl
 
-#include "bsdfs.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 bool rayPlaneIntersection(vec3 planeNormal, vec3 planePoint, vec3 rayOrigin, vec3 rayDirection, out float t) 
@@ -92,7 +92,7 @@ float Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, S
 	vec3 samplePoint =  ql.center + u.x * ql.right + u.y * ql.up;
 	
 	vec3 L = normalize(samplePoint - surface.position);  
-	addIncomingLightDirection(surface, L);
+	addOutgoingDir(surface, L);
 
 	float dist = distance(samplePoint, surface.position);
 	if(ql.hasShadow == 1 && Quadlight_ShadowRayQuery(topLevelAs, surface.position, L, 0.01, dist) > 0.0){
@@ -102,7 +102,7 @@ float Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, S
 	float pdf_brdf = 1;
 	if(surface.a >= SPEC_THRESHOLD)
 	{
-		pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
+		//pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 		pdf_brdf = max(pdf_brdf, BIAS);
 	}
 	
@@ -110,29 +110,29 @@ float Quadlight_LightSample(accelerationStructureEXT topLevelAs, Quadlight ql, S
 	ql.quadraticTerm * (dist * dist));
 
 	// WIP: check using / (pdf_area + pdf_brdf)
-	return attenuation * surface.nol / (pdf_area + pdf_brdf); // MIS
+	return attenuation / (pdf_area + pdf_brdf); // MIS
 }
 
 float Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface, uint seed)
 {
 	float pdf_area = 1.0 / (ql.width * ql.height);
 
-	surface.l = reflect(-surface.v);
-	cacheSurfaceDots(surface);
+	surface.o = reflect(-surface.i);
+	//cacheSurfaceDots(surface);
 	float pdf_brdf = 1;
 
 	if(surface.a >= SPEC_THRESHOLD)
 	{
 		vec2 u = rand2(seed);
-		vec3 H = importanceSampleGGX(u, surface.a);
+		vec3 H = vec3(0);// importanceSampleGGX(u, surface.a);
 
-		surface.l =  reflect(-surface.v, H);
-		cacheSurfaceDots(surface);
+		surface.o =  reflect(-surface.i, H);
+		//cacheSurfaceDots(surface);
 
-		pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
+		//pdf_brdf = importanceSamplePdf(surface.a, surface.noh, surface.loh);
 	}
 
-	vec3 L = surfaceIncidentLightDir(surface);  				
+	vec3 L = getOutgoingDir(surface);  				
 
 	vec3 samplePoint;
 	if(!rayQuadIntersection(ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height, surface.position, L, samplePoint)) {
@@ -149,7 +149,7 @@ float Quadlight_BrdfSample(accelerationStructureEXT topLevelAs, Quadlight ql, Su
 	ql.quadraticTerm * (dist * dist));
 
 	// WIP: check using / (pdf_area + pdf_brdf)
-	return attenuation * surface.nol / (pdf_area + pdf_brdf); // MIS
+	return attenuation / (pdf_area + pdf_brdf); // MIS
 }
 
 vec3 Quadlight_FastContribution(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface)

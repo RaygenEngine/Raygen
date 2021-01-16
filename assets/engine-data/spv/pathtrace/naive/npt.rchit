@@ -9,7 +9,6 @@
 #define RAY
 #include "global.glsl"
 
-#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -199,31 +198,28 @@ Surface surfaceFromGeometryGroup(
 	float sqrtf0 = sqrt(f0);
 	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
 
-	// WIP: use of current medium, not vacuum (1.0)
-	float etaI = 1.0; // vacuum (recursive)
-	float etaT = eta; // material
-		
-	//vec3 n = normalize(cross(v1.position - v0.position, v2.position - v0.position));
-
-	// if we view backface flip the normals
+	// Backwards tracing:
+	surface.eta_i = 1.0; // vacuum view ray
+	surface.eta_o = eta; // material light ray
+	
+	// from the inside of object
 	if(dot(V, Ng) < 0) { 
-	    Ng = -Ng;
-		N = -N; 
-		// swap
-		float t = etaI; 
-		etaI = etaT;
-		etaT = t;
+		Ng = -Ng;
+		N = -N;
+		
+		// solid object
+		if(mat.mask == 2) {
+			surface.eta_o = 1.0; // vacuum light ray
+			surface.eta_i = eta; // material view ray
+		}
 	}
-
-	surface.eta = etaI / etaT;
 		
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 	surface.basis = branchlessOnb(N);
 
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = absNdot(surface.v);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
 
     return surface;
 }
@@ -240,7 +236,7 @@ void main() {
 
 	bool isDiffusePath;
 	float pathPdf, bsdfPdf;
-	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
+	if(!sampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
 		prd.attenuation = vec3(0);
 		prd.hitType = 2;
 		return;
@@ -249,8 +245,8 @@ void main() {
 	float pdf = pathPdf * bsdfPdf;
 
 	// bsdf * nol / pdf
-	prd.attenuation = prd.attenuation * surface.nol / pdf;
+	prd.attenuation = prd.attenuation * absNdot(surface.o) / pdf;
 	prd.hitType = 1; // general
 	prd.origin = surface.position;
-	prd.direction = surfaceIncidentLightDir(surface);	
+	prd.direction = getOutgoingDir(surface);	
 }

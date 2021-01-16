@@ -10,7 +10,6 @@
 #include "global.glsl"
 
 #include "pathtrace/lights.glsl"
-#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -130,7 +129,6 @@ vec4 texture(samplerRef s, vec2 uv) {
 	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
 }
 
-bool exits = false;
 Surface surfaceFromGeometryGroup(
     GeometryGroup gg)
 {
@@ -206,29 +204,28 @@ Surface surfaceFromGeometryGroup(
 	float sqrtf0 = sqrt(f0);
 	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
 
-	// WIP: use of current medium, not vacuum (1.0)
-	float etaI = 1.0; // vacuum (recursive)
-	float etaT = eta; // material
-		
-	// if behind actual surface flip the normals
+	// Backwards tracing:
+	surface.eta_i = 1.0; // vacuum view ray
+	surface.eta_o = eta; // material light ray
+	
+	// from the inside of object
 	if(dot(V, Ng) < 0) { 
-	    Ng = -Ng;
-		N = -N; 
-		// swap
-		float t = etaI; 
-		etaI = etaT;
-		etaT = t;
+		Ng = -Ng;
+		N = -N;
+		
+		// solid object
+		if(mat.mask == 2) {
+			surface.eta_o = 1.0; // vacuum light ray
+			surface.eta_i = eta; // material view ray
+		}
 	}
-
-	surface.eta = etaI / etaT;
 		
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 	surface.basis = branchlessOnb(N);
 
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = absNdot(surface.v);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
 
     return surface;
 }
@@ -244,7 +241,7 @@ void main() {
 	vec3 radiance = vec3(0.f);
 	bool isDiffusePath;
 	float pathPdf, bsdfPdf;
-	if(!SampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
+	if(!sampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
 		prd.attenuation = vec3(0);
 		prd.weightedPdf = 1;
 		prd.hitType = 4;
@@ -254,15 +251,15 @@ void main() {
 	bool deltaPath = surface.a < SPEC_THRESHOLD && !isDiffusePath;
 
 	// DIRECT 
-	if(!exits && !deltaPath) {
+	if(!deltaPath) {
 		int totalLights = quadlightCount;
 		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
 		float pdf_pickLight = 1.0 / float(totalLights); // pick one of the lights
 
 		Quadlight ql = quadlights.light[i];
-		// direct light sample, brdf sample from hit shader and MIS
-		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, isDiffusePath, pdf_pickLight, prd.seed); 
+		// direct light sample, brdf sample from hit shader and MIS TODO: there is something wrong with the probabilites resulting in brighter ligth than naive approach
+		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, isDiffusePath, prd.seed) / (pdf_pickLight * pathPdf); // boost by chance of diffuse or spec
 	}
 
 	radiance += surface.emissive; // works like naive approach
@@ -271,10 +268,10 @@ void main() {
 	// INDIRECT - next step
 	{
 		// bsdf * nol 
-		prd.attenuation = prd.attenuation * surface.nol / pathPdf;
+		prd.attenuation = prd.attenuation * absNdot(surface.o) / pathPdf;
 		prd.weightedPdf =  bsdfPdf; // NOTE: this is why we split the pdfs
 		prd.hitType = !deltaPath ? 1 : 2; // general or delta
 		prd.origin = surface.position;
-		prd.direction = surfaceIncidentLightDir(surface);	
+		prd.direction = getOutgoingDir(surface);	
 	}
 }

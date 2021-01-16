@@ -14,7 +14,6 @@
 
 #include "aabb.glsl"
 #include "attachments.glsl"
-#include "bsdfs.glsl"
 #include "lights/dirlight.glsl"
 #include "lights/irragrid.glsl"
 #include "lights/pointlight.glsl"
@@ -22,6 +21,7 @@
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 hitAttributeEXT vec2 baryCoord;
@@ -186,8 +186,8 @@ Surface surfaceFromGeometryGroup(
 	surface.basis = branchlessOnb(ns);
 
 	vec3 V = normalize(-gl_WorldRayDirectionEXT);
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = max(Ndot(surface.v), BIAS);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
+    //surface.nov = max(Ndot(surface.v), BIAS);
 
 	surface.albedo = (1.0 - metallic) * baseColor;
     surface.opacity = sampledBaseColor.a;
@@ -280,7 +280,7 @@ void main() {
 	{
 		vec3 brdf_NoL_invpdf = SampleReflectionDirection(surface, prd.seed);
 
-		vec3 L = surfaceIncidentLightDir(surface);
+		vec3 L = getOutgoingDir(surface);
 		radiance += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;
 	}
 

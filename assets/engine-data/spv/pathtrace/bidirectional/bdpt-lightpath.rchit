@@ -9,7 +9,6 @@
 #define RAY
 #include "global.glsl"
 
-#include "surface-path.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -207,24 +206,24 @@ Surface surfaceFromGeometryGroup(
 	float etaT = eta; // material
 		
 	// if behind actual surface flip the normals
-	if(dot(V, Ng) < 0) { 
-	    Ng = -Ng;
-		N = -N; 
-		// swap
-		float t = etaI; 
-		etaI = etaT;
-		etaT = t;
-	}
-
-	surface.eta = etaI / etaT;
+//	if(dot(V, Ng) < 0) { 
+//	    Ng = -Ng;
+//		N = -N; 
+//		// swap
+//		float t = etaI; 
+//		etaI = etaT;
+//		etaT = t;
+//	}
+//
+//	surface.eta = etaI / etaT;
 
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 	surface.basis = branchlessOnb(N);
 
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = absNdot(surface.v);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
+    //surface.nov = absNdot(surface.v);
 
     return surface;
 }
@@ -239,7 +238,7 @@ void main() {
 
 	bool isDiffusePath;
 	float pathPdf, bsdfPdf;
-	if(!SampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
+	if(!sampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
 		prd.throughput = vec3(0);
 		prd.hitType = 1;
 		return;
@@ -248,11 +247,11 @@ void main() {
 	float pdf = pathPdf * bsdfPdf;
 
 	// projection solid angle form
-	pdf /= surface.nol;
+	pdf /= absNdot(surface.o);
 
 	prd.normal = surface.basis.normal;
 	prd.throughput /= pdf;
 	prd.hitType = 0; // continue
 	prd.origin = surface.position;
-	prd.direction = surfaceIncidentLightDir(surface);
+	prd.direction = getOutgoingDir(surface);
 }

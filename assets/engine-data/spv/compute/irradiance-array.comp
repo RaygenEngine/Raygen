@@ -3,7 +3,7 @@
 
 #include "global.glsl"
 #include "sampling.glsl"
-#include "hammersley.glsl"
+#include "random.glsl"
 #include "onb.glsl"
 
 layout (local_size_x = 32, local_size_y = 32) in;

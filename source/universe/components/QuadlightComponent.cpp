@@ -12,7 +12,6 @@ DECLARE_DIRTY_FUNC(CQuadlight)(BasicComponent& bc)
 			ql.ubo.up = glm::vec4(up, height);
 			ql.ubo.normal = glm::vec4(front, 0.f);
 
-			// WIP: check scale
 			ql.transform = math::transformMat(glm::vec3{ width, height, 1.f }, orientation, center);
 
 			if constexpr (FullDirty) {

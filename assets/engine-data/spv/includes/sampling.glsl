@@ -1,8 +1,6 @@
 #ifndef sampling_glsl
 #define sampling_glsl
 
-#include "bsdfs.glsl"
-
 vec3 uniformSampleHemisphere(vec2 u) 
 {
     float z = u.x;
@@ -85,21 +83,5 @@ vec2 uniformSampleTriangle(vec2 u)
 }
 
 // pdf = 1 / area of triangle
-
-vec3 importanceSampleGGX(vec2 u, float a) 
-{
-    float phi = 2.0f * PI * u.x;
-    // (aa-1) == (a-1)(a+1) produces better fp accuracy
-    float cosTheta2 = (1 - u.y) / (1 + (a + 1) * ((a - 1) * u.y));
-    float cosTheta = sqrt(cosTheta2);
-    float sinTheta = sqrt(1 - cosTheta2);
-
-    return vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
-}
-
-float importanceSamplePdf(float a, float NoH, float LoH)
-{
-    return D_GGX(NoH, a) * NoH /  (4.0 * LoH);
-}
 
 #endif

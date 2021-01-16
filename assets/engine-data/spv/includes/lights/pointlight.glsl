@@ -1,10 +1,10 @@
 #ifndef pointlight_glsl
 #define pointlight_glsl
 
-#include "bsdfs.glsl"
 #include "onb.glsl"
 #include "random.glsl"
 #include "sampling.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 float Pointlight_ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)

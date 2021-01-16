@@ -12,8 +12,8 @@
 #include "raytrace/rtspec/rtspec.glsl"
 
 #include "attachments.glsl"
-#include "bsdfs.glsl"
 #include "onb.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
@@ -102,7 +102,7 @@ void main() {
 
 		vec3 brdf_NoL_invpdf = SampleSpecularDirection(surface, prd.seed);
 
-		vec3 L = surfaceIncidentLightDir(surface);
+		vec3 L = getOutgoingDir(surface);
 		accumColor += RadianceOfRay(surface.position, L) * brdf_NoL_invpdf;
 	}
 

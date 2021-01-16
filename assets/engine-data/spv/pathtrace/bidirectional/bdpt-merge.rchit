@@ -205,24 +205,24 @@ Surface surfaceFromGeometryGroup(
 	float etaT = eta; // material
 		
 	// if behind actual surface flip the normals
-	if(dot(V, Ng) < 0) { 
-	    Ng = -Ng;
-		N = -N; 
-		// swap
-		float t = etaI; 
-		etaI = etaT;
-		etaT = t;
-	}
-
-	surface.eta = etaI / etaT;
+//	if(dot(V, Ng) < 0) { 
+//	    Ng = -Ng;
+//		N = -N; 
+//		// swap
+//		float t = etaI; 
+//		etaI = etaT;
+//		etaT = t;
+//	}
+//
+//	surface.eta = etaI / etaT;
 
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
 	surface.basis = branchlessOnb(N);
 
 	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
 
-    surface.v = normalize(toOnbSpace(surface.basis, V));
-    surface.nov = absNdot(surface.v);
+    surface.i = normalize(toOnbSpace(surface.basis, V));
+    //surface.nov = absNdot(surface.v);
 
     return surface;
 }

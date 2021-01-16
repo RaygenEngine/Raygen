@@ -10,8 +10,8 @@
 
 #include "global-descset.glsl"
 
-#include "bsdfs.glsl"
 #include "onb.glsl"
+#include "shading-math.glsl"
 #include "surface.glsl"
 
 struct hitPayload
@@ -89,7 +89,7 @@ void main() {
 	// PERF: you can calculate reflection UVs here and use them later for ssr and skip some rays here
 //	vec3 brdf_NoL = SampleSpecularReflectionDirection(surface);
 //
-//	vec3 L = surfaceIncidentLightDir(surface);
+//	vec3 L = getOutgoingDir(surface);
 //	vec3 color = RadianceOfRay(surface.position, L) * brdf_NoL;
 //
 //	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
