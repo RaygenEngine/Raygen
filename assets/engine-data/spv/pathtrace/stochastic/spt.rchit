@@ -251,14 +251,34 @@ void main() {
 
 	// DIRECT 
 	if(!isDeltaPath) {
-		int totalLights = quadlightCount;
+		int totalLights = pointlightCount + quadlightCount + spotlightCount + dirlightCount;
 		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
 		float pdf_pickLight = 1.0 / float(totalLights); // pick one of the lights
 
-		Quadlight ql = quadlights.light[i];
-		// direct light sample, brdf sample from hit shader and MIS TODO: there is something wrong with the probabilites resulting in brighter ligth than naive approach
-		radiance += Quadlight_EstimateDirect(topLevelAs, ql, i, surface, isDiffusePath, prd.seed) / (pdf_pickLight * pdf_path); // CHECK: boost by chance of diffuse or spec?
+#define pIndex i
+#define qIndex pIndex - pointlightCount
+#define sIndex qIndex - quadlightCount
+#define dIndex sIndex - spotlightCount
+
+		if(pIndex < pointlightCount) {
+			Pointlight pl = pointlights.light[pIndex];
+			radiance += Pointlight_EstimateDirect(topLevelAs, pl, surface, isDiffusePath);
+		}
+		else if (qIndex < quadlightCount) {
+			Quadlight ql = quadlights.light[qIndex];
+			radiance += Quadlight_EstimateDirect(topLevelAs, ql, qIndex, surface, isDiffusePath, prd.seed); // TODO: there is something wrong with the probabilites resulting in brighter light than naive approach
+		}
+		else if (sIndex < spotlightCount) {
+			Spotlight sl = spotlights.light[sIndex];
+			radiance += Spotlight_EstimateDirect(topLevelAs, sl, surface, isDiffusePath); 
+		}
+		else if (dIndex < dirlightCount) {
+			Dirlight dl = dirlights.light[dIndex];
+			radiance += Dirlight_EstimateDirect(topLevelAs, dl, surface, isDiffusePath); 
+		}
+
+		radiance /= (pdf_pickLight * pdf_path); // CHECK: boost by chance of diffuse or glossy?
 	}
 
 	radiance += surface.emissive; // works like naive approach
