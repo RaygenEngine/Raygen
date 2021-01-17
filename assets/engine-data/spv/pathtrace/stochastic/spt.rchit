@@ -18,8 +18,7 @@ struct hitPayload
 
 	vec3 origin; // stuff of THIS ray
 	vec3 direction;
-	vec3 attenuation; 
-	float weightedPdf;
+	vec3 attenuation;
 
 	int hitType; // previous hit type
 	uint seed;
@@ -239,19 +238,19 @@ void main() {
 	Surface surface = surfaceFromGeometryGroup(gg);
 
 	vec3 radiance = vec3(0.f);
-	bool isDiffusePath;
-	float pathPdf, bsdfPdf;
-	if(!sampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
+
+	bool isDiffusePath, isRefractedPath;
+	float pdf_path, pdf_bsdf;
+	if(!sampleBSDF(surface, prd.attenuation, pdf_path, pdf_bsdf, isDiffusePath, isRefractedPath, prd.seed)) {
 		prd.attenuation = vec3(0);
-		prd.weightedPdf = 1;
-		prd.hitType = 4;
+		prd.hitType = 3;
 		return;
 	}
 
-	bool deltaPath = surface.a < SPEC_THRESHOLD && !isDiffusePath;
+	bool isDeltaPath = surface.a < SPEC_THRESHOLD && !isDiffusePath;
 
 	// DIRECT 
-	if(!deltaPath) {
+	if(!isDeltaPath) {
 		int totalLights = quadlightCount;
 		float u = rand(prd.seed);
 		int i = int(floor(u * totalLights));
@@ -259,7 +258,7 @@ void main() {
 
 		Quadlight ql = quadlights.light[i];
 		// direct light sample, brdf sample from hit shader and MIS TODO: there is something wrong with the probabilites resulting in brighter ligth than naive approach
-		radiance += Quadlight_Ldirect(topLevelAs, ql, surface, isDiffusePath, prd.seed) / (pdf_pickLight * pathPdf); // boost by chance of diffuse or spec
+		radiance += Quadlight_EstimateDirect(topLevelAs, ql, i, surface, isDiffusePath, prd.seed) / (pdf_pickLight * pdf_path); // CHECK: boost by chance of diffuse or spec?
 	}
 
 	radiance += surface.emissive; // works like naive approach
@@ -268,9 +267,8 @@ void main() {
 	// INDIRECT - next step
 	{
 		// bsdf * nol 
-		prd.attenuation = prd.attenuation * absNdot(surface.o) / pathPdf;
-		prd.weightedPdf =  bsdfPdf; // NOTE: this is why we split the pdfs
-		prd.hitType = !deltaPath ? 1 : 2; // general or delta
+		prd.attenuation = prd.attenuation * absNdot(surface.o) / (pdf_path * pdf_bsdf);
+		prd.hitType = isDeltaPath || isRefractedPath ? 2 : 1; // delta or general
 		prd.origin = surface.position;
 		prd.direction = getOutgoingDir(surface);	
 	}

@@ -11,15 +11,13 @@ struct hitPayload
 
 	vec3 origin; // next ray stuff
 	vec3 direction;
-	vec3 attenuation; 
-	float weightedPdf;
+	vec3 attenuation;
 
 	int hitType; 
 	// 0 - direct
 	// 1 - general
-	// 2 - mirror
-	// 3 - light
-	// 4 - stop
+	// 2 - special
+	// 3 - stop
 	uint seed;
 };
 
@@ -93,25 +91,16 @@ void main() {
 	prd.direction = direction.xyz;
 
 	prd.attenuation = vec3(1.f);
-	prd.weightedPdf = 1.f;
 
 	prd.hitType = 0; // direct
 
 	vec3 accumColor = vec3(0.f);
 	vec3 currentTotalAttenuation = vec3(1);
-	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 4 && prd.hitType != 3); ++depth)
+	for(int depth = 0; depth < bounces + 1 && (prd.hitType != 3); ++depth)
 	{
-		vec3 segmentAttenuation = prd.attenuation;
-		float segmentPdf = prd.weightedPdf;
+		currentTotalAttenuation *= prd.attenuation;
 
-		TraceRay();
-		
-		if(prd.hitType == 3) {
-			currentTotalAttenuation *= segmentAttenuation / prd.weightedPdf; // use final mis weighted pdf
-		}
-		else {
-			currentTotalAttenuation *= segmentAttenuation / segmentPdf;
-		}
+		TraceRay(); 
 
 		accumColor += prd.radiance * currentTotalAttenuation;
 		

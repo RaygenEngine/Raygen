@@ -11,8 +11,7 @@ struct hitPayload
 
 	vec3 origin; // stuff of THIS ray
 	vec3 direction;
-	vec3 attenuation; 
-	float weightedPdf;
+	vec3 attenuation;
 
 	int hitType; // previous hit type
 	uint seed;
@@ -40,34 +39,23 @@ void main() {
 
 	float LnoL = dot(ql.normal, -gl_WorldRayDirectionEXT);
 
+	prd.radiance = vec3(0);
+
 	// behind
 	if(LnoL < BIAS) {
-		prd.radiance = vec3(0);
-		prd.hitType = 4;
+		prd.hitType = 3;
 		return;	
 	}
 
 	// direct hit
 	if(prd.hitType == 0) {
 		prd.radiance = ql.color;
-		prd.hitType = 4; // TODO: continue path, tho analytic light surface has no actual material values
-		return;	
 	}
 
-	// from mirror
+	// from paths delta or refracted path
 	if(prd.hitType == 2) {
 		prd.radiance = ql.color * ql.intensity;
-		prd.hitType = 4;
-		return;	
 	}
 
-	LnoL = abs(LnoL);
-
-	vec3 hitpoint = gl_WorldRayOriginEXT + gl_HitTEXT * gl_WorldRayDirectionEXT;
-	float dist = distance(hitpoint, gl_WorldRayOriginEXT);
-	float pdf_lightArea = (dist * dist) / (ql.width * ql.height * LnoL);
-
-	prd.radiance = ql.color * ql.intensity;  
-	prd.weightedPdf = prd.weightedPdf + pdf_lightArea; // prev prd.weightedPdf = pdf_bsdf
 	prd.hitType = 3;
 }

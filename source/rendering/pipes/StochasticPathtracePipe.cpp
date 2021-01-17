@@ -55,6 +55,7 @@ vk::UniquePipeline StochasticPathtracePipe::MakePipeline()
 	auto& ptshader = getShader("engine-data/spv/pathtrace/stochastic/spt.shader");
 	auto& ptQuadlightShader = getShader("engine-data/spv/pathtrace/stochastic/spt-quadlight.shader");
 	auto& ptShadowShadow = getShader("engine-data/spv/pathtrace/stochastic/spt-shadow.shader");
+	auto& ptShadowQuadlightShadow = getShader("engine-data/spv/pathtrace/stochastic/spt-shadow-quadlight.shader");
 
 	auto get = [](auto shader) {
 		return *shader.Lock().module;
@@ -66,6 +67,7 @@ vk::UniquePipeline StochasticPathtracePipe::MakePipeline()
 	AddHitGroup(get(ptshader.closestHit), get(ptshader.anyHit));             // gltf mat 0, ahit for mask
 	AddHitGroup(get(ptQuadlightShader.closestHit));                          // quad lights 1
 	AddHitGroup(get(ptShadowShadow.closestHit), get(ptShadowShadow.anyHit)); // shadow 2, ahit for mask
+	AddHitGroup(get(ptShadowQuadlightShadow.closestHit));                    // shadow quad lights 3
 
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
 	rayPipelineInfo
