@@ -234,15 +234,15 @@ void main() {
 
 	prd.radiance = surface.emissive;
 
-	bool isDiffusePath;
-	float pathPdf, bsdfPdf;
-	if(!sampleBSDF(surface, prd.attenuation, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
+	bool isDiffusePath, isRefractedPath;
+	float pdf_path, pdf_bsdf;
+	if(!sampleBSDF(surface, prd.attenuation, pdf_path, pdf_bsdf, isDiffusePath, isRefractedPath, prd.seed)) {
 		prd.attenuation = vec3(0);
 		prd.hitType = 2;
 		return;
 	}
 
-	float pdf = pathPdf * bsdfPdf;
+	float pdf = pdf_path * pdf_bsdf;
 
 	// bsdf * nol / pdf
 	prd.attenuation = prd.attenuation * absNdot(surface.o) / pdf;

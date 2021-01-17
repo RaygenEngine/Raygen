@@ -2,18 +2,19 @@
 #extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_tracing : require
 
-#include "global.glsl"
-
 struct ShadowPayload
 {
 	int id;
 	float dist;
-	bool hit;  
+	bool hit; 
 };
 
 layout(location = 1) rayPayloadInEXT ShadowPayload prd;
 
 void main() {
-	// if delta light (id == -1) this check is enough
-	prd.hit = prd.id != -1 ? false : true;
+	
+	// CHECK: more light types this will need adjustment
+	// if we hit the light we searched for
+	prd.hit = prd.id != gl_InstanceCustomIndexEXT ? false : true;
+	prd.dist = gl_HitTEXT;
 }

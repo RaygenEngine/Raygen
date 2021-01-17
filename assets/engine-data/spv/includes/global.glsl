@@ -39,6 +39,11 @@
 #define BIAS 1e-4
 #endif
 
+// CHECK:
+#ifndef INF
+#define INF 1e+6
+#endif
+
 #ifndef SPEC_THRESHOLD
 #define SPEC_THRESHOLD 0.001
 #endif

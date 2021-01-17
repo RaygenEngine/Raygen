@@ -236,15 +236,15 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup(gg);
 
-	bool isDiffusePath;
-	float pathPdf, bsdfPdf;
-	if(!sampleBSDF(surface, prd.throughput, pathPdf, bsdfPdf, isDiffusePath, prd.seed)) {
+	bool isDiffusePath, isRefractedPath;
+	float pdf_path, pdf_bsdf;
+	if(!sampleBSDF(surface, prd.throughput, pdf_path, pdf_bsdf, isDiffusePath, isRefractedPath, prd.seed)) {
 		prd.throughput = vec3(0);
 		prd.hitType = 1;
 		return;
 	}
 
-	float pdf = pathPdf * bsdfPdf;
+	float pdf = pdf_path * pdf_bsdf;
 
 	// projection solid angle form
 	pdf /= absNdot(surface.o);
