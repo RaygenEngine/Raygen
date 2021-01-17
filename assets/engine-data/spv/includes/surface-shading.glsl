@@ -76,7 +76,7 @@ float finalWeight(Surface surface)
     return absdot(surface.i, surface.h) * G_Smith(surface.i, surface.h, surface.o, surface.a) / (absNdot(surface.i) * absNdot(surface.h));
 }
 
-// SMATH: check opacity stuff, and specular
+// SMATH: check opacity stuff, and specular NEXT: rename and adjust
 vec3 explicitBrdf(inout Surface surface, vec3 L)
 {
     addOutgoingDir(surface, L);

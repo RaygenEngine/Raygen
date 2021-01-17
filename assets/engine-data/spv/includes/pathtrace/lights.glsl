@@ -154,4 +154,71 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 	return directLighting;
 }
 
+vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, bool isDiffusePath)
+{
+	vec3 L = normalize(pl.position - surface.position);
+
+	addOutgoingDir(surface, L);
+
+	if(isOutgoingDirPassingThrough(surface)) {
+		return vec3(0.0);
+	}
+
+	float dist = distance(pl.position, surface.position);
+	if(pl.hasShadow == 1 && !PtLights_ShadowRayTest(topLevelAs, -1, surface.position, L, 0.001, dist)) {
+		return vec3(0.0); // V
+	}
+
+	float attenuation = 1.0 / (pl.constantTerm + pl.linearTerm * dist + 
+  			     pl.quadraticTerm * (dist * dist));
+
+	vec3 Li = pl.color * pl.intensity * attenuation;  
+	return Li * nonSpecularBRDF(surface, isDiffusePath) * absNdot(surface.o);
+}
+
+vec3 Spotlight_EstimateDirect(accelerationStructureEXT topLevelAs, Spotlight sl, Surface surface, bool isDiffusePath)
+{
+	vec3 L = normalize(sl.position - surface.position);
+
+	addOutgoingDir(surface, L);
+
+	if(isOutgoingDirPassingThrough(surface)) {
+		return vec3(0.0);
+	}
+
+	// spot effect (soft edges)
+	float theta = dot(L, -sl.front);
+    float epsilon = (sl.innerCutOff - sl.outerCutOff);
+    float spotEffect = clamp((theta - sl.outerCutOff) / epsilon, 0.0, 1.0);
+
+	if(spotEffect < BIAS){
+		return vec3(0.0);
+	}
+
+	float dist = distance(sl.position, surface.position);
+	if(sl.hasShadow == 1 && !PtLights_ShadowRayTest(topLevelAs, -1, surface.position, L, 0.001, dist)) {
+		return vec3(0.0); // V
+	}
+
+	float attenuation = 1.0 / (sl.constantTerm + sl.linearTerm * dist + 
+  			     sl.quadraticTerm * (dist * dist));
+
+	vec3 Li = sl.color * sl.intensity * attenuation * spotEffect;  
+	return Li * nonSpecularBRDF(surface, isDiffusePath) * absNdot(surface.o);
+}
+
+vec3 Dirlight_EstimateDirect(accelerationStructureEXT topLevelAs, Dirlight dl, Surface surface, bool isDiffusePath)
+{
+	vec3 L = normalize(-dl.front);
+
+	addOutgoingDir(surface, L);
+
+	if(dl.hasShadow == 1 && !PtLights_ShadowRayTest(topLevelAs, -1, surface.position, L, 0.001, INF)) {
+		return vec3(0.0); // V
+	}
+
+	vec3 Li = dl.color * dl.intensity; 
+	return Li * nonSpecularBRDF(surface, isDiffusePath) * absNdot(surface.o);
+}
+
 #endif
