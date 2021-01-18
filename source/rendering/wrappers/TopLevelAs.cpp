@@ -16,6 +16,7 @@
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
+#include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace {
@@ -159,7 +160,8 @@ void RtSceneDescriptor::AddGeomGroup(const GpuGeometryGroup& group, const GpuMes
 	dstGeomGroup.primOffset = group.primOffset;
 
 	dstGeomGroup.transform = transform;
-	dstGeomGroup.invTransform = glm::inverse(transform);
+
+	dstGeomGroup.invTransform = glm::inverseTranspose(transform);
 }
 
 void RtSceneDescriptor::WriteImages()

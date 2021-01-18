@@ -54,6 +54,16 @@ Onb computeOnb(vec3 n)
 	return res;
 }
 
+Onb createOnb(vec3 n, vec3 t, vec3 b)
+{
+	Onb res;
+	res.normal = n;
+	res.tangent = t;
+	res.bitangent = b;
+
+	return res;
+}
+
 vec3 toOnbSpace(Onb orthoBasis, vec3 v)
 {
 	return vec3(dot(v, orthoBasis.tangent), 

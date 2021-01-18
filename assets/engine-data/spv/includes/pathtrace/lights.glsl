@@ -213,6 +213,10 @@ vec3 Dirlight_EstimateDirect(accelerationStructureEXT topLevelAs, Dirlight dl, S
 
 	addOutgoingDir(surface, L);
 
+	if(isOutgoingDirPassingThrough(surface)) {
+		return vec3(0.0);
+	}
+
 	if(dl.hasShadow == 1 && !PtLights_ShadowRayTest(topLevelAs, -1, surface.position, L, 0.001, INF)) {
 		return vec3(0.0); // V
 	}
