@@ -1,15 +1,10 @@
 #version 460
 #extension GL_GOOGLE_include_directive: enable
+
 #include "global.glsl"
 
 #include "global-descset.glsl"
-
-#include "lights/dirlight.glsl"
-#include "onb.glsl"
-#include "sampling.glsl"
-#include "shading-math.glsl"
-#include "shadowmap.glsl"
-#include "surface.glsl"
+#include "radiance.glsl"
 
 // out
 
@@ -45,6 +40,6 @@ void main()
 		uv
 	);
 
-	vec3 finalContribution = Dirlight_SmoothContribution(light, shadowmap, surface);
+	vec3 finalContribution = Dirlight_EstimateDirectSmooth(light, shadowmap, surface);
 	outColor = vec4(finalContribution, 1);
 }

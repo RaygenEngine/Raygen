@@ -1,5 +1,6 @@
 #include "DepthmapPipe.h"
 
+#include "assets/pods/MaterialArchetype.h"
 #include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
@@ -63,11 +64,14 @@ namespace {
 			.setAlphaToOneEnable(VK_FALSE);
 
 		// Dynamic vieport
-		vk::DynamicState dynamicStates[2] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+		std::array dynamicStates{
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor,
+			// WIP: temp hack, this should be created from the archetype
+			vk::DynamicState::eCullModeEXT,
+		};
 		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-		dynamicStateInfo
-			.setDynamicStateCount(2u) //
-			.setPDynamicStates(&dynamicStates[0]);
+		dynamicStateInfo.setDynamicStates(dynamicStates);
 
 		// depth and stencil state
 		vk::PipelineDepthStencilStateCreateInfo depthStencil{};
@@ -205,6 +209,25 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
+
+			{
+				// WIP: temp hack - this is part of every archetype
+				PodHandle<MaterialArchetype> pod{ arch.podUid };
+				auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
+				auto prp = cl.GetPropertyByName(std::string("mask"));
+				if (prp) {
+					PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
+					auto mati = pod2.Lock();
+					auto mask = mati->descriptorSet.uboData.end() - 4;
+					if (*mask == 1 || *mask == 2) {
+						cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eNone);
+					}
+					else {
+						cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eBack);
+					}
+				}
+			}
+
 			if (arch.isUnlit) [[unlikely]] {
 				continue;
 			}

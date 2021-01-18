@@ -5,6 +5,7 @@
 #include "random.glsl"
 #include "sampling.glsl"
 #include "shading-math.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 bool rayPlaneIntersection(vec3 planeNormal, vec3 planePoint, vec3 rayOrigin, vec3 rayDirection, out float t) 
@@ -165,7 +166,7 @@ vec3 Quadlight_FastContribution(accelerationStructureEXT topLevelAs, Quadlight q
   	ql.quadraticTerm * (dist * dist));
 
 	vec3 Li = ql.color * ql.intensity * attenuation;  
-	return Li * explicitBrdf(surface, L);
+	return Li * explicitBRDFcosTheta(surface, L);
 }
 
 #endif

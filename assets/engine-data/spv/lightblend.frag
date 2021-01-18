@@ -47,7 +47,7 @@ vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 	vec3 L = normalize(ql.center - surface.position);
 
 	vec3 Li = ql.color * ql.intensity; 
-	return Li * explicitBrdf(surface, L);
+	return Li * explicitBRDFcosTheta(surface, L);
 }
 
 void main()

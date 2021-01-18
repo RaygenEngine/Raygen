@@ -17,7 +17,12 @@
 struct hitPayload
 {
 	vec3 radiance;
-	int depth;
+
+	vec3 origin;
+	vec3 direction;
+	vec3 attenuation;
+
+	bool done;
 };
 
 layout(push_constant) uniform PC
@@ -35,12 +40,11 @@ layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 layout(location = 0) rayPayloadEXT hitPayload prd;
 
-vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
+void TraceRay() {
 	prd.radiance = vec3(0);
-	prd.depth += 1;
 
     uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT;
-    float tMin     = 0.001;
+    float tMin     = 0.01;
     float tMax     = 10000.0;
 
 	// trace ray
@@ -50,19 +54,12 @@ vec3 RadianceOfRay(vec3 nextOrigin, vec3 nextDirection) {
 				0,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				0,              // missIndex
-				nextOrigin,     // ray origin
+				prd.origin,     // ray origin
 				tMin,           // ray min range
-				nextDirection,  // ray direction
+				prd.direction,  // ray direction
 				tMax,           // ray max range
 				0               // payload (location = 0)
 	);
-	
-    prd.depth -= 1;
-    
-    if(isnan(prd.radiance.x) || isnan(prd.radiance.y) || isnan(prd.radiance.z)){
-    	prd.radiance = vec3(0,0,0);
-    }
-	return prd.radiance;
 }
 
 void main() {
@@ -76,21 +73,35 @@ void main() {
 		g_SpecularSampler,
 		g_EmissiveSampler,
 		uv
-		);
+	);
 		
-	
+
 	if(surface.depth == 1.0 || surface.a >= SPEC_THRESHOLD) {
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
 		return; 
 	}
 
-	prd.depth = 1;
+	prd.attenuation = vec3(sampleSpecularBRDF(surface));
+	prd.attenuation *= absNdot(surface.o);
 
+	vec3 L = getOutgoingDir(surface);
+	prd.origin = surface.position;
+	prd.direction = L;
+
+	prd.done = false;
+
+	vec3 accumColor = vec3(0);
+	vec3 currentTotalAttenuation = vec3(1.0);
+	for(int i = 0; i < depth && !prd.done; ++i)
+	{
+		currentTotalAttenuation *= prd.attenuation;
+
+		TraceRay(); 
+
+		accumColor += prd.radiance * currentTotalAttenuation;
+	}
+
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(accumColor, 1.f));
+	
 	// PERF: you can calculate reflection UVs here and use them later for ssr and skip some rays here
-//	vec3 brdf_NoL = SampleSpecularReflectionDirection(surface);
-//
-//	vec3 L = getOutgoingDir(surface);
-//	vec3 color = RadianceOfRay(surface.position, L) * brdf_NoL;
-//
-//	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }

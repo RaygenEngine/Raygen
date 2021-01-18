@@ -6,6 +6,7 @@
 #include "random.glsl"
 #include "sampling.glsl"
 #include "shading-math.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 vec3 SampleIrrad(Irragrid grid, samplerCubeArray irradianceSamplers, Surface surface, float x, float y, float z) 

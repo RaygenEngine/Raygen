@@ -1,5 +1,6 @@
 #include "GbufferPipe.h"
 
+#include "assets/pods/MaterialArchetype.h"
 #include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
@@ -38,7 +39,12 @@ namespace {
 			.setPrimitiveRestartEnable(VK_FALSE);
 
 		// Dynamic vieport
-		std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+		std::array dynamicStates{
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor,
+			// WIP: temp hack, this should be created from the archetype
+			vk::DynamicState::eCullModeEXT,
+		};
 		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 		dynamicStateInfo.setDynamicStates(dynamicStates);
 
@@ -238,6 +244,24 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
+
+			{
+				// WIP: temp hack - this is part of every archetype
+				PodHandle<MaterialArchetype> pod{ arch.podUid };
+				auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
+				auto prp = cl.GetPropertyByName(std::string("mask"));
+				if (prp) {
+					PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
+					auto mati = pod2.Lock();
+					auto mask = mati->descriptorSet.uboData.end() - 4;
+					if (*mask == 1 || *mask == 2) {
+						cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eNone);
+					}
+					else {
+						cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eBack);
+					}
+				}
+			}
 
 			if (arch.isUnlit) [[unlikely]] {
 				continue;

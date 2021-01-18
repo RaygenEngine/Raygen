@@ -4,8 +4,6 @@
 
 #include "global.glsl"
 
-#include "sky.glsl"
-
 struct hitPayload
 {
 	vec3 origin; 

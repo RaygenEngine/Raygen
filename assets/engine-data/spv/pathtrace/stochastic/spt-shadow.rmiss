@@ -4,8 +4,7 @@
 
 #include "global.glsl"
 
-struct ShadowPayload
-{
+struct ShadowPayload {
 	int id;
 	float dist;
 	bool hit;  

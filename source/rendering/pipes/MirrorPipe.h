@@ -4,16 +4,11 @@
 #include "rendering/wrappers/ImageView.h"
 
 namespace vl {
-struct MirrorPipe : public StaticPipeBase {
+struct MirrorPipe : public StaticRaytracingPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 
 	void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
 		vk::DescriptorSet mirrorImageStorageDescSet, const vk::Extent3D& extent) const;
-
-private:
-	// TODO: wrap those and inner boilerplate
-	RBuffer m_rtSBTBuffer;
-	std::vector<vk::RayTracingShaderGroupCreateInfoKHR> m_rtShaderGroups;
 };
 } // namespace vl

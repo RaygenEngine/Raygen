@@ -8,7 +8,7 @@ struct Surface {
     // surface
     Onb basis; // shading normal aligned hemisphere
 
-    vec3 ng; // geometric normal
+    vec3 ng; // geometric normal - TODO: check if we need this in rasterization
     
     // we use i and surface interface to sample o directions
     // h is calculated from i and o according to interface (refraction, reflection, etc)
@@ -32,6 +32,22 @@ struct Surface {
     vec2 uv;
 };
 
+void addNormal(inout Surface surface, vec3 N)
+{
+    surface.basis = branchlessOnb(N);
+}
+
+void addIncomingDir(inout Surface surface, vec3 V)
+{
+    surface.i = toOnbSpace(surface.basis, V);
+}
+
+void addOutgoingDir(inout Surface surface, vec3 L)
+{
+    surface.o = toOnbSpace(surface.basis, L);
+    surface.h = normalize(surface.i + surface.o);
+}
+
 vec3 getOutgoingDir(Surface surface)
 {
     return outOnbSpace(surface.basis, surface.o);
@@ -40,12 +56,6 @@ vec3 getOutgoingDir(Surface surface)
 vec3 getIncomingDir(Surface surface)
 {
     return outOnbSpace(surface.basis, surface.i);
-}
-
-void addOutgoingDir(inout Surface surface, vec3 L)
-{
-    surface.o = toOnbSpace(surface.basis, L);
-    surface.h = normalize(surface.i + surface.o);
 }
 
 bool isOutgoingDirPassingThrough(Surface surface)
@@ -98,12 +108,14 @@ Surface surfaceFromGBuffer(
 
     surface.position = reconstructWorldPosition(surface.depth, uv, cam.viewProjInv);
     
-	vec3 normal = texture(normalsSampler, uv).rgb;
-    surface.basis = branchlessOnb(normal);
-
+    vec3 N = texture(normalsSampler, uv).rgb;
     vec3 V = normalize(cam.position - surface.position);
-    surface.i = normalize(toOnbSpace(surface.basis, V));
-    //surface.nov = max(Ndot(surface.v), BIAS);
+
+	N = csign(dot(V, N)) * N;
+
+    addNormal(surface, N);
+
+    addIncomingDir(surface, V);
 
     // rgb: albedo a: opacity
     vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
@@ -144,12 +156,14 @@ Surface surfaceFromGBuffer(
 
     surface.position = reconstructWorldPosition(surface.depth, uv, cam.viewProjInv);
     
-	vec3 normal = subpassLoad(normalsSampler).rgb;
-    surface.basis = branchlessOnb(normal);
-
+    vec3 N = subpassLoad(normalsSampler).rgb;
     vec3 V = normalize(cam.position - surface.position);
-    surface.i = normalize(toOnbSpace(surface.basis, V));
-    //surface.nov = max(Ndot(surface.v), BIAS);
+
+	N = csign(dot(V, N)) * N;
+
+    addNormal(surface, N);
+
+    addIncomingDir(surface, V);
 
     // rgb: albedo a: opacity
     vec4 albedoOpacity = subpassLoad(albedoOpacitySampler);
