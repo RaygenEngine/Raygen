@@ -69,27 +69,31 @@ vec3 nonSpecularBRDF(Surface surface)
 	return kd * diffuseBRDF(surface) + ks * microfacetBRDF(surface);
 }
 
-// term elimination of fs * |o . n| / pdf
-float finalWeight(Surface surface) 
-{ 
-    // PERF: this maybe wrong
-    return absdot(surface.i, surface.h) * G_Smith(surface.i, surface.h, surface.o, surface.a) / (absNdot(surface.i) * absNdot(surface.h));
+float hackSpecularBRDF(Surface surface)
+{
+    return BlinnPhongSpecular(absNdot(surface.h), surface.a);
 }
 
-// SMATH: check opacity stuff, and specular NEXT: rename and adjust
-vec3 explicitBrdf(inout Surface surface, vec3 L)
+vec3 explicitBRDFcosTheta(Surface surface, vec3 L)
 {
     addOutgoingDir(surface, L);
 
-    vec3 ks = vec3(0);//F_Schlick(surface.loh, surface.f0);
+    vec3 ks = interfaceFresnel(surface);
     vec3 kt = 1.0 - ks;
     vec3 kd = kt * surface.opacity;
 
-    vec3 brdf_d = LambertianDiffuse(surface.albedo);
+    vec3 brdf_d = diffuseBRDF(surface);
  
-    float brdf_r = surface.a >= SPEC_THRESHOLD ? microfacetBRDF(surface) : 0.f;
+    float brdf_r = surface.a >= SPEC_THRESHOLD ? microfacetBRDF(surface) : hackSpecularBRDF(surface);
 
-    return kd * brdf_d + ks * brdf_r;
+    return (kd * brdf_d + ks * brdf_r) * absNdot(surface.o);
 }
+
+// term elimination of fs * |o . n| / pdf
+//float finalWeight(Surface surface) 
+//{ 
+//    // PERF: this maybe wrong
+//    return absdot(surface.i, surface.h) * G_Smith(surface.i, surface.h, surface.o, surface.a) / (absNdot(surface.i) * absNdot(surface.h));
+//}
 
 #endif

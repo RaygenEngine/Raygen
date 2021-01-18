@@ -3,9 +3,7 @@
 #include "global.glsl"
 
 #include "global-descset.glsl"
-
-#include "lights/spotlight.glsl"
-#include "surface.glsl"
+#include "radiance.glsl"
 
 #pragma begin
 
@@ -43,6 +41,6 @@ void main()
 		uv
 	);
 
-	vec3 finalContribution = Spotlight_SmoothContribution(light, shadowmap, surface);
+	vec3 finalContribution = Spotlight_EstimateDirectSmooth(light, shadowmap, surface);
 	outColor = vec4(finalContribution, 1);
 }

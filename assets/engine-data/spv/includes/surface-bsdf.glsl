@@ -136,6 +136,61 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf_path, out fl
 			 );                          
 }
 
+//bool sampleSpecularBSDF(inout Surface surface, out vec3 bsdf) {
+//
+//	float LoH = absNdot(surface.i);
+//	surface.h = vec3(0, 0, 1); // surface space N
+//
+//	bool isRefractedPath = false;
+//    float pdf_path = 1.f;
+//
+//	float eta = surface.eta_i / surface.eta_o;
+//
+//    float k = 1.0 - eta * eta * (1.0 - LoH * LoH);
+//
+//	vec3 kr = interfaceFresnel(surface);
+//
+//	// handle total intereflection
+//	float p_reflect = k < 0.0 ? 1.0 : max(kr);
+//
+//	// transmission
+//	if(rand(seed) > p_reflect) {
+//		
+//		bsdf *= 1.0 - kr; // kt
+//		pdf_path *= 1 - p_reflect;
+//		
+//		float p_transparency = 1.0 - surface.opacity; // TODO: trans material
+//
+//		// absorb 
+//		if(rand(seed) > p_transparency) {
+//			bsdf *= 0;
+//		}
+//		// refraction
+//		else {
+//			pdf_path *= p_transparency;
+//			isRefractedPath = true;
+//
+//			bsdf *= sampleSpecularBTDF(surface);
+//		}
+//	}
+//
+//	// reflection
+//	else {
+//	    bsdf *= kr;
+//		pdf_path *= p_reflect;
+//
+//		bsdf *= sampleSpecularBRDF(surface);
+//	}
+//
+//	bsdf /= pdf_path;
+//
+//	// BIAS: stop erroneous paths
+//	return !(isRefractedPath && !isOutgoingDirPassingThrough(surface) || // reflect but under actual geometry
+//	         !isRefractedPath && isOutgoingDirPassingThrough(surface) || // transmit but above actual geometry        
+//	         pdf_path < BIAS                            // very small pdf
+//			 ); 
+//}
+
 // PERF: only for npt probably, avoid a lot of operations by simplifying terms
 //bool sampleBSDF_termElimination...
 

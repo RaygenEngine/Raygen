@@ -5,6 +5,7 @@
 #include "random.glsl"
 #include "sampling.glsl"
 #include "shading-math.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 float Pointlight_ShadowRayQuery(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
@@ -39,7 +40,7 @@ vec3 Pointlight_Sample(accelerationStructureEXT topLevelAs, Pointlight pl, Surfa
   			     pl.quadraticTerm * (dist * dist));
 
 	vec3 Li = pl.color * pl.intensity * attenuation;  
-	return Li * explicitBrdf(surface, L);
+	return Li * explicitBRDFcosTheta(surface, L);
 }
 
 vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)

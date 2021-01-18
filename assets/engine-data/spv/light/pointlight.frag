@@ -2,11 +2,10 @@
 #extension GL_GOOGLE_include_directive: enable
 #extension GL_EXT_ray_tracing : require
 #extension GL_EXT_ray_query: require
+
 #include "global.glsl"
 
 #include "global-descset.glsl"
-
-#include "lights/pointlight.glsl"
 #include "surface.glsl"
 
 // out
@@ -29,6 +28,32 @@ layout (input_attachment_index = 6, set = 1, binding = 6) uniform subpassInput g
 layout(set = 2, binding = 0) uniform UBO_Pointlight { Pointlight pl; };
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
+// WIP: this can't handle alpha mask
+float ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
+{ 
+	// Initializes a ray query object but does not start traversal
+	rayQueryEXT rayQuery;
+	rayQueryInitializeEXT(rayQuery, 
+						  topLevelAs, 
+						  gl_RayFlagsTerminateOnFirstHitEXT, 
+						  0xFF, 
+						  origin, 
+						  tMin,
+						  direction, 
+						  tMax);
+
+	// Start traversal: return false if traversal is complete
+	while(rayQueryProceedEXT(rayQuery)) {
+	}
+      
+	// Returns type of committed (true) intersection
+	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
+		// Got an intersection == Shadow
+		return 1.0;
+	}
+	return 0.0;
+}
+
 void main()
 {
 	Surface surface = surfaceFromGBuffer(
@@ -43,6 +68,21 @@ void main()
 		uv
 	);
 
-	vec3 finalContribution = Pointlight_SmoothContribution(topLevelAs, pl, surface);
+	vec3 L = normalize(pl.position - surface.position);
+
+	//if(isOutgoingDirPassingThrough(surface)) { // NEXT: ng
+	//	return vec3(0.0);
+	//}
+
+	float dist = distance(pl.position, surface.position);
+	float shadow = 1 - pl.hasShadow * ShadowRayTest(topLevelAs, surface.position, L, 0.001, dist);
+
+	float attenuation = 1.0 / (pl.constantTerm + pl.linearTerm * dist + 
+  			     pl.quadraticTerm * (dist * dist));
+
+	vec3 Li = pl.color * pl.intensity * attenuation * shadow; 
+	
+	vec3 finalContribution = Li * explicitBRDFcosTheta(surface, L);
+
 	outColor = vec4(finalContribution, 1);
 }

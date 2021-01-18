@@ -2,6 +2,7 @@
 #define reflprobe_glsl
 
 #include "aabb.glsl"
+#include "shadowmap.glsl"
 #include "surface.glsl"
 
 // PERF:

@@ -12,8 +12,7 @@
 #include "pathtrace/gltf-surface.glsl"
 #include "pathtrace/lights.glsl"
 
-struct hitPayload
-{
+struct hitPayload {
 	vec3 radiance; // previous radiance
 
 	vec3 origin; // stuff of THIS ray
@@ -24,10 +23,9 @@ struct hitPayload
 	uint seed;
 };
 
-layout(push_constant) uniform PC
-{
+layout(push_constant) uniform PC {
+	int samples;
 	int bounces;
-	int frame;
 	int pointlightCount;
 	int spotlightCount;
 	int dirlightCount;

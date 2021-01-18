@@ -5,8 +5,7 @@
 #define RAY
 #include "global.glsl"
 
-struct hitPayload
-{
+struct hitPayload {
 	vec3 radiance; // previous radiance
 
 	vec3 origin; // stuff of THIS ray
@@ -17,23 +16,13 @@ struct hitPayload
 	uint seed;
 };
 
-layout(push_constant) uniform PC
-{
-	int bounces;
-	int frame;
-	int pointlightCount;
-	int spotlightCount;
-	int dirlightCount;
-	int quadlightCount;
-};
-
 hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
-void main() {
-
+void main() 
+{
 	int quadId = gl_InstanceCustomIndexEXT;
 	Quadlight ql = quadlights.light[quadId];
 
