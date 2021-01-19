@@ -1,6 +1,5 @@
 #pragma once
 #include "rendering/pipes/StaticPipeBase.h"
-#include "rendering/wrappers/Buffer.h"
 
 namespace vl {
 struct StochasticPathtracePipe : public StaticRaytracingPipeBase {

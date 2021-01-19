@@ -47,7 +47,7 @@ vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 	vec3 L = normalize(ql.center - surface.position);
 
 	vec3 Li = ql.color * ql.intensity; 
-	return Li * explicitBRDFcosTheta(surface, L);
+	return Li * explicitBRDF(surface, L); // we lose the L, and Li(p, L) data - but at least we got smooth shadows - yey
 }
 
 void main()

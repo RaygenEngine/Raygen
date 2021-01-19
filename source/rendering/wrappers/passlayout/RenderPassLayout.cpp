@@ -333,8 +333,11 @@ RenderingPassInstance RRenderPassLayout::CreatePassInstance(
 
 		usageBits |= att.additionalFlags;
 
+
+		// TODO: implement this
+		static auto uid = 0u;
 		framebuffer.AddAttachment(width, height, att.format, vk::ImageTiling::eOptimal, usageBits,
-			vk::MemoryPropertyFlagBits::eDeviceLocal, att.name, initialLayout);
+			vk::MemoryPropertyFlagBits::eDeviceLocal, att.name + "____" + std::to_string(uid++), initialLayout);
 	}
 
 	CLOG_ABORT(externalAttachmentInstances.size() != externalAttachments.size(),
