@@ -4,16 +4,19 @@
 
 // out
 
-layout (location = 0) out vec4 gNormal;
-// rgb: albedo, a: opacity
-layout (location = 1) out vec4 gAlbedo;
-// r: f0, a: a (roughness^2)
-layout (location = 2) out vec4 gSpecularColor;
-// rgb: emissive, a: occlusion
-layout (location = 3) out vec4 gEmissive;
+layout (location = 0) out vec4 gSNormal;
 
-layout (location = 4) out vec4 gVelocity;
-layout (location = 5) out vec4 gUVDrawIndex;
+layout (location = 1) out vec4 gGNormal;
+
+// rgb: albedo, a: opacity
+layout (location = 2) out vec4 gAlbedo;
+// r: f0, a: a (roughness^2)
+layout (location = 3) out vec4 gSpecularColor;
+// rgb: emissive, a: occlusion
+layout (location = 4) out vec4 gEmissive;
+
+layout (location = 5) out vec4 gVelocity;
+layout (location = 6) out vec4 gUVDrawIndex;
 
 // in
 
@@ -60,7 +63,10 @@ void main() {
 	// opacity set from above
 
     // normal (with normal mapping)
-    gNormal = vec4(normalize(TBN * normal), 1.0);
+    gSNormal = vec4(normalize(TBN * normal), 1.0);
+
+	// geometric normal
+	gGNormal = vec4(TBN[2], 1.0);
 	
 	// albedo = (1.0 - metallic) * baseColor;
 	gAlbedo = vec4((1.0 - metallic) * baseColor, opacity);

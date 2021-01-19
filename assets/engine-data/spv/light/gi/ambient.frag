@@ -58,10 +58,13 @@ float VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
 
 void main()
 {
+	float depth = texture(g_DepthSampler, uv).r;
+
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
+		depth,
+	    g_SNormalSampler,
+		g_GNormalSampler,
 		g_AlbedoSampler,
 		g_SpecularSampler,
 		g_EmissiveSampler,
@@ -70,7 +73,7 @@ void main()
 
 	// CHECK: could gather an approximation of the diffused sky light on surfaces during far ao queries
 	vec3 skyColor = vec3(0.0);
-	if(surface.depth == 1.0) {
+	if(depth == 1.0) {
 	
 		vec3 V = normalize(surface.position - cam.position);
 	
@@ -87,7 +90,7 @@ void main()
 	for(uint smpl = 0; smpl < samples; ++smpl){
 
 	    // TODO: get res from global desc set -> render scale also should be factored here
-		uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), samples + smpl);
+		uint seed = 1;// tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), samples + smpl);
 		vec2 u = rand2(seed);
 		
 		//vec2 u = hammersley(smpl, samples); 

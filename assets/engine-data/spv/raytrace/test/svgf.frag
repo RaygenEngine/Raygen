@@ -112,7 +112,7 @@ PixelData LoadPixelData(ivec2 iuv, ivec2 screenSize) {
 	data.luminance = luminance(data.color.rgb);
 	
 	vec2 uv = iuv / screenSize; 
-	data.normal = texture(g_NormalSampler, uv).rgb;
+	data.normal = texture(g_SNormalSampler, uv).rgb;
 
 	return data;
 }

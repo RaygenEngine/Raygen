@@ -212,19 +212,13 @@ Surface surfaceFromGeometryGroup()
 		Ng = -Ng;
 		N = -N;
 		
-		// solid object
-		if(mat.mask == 2) {
-			surface.eta_o = 1.0; // vacuum light ray
-			surface.eta_i = eta; // material view ray
-		}
+		surface.eta_o = 1.0; // vacuum light ray
+		surface.eta_i = eta; // material view ray
 	}
 		
 	surface.position = gl_WorldRayOriginEXT + gl_WorldRayDirectionEXT * gl_HitTEXT;
-	surface.basis = branchlessOnb(N);
 
-	surface.ng = normalize(toOnbSpace(surface.basis, Ng));
-
-    surface.i = normalize(toOnbSpace(surface.basis, V));
+	addInitialVectors(surface, Ng, N, V);
 
     return surface;
 }

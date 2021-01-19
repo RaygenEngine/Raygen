@@ -51,7 +51,7 @@ vec3 Pointlight_MultipleSamples(accelerationStructureEXT topLevelAs, Pointlight 
 	Onb lightOrthoBasis = branchlessOnb(plFront);
 
 	// TODO: get res from global desc set -> render scale also should be factored here
-	uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), pl.samples);
+	uint seed = 1;// tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), pl.samples);
 
 	vec3 res = vec3(0);
 
