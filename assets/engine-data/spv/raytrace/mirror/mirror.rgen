@@ -65,10 +65,13 @@ void TraceRay() {
 void main() {
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
 
+	float depth = texture(g_DepthSampler, uv).r;
+
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
+		depth,
+	    g_SNormalSampler,
+		g_GNormalSampler,
 		g_AlbedoSampler,
 		g_SpecularSampler,
 		g_EmissiveSampler,
@@ -76,7 +79,7 @@ void main() {
 	);
 		
 
-	if(surface.depth == 1.0 || surface.a >= SPEC_THRESHOLD) {
+	if(depth == 1.0 || surface.a >= SPEC_THRESHOLD) {
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 1.0));
 		return; 
 	}

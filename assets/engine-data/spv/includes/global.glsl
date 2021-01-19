@@ -112,6 +112,32 @@ float x_p(float a) {
 	return sign(sign(a) - 0.5); 
 }
 
+vec3 reconstructWorldPosition(float depth, vec2 uv, mat4 viewProjInv)
+{
+	// clip space reconstruction
+	vec4 clipPos; 
+	clipPos.xy = uv.xy * 2.0 - 1;
+	clipPos.z = depth;
+	clipPos.w = 1.0;
+	
+	vec4 worldPos = viewProjInv * clipPos;
+
+	return worldPos.xyz / worldPos.w; // return world space pos xyz
+}
+
+vec3 reconstructEyePosition(float depth, vec2 uv, mat4 projInv)
+{
+	// clip space reconstruction
+	vec4 clipPos; 
+	clipPos.xy = uv.xy * 2.0 - 1;
+	clipPos.z = depth;
+	clipPos.w = 1.0;
+	
+	vec4 eyePos = projInv * clipPos;
+
+	return eyePos.xyz / eyePos.w; // return eye space pos xyz
+}
+
 #include "global-bsdfspace.glsl"
 #include "global-structs.glsl"
 

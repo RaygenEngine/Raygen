@@ -34,10 +34,13 @@ layout(set = 3, binding = 0, std430) readonly buffer Quadlights { Quadlight ligh
 void main() {
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
 
+	float depth = texture(g_DepthSampler, uv).r;
+
 	Surface surface = surfaceFromGBuffer(
 	    cam,
-		g_DepthSampler,
-		g_NormalSampler,
+		depth,
+	    g_SNormalSampler,
+		g_GNormalSampler,
 		g_AlbedoSampler,
 		g_SpecularSampler,
 		g_EmissiveSampler,
@@ -45,7 +48,7 @@ void main() {
 	);
 
 	// pick 1 light
-	uint seed = tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), frame /* * samples of lights*/);
+	uint seed = 1;// tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), frame /* * samples of lights*/);
 
 	float u = rand(seed);
 

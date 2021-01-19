@@ -7,12 +7,13 @@ namespace vl {
 inline struct Layouts_ {
 
 	inline constexpr static std::array gBufferColorAttachments = {
-		std::pair{ "GNormal", vk::Format::eR16G16B16A16Snorm },
-		std::pair{ "GAlbedo", vk::Format::eR32G32B32A32Sfloat },
-		std::pair{ "GSpecularColor", vk::Format::eR32G32B32A32Sfloat },
-		std::pair{ "GEmissive", vk::Format::eR8G8B8A8Srgb },
-		std::pair{ "GVelocity", vk::Format::eR32G32B32A32Sfloat },
-		std::pair{ "GUVDrawIndex", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "G_SNormal", vk::Format::eR16G16B16A16Snorm },
+		std::pair{ "G_GNormal", vk::Format::eR16G16B16A16Snorm },
+		std::pair{ "G_Albedo", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "G_SpecularColor", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "G_Emissive", vk::Format::eR8G8B8A8Srgb },
+		std::pair{ "G_Velocity", vk::Format::eR32G32B32A32Sfloat },
+		std::pair{ "G_UVDrawIndex", vk::Format::eR32G32B32A32Sfloat },
 	};
 
 	RDescriptorSetLayout gltfMaterialDescLayout;
@@ -25,8 +26,6 @@ inline struct Layouts_ {
 	RDescriptorSetLayout accelLayout;
 
 	RDescriptorSetLayout rtTriangleGeometry;
-
-	RDescriptorSetLayout inputAttachment;
 
 	RDescriptorSetLayout cubemapArray6;
 	RDescriptorSetLayout cubemapArray64;

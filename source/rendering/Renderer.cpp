@@ -128,7 +128,7 @@ void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 
 		descriptorWrite
 			.setDstSet(m_globalDesc[sceneDesc.frameIndex]) //
-			.setDstBinding(15u)                            // WIP:
+			.setDstBinding(16u)                            // WIP:
 			.setDstArrayElement(0u)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 			.setBufferInfo(bufferInfo);

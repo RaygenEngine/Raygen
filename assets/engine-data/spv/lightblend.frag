@@ -52,10 +52,13 @@ vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 
 void main()
 {
+	float depth = texture(g_DepthSampler, uv).r;
+
     Surface surface = surfaceFromGBuffer(
 	    cam,
-	    g_DepthSampler,
-	    g_NormalSampler,
+	    depth,
+	    g_SNormalSampler,
+		g_GNormalSampler,
 	    g_AlbedoSampler,
 	    g_SpecularSampler,
 	    g_EmissiveSampler,
@@ -76,7 +79,8 @@ void main()
 		arealights += Quadlight_AfterContribution(ql, surface) * arealightShadowing[i];
     }
 
-	vec3 final =  directLight + (indirectLight * ambientInfo.a) + ambientInfo.rgb + surface.emissive + mirror + arealights;
+	// CHECK: (indirectLight * ambientInfo.a) + ambientInfo.rgb +
+	vec3 final =  directLight + surface.emissive + mirror + arealights;
 
 	outColor = vec4(final, 1.0);
 }

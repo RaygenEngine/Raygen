@@ -7,9 +7,9 @@ struct Surface {
     
     // surface
     Onb basis; // shading normal aligned hemisphere
+    vec3 position;
+    vec3 ng; // geometric normal
 
-    vec3 ng; // geometric normal - TODO: check if we need this in rasterization
-    
     // we use i and surface interface to sample o directions
     // h is calculated from i and o according to interface (refraction, reflection, etc)
     vec3 i; // incoming
@@ -25,16 +25,16 @@ struct Surface {
     float eta_o; // eta of medium of outgoing ray
     float opacity;
     float occlusion;
-
-    // surface
-    vec3 position; 
-    float depth;
-    vec2 uv;
 };
 
-void addNormal(inout Surface surface, vec3 N)
+void addShadingNormal(inout Surface surface, vec3 N)
 {
     surface.basis = branchlessOnb(N);
+}
+
+void addGeometricNormal(inout Surface surface, vec3 Ng)
+{
+    surface.ng = toOnbSpace(surface.basis, Ng);
 }
 
 void addIncomingDir(inout Surface surface, vec3 V)
@@ -58,45 +58,27 @@ vec3 getIncomingDir(Surface surface)
     return outOnbSpace(surface.basis, surface.i);
 }
 
+void addInitialVectors(inout Surface surface, vec3 geometricNormal, vec3 shadingNormal, vec3 incomingDirection) 
+{
+    addShadingNormal(surface, shadingNormal); // the onb is built based on the shading normal
+    addGeometricNormal(surface, geometricNormal); // the geometric normal is in reference to the shading normal to match other vectors
+
+    addIncomingDir(surface, incomingDirection);
+}
+
 bool isOutgoingDirPassingThrough(Surface surface)
 {
-    // not in the same side of ng -> passes through
+    // below actual surface normal -> passes through
     return dot(surface.ng, surface.o) < 0;
 }
 
 #include "surface-bsdf.glsl"
 
-// WIP: tidy those
-vec3 reconstructWorldPosition(float depth, vec2 uv, mat4 viewProjInv)
-{
-	// clip space reconstruction
-	vec4 clipPos; 
-	clipPos.xy = uv.xy * 2.0 - 1;
-	clipPos.z = depth;
-	clipPos.w = 1.0;
-	
-	vec4 worldPos = viewProjInv * clipPos;
-
-	return worldPos.xyz / worldPos.w; // return world space pos xyz
-}
-
-vec3 reconstructEyePosition(float depth, vec2 uv, mat4 projInv)
-{
-	// clip space reconstruction
-	vec4 clipPos; 
-	clipPos.xy = uv.xy * 2.0 - 1;
-	clipPos.z = depth;
-	clipPos.w = 1.0;
-	
-	vec4 eyePos = projInv * clipPos;
-
-	return eyePos.xyz / eyePos.w; // return eye space pos xyz
-}
-
 Surface surfaceFromGBuffer(
     Camera cam,
-    sampler2D depthSampler,
-    sampler2D normalsSampler, 
+    float depth,
+    sampler2D snormalsSampler,
+    sampler2D gnormalsSampler,
     sampler2D albedoOpacitySampler,
     sampler2D f0RoughnessSampler,
     sampler2D emissiveOcclusionSampler,
@@ -104,18 +86,7 @@ Surface surfaceFromGBuffer(
 {
     Surface surface;
 
-    surface.depth = texture(depthSampler, uv).r;
-
-    surface.position = reconstructWorldPosition(surface.depth, uv, cam.viewProjInv);
-    
-    vec3 N = texture(normalsSampler, uv).rgb;
-    vec3 V = normalize(cam.position - surface.position);
-
-	N = csign(dot(V, N)) * N;
-
-    addNormal(surface, N);
-
-    addIncomingDir(surface, V);
+    surface.position = reconstructWorldPosition(depth, uv, cam.viewProjInv);
 
     // rgb: albedo a: opacity
     vec4 albedoOpacity = texture(albedoOpacitySampler, uv);
@@ -133,7 +104,29 @@ Surface surfaceFromGBuffer(
     surface.emissive = emissiveOcclusion.rgb;
     surface.occlusion = emissiveOcclusion.a;
 
-    surface.uv = uv;
+    // Geometric stuff
+	float f0 = max(surface.f0);
+	float sqrtf0 = sqrt(f0);
+	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
+
+	// Backwards tracing:
+	surface.eta_i = 1.0; // vacuum view ray
+	surface.eta_o = eta; // material light ray
+
+    vec3 N = texture(snormalsSampler, uv).rgb;
+    vec3 Ng = texture(gnormalsSampler, uv).rgb;
+    vec3 V = normalize(cam.position - surface.position);
+	
+	// from the inside of object - if not culled
+	if(dot(V, Ng) < 0) { 
+		Ng = -Ng;
+		N = -N;
+		
+		surface.eta_o = 1.0; // vacuum light ray
+		surface.eta_i = eta; // material view ray
+	}
+
+    addInitialVectors(surface, Ng, N, V);
 
     return surface;
 }
@@ -141,36 +134,24 @@ Surface surfaceFromGBuffer(
 #ifndef RAY
 Surface surfaceFromGBuffer(
     Camera cam,
-    subpassInput depthSampler,
-    subpassInput normalsSampler, 
-    subpassInput albedoOpacitySampler,
-    subpassInput f0RoughnessSampler,
-    subpassInput emissiveOcclusionSampler,
-    subpassInput use0,
-    subpassInput use1,
+    float depth,
+    subpassInput snormalsInput,
+    subpassInput gnormalsInput,
+    subpassInput albedoOpacityInput,
+    subpassInput f0RoughnessInput,
+    subpassInput emissiveOcclusionInput,
     vec2 uv)
 {
     Surface surface;
 
-    surface.depth = subpassLoad(depthSampler).r;
-
-    surface.position = reconstructWorldPosition(surface.depth, uv, cam.viewProjInv);
-    
-    vec3 N = subpassLoad(normalsSampler).rgb;
-    vec3 V = normalize(cam.position - surface.position);
-
-	N = csign(dot(V, N)) * N;
-
-    addNormal(surface, N);
-
-    addIncomingDir(surface, V);
+    surface.position = reconstructWorldPosition(depth, uv, cam.viewProjInv);
 
     // rgb: albedo a: opacity
-    vec4 albedoOpacity = subpassLoad(albedoOpacitySampler);
+    vec4 albedoOpacity = subpassLoad(albedoOpacityInput);
     // rgb: f0, a: roughness^2
-    vec4 f0Roughness = subpassLoad(f0RoughnessSampler);
+    vec4 f0Roughness = subpassLoad(f0RoughnessInput);
     // rgb: emissive, a: occlusion
-    vec4 emissiveOcclusion = subpassLoad(emissiveOcclusionSampler);
+    vec4 emissiveOcclusion = subpassLoad(emissiveOcclusionInput);
 
     surface.albedo = albedoOpacity.rgb;
     surface.opacity = albedoOpacity.a;
@@ -181,7 +162,29 @@ Surface surfaceFromGBuffer(
     surface.emissive = emissiveOcclusion.rgb;
     surface.occlusion = emissiveOcclusion.a;
 
-    surface.uv = uv;
+        // Geometric stuff
+	float f0 = max(surface.f0);
+	float sqrtf0 = sqrt(f0);
+	float eta = -(f0 + 1 + 2 * sqrtf0) / (f0 - 1);
+
+	// Backwards tracing:
+	surface.eta_i = 1.0; // vacuum view ray
+	surface.eta_o = eta; // material light ray
+
+    vec3 N = subpassLoad(snormalsInput).rgb;
+    vec3 Ng = subpassLoad(gnormalsInput).rgb;
+    vec3 V = normalize(cam.position - surface.position);
+	
+	// from the inside of object - if not culled
+	if(dot(V, Ng) < 0) { 
+		Ng = -Ng;
+		N = -N;
+		
+		surface.eta_o = 1.0; // vacuum light ray
+		surface.eta_i = eta; // material view ray
+	}
+
+    addInitialVectors(surface, Ng, N, V);
 
     return surface;
 }
