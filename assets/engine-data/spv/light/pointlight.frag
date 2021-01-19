@@ -29,7 +29,7 @@ layout (input_attachment_index = 7, set = 1, binding = 7) uniform subpassInput g
 layout(set = 2, binding = 0) uniform UBO_Pointlight { Pointlight pl; };
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-// WIP: this can't handle alpha mask
+// WIP: this can't handle alpha mask - maybe it would be easier to put those in the raytraced lights (arealights currently) pipeline
 float ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
 { 
 	// Initializes a ray query object but does not start traversal
@@ -72,9 +72,11 @@ void main()
 
 	vec3 L = normalize(pl.position - surface.position);
 
-	//if(isOutgoingDirPassingThrough(surface)) { // NEXT: ng
-	//	return vec3(0.0);
-	//}
+	addOutgoingDir(surface, L);
+
+	if(isOutgoingDirPassingThrough(surface)) { 
+		discard;
+	}
 
 	float dist = distance(pl.position, surface.position);
 	float shadow = 1 - pl.hasShadow * ShadowRayTest(topLevelAs, surface.position, L, 0.001, dist);
@@ -84,7 +86,7 @@ void main()
 
 	vec3 Li = pl.color * pl.intensity * attenuation * shadow; 
 	
-	vec3 finalContribution = Li * explicitBRDFcosTheta(surface, L);
+	vec3 finalContribution = Li * explicitBRDFcosTheta(surface);
 
 	outColor = vec4(finalContribution, 1);
 }

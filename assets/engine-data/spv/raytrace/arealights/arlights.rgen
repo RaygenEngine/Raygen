@@ -1,0 +1,156 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : require
+#extension GL_EXT_ray_query: require
+// TODO:
+#define RAY
+#include "global.glsl"
+
+#include "global-descset.glsl"
+
+#include "random.glsl"
+#include "surface.glsl"
+
+struct ShadowPayload
+{
+	// area light with this id
+	int id; 
+	// t_hit - usefull for area lights that we don't know their position
+	float dist;
+	// true - there is visibility to our light
+	bool hit; 
+};
+
+layout(push_constant) uniform PC
+{
+	int frame;
+	int quadlightCount;
+};
+
+layout(location = 0) rayPayloadEXT ShadowPayload prd;
+
+layout(set = 1, binding = 0, rgba32f) uniform image2D image;
+layout(set = 1, binding = 1, rgba32f) uniform image2D progressive;
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
+layout(set = 4, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
+
+bool PtLights_ShadowRayTest(accelerationStructureEXT topLevelAs, int id, vec3 origin, vec3 direction, float tMin, float tMax)
+{ 
+	prd.hit = false;
+	prd.id = id;
+	prd.dist = 0.0;
+
+    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
+
+	// trace ray
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFF,           // cullMask - quadlights
+				0,              // sbtRecordOffset - shadow shaders offset
+				0,              // sbtRecordStride
+				0,              // shadow missIndex
+				origin,         // ray origin
+				tMin,           // ray min range
+				direction,      // ray direction
+				tMax,           // ray max range
+				0               // payload (location = 0)
+	);
+
+	return prd.hit;
+}
+
+void Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, inout Surface surface, out float pdf_light, inout uint seed)
+{
+	pdf_light = 0;
+
+	vec2 u = rand2(seed) * 2 - 1;
+	u.x *= ql.width / 2.f;
+	u.y *= ql.height / 2.f;
+
+	vec3 samplePoint =  ql.center + u.x * ql.right + u.y * ql.up;
+
+	vec3 L = normalize(samplePoint - surface.position);
+
+	float cosTheta_o = dot(ql.normal, -L);
+
+	if (cosTheta_o < BIAS) {
+		return;
+	}
+
+	cosTheta_o = abs(cosTheta_o);
+
+	addOutgoingDir(surface, L);
+
+	if(isOutgoingDirPassingThrough(surface)) {
+		return;
+	}
+
+	float dist = distance(samplePoint, surface.position);
+	if(!PtLights_ShadowRayTest(topLevelAs, areaLightId, surface.position, L, 0.001, INF)) {
+		return;
+	}
+
+	// pdfw = pdfA / (cosTheta_o / r^2) = r^2 * pdfA / cosTheta_o
+	pdf_light = (dist * dist) / (ql.width * ql.height * cosTheta_o);
+}
+
+float Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed)
+{
+	float pdf_light;
+	Quadlight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
+
+	if(pdf_light >= BIAS){
+		return absNdot(surface.o) / pdf_light;  // this is basically the G factor (costhetai * costhetao * V / dist ^ 2)
+	}
+
+	return 0.0;
+}
+
+void main() {
+
+	if(quadlightCount == 0) {
+		return;
+	}
+
+	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
+
+	float depth = texture(g_DepthSampler, uv).r;
+
+	Surface surface = surfaceFromGBuffer(
+	    cam,
+		depth,
+	    g_SNormalSampler,
+		g_GNormalSampler,
+		g_AlbedoSampler,
+		g_SpecularSampler,
+		g_EmissiveSampler,
+		uv
+	);
+
+	// pick 1 light
+	uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
+
+	int totalLights = quadlightCount;
+	float u = rand(seed);
+	int i = int(floor(u * totalLights)) % 4; // TODO: max 4 quadlights
+	float pdf_pickLight = 1.0 / float(totalLights); // pick one of the lights
+
+	Quadlight ql = quadlights.light[i];
+
+	float val = Quadlight_EstimateDirect(topLevelAs, ql, i, surface, seed);
+
+	vec4 finalColor = vec4(0);
+
+	// Do accumulation
+	if(frame > 0)
+	{
+		float a = 1.0f / float(frame);
+		finalColor = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy));
+		val = mix(finalColor[i], val, a);
+	}
+	
+	finalColor[i] = val;
+
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), finalColor);
+	imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), finalColor);
+}

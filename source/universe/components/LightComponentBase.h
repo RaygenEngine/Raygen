@@ -8,14 +8,14 @@ struct CLightBase : CSceneBase {
 
 	bool hasShadow{ true };
 
-	int32 shadowMapWidth{ 2048 };
-	int32 shadowMapHeight{ 2048 };
+	int32 shadowMapWidth{ 512 };
+	int32 shadowMapHeight{ 512 };
 
-	float _near{ 0.05f };
-	float _far{ 20.0f };
+	float _near{ 0.25f };
+	float _far{ 10.0f };
 
 	float maxShadowBias{ 0.005f };
 
-	int32 samples{ 4 };
-	float radius{ 0.2f };
+	int32 samples{ 1 };
+	float radius{ 0.002f };
 };
