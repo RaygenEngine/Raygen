@@ -14,7 +14,7 @@ struct Irragrid_UBO {
 
 struct SceneIrragrid : public SceneStruct {
 	SceneIrragrid();
-	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(decltype(ubo))); }
+	void UploadUbo(uint32 curFrame);
 
 	Irragrid_UBO ubo{};
 
@@ -27,7 +27,7 @@ struct SceneIrragrid : public SceneStruct {
 	vl::RCubemapArray environmentCubemaps;
 	vl::RCubemapArray irradianceCubemaps;
 
-	BoolFlag shouldBuild{ true };
+	BoolFlag shouldBuild{ false };
 	int32 ptSamples{ 2 };
 	int32 ptBounces{ 2 };
 

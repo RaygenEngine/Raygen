@@ -90,7 +90,7 @@ void main()
 	for(uint smpl = 0; smpl < samples; ++smpl){
 
 	    // TODO: get res from global desc set -> render scale also should be factored here
-		uint seed = 1;// tea16(uint(surface.uv.y * 2160 * 4096 + surface.uv.x * 4096), samples + smpl);
+		uint seed = tea16(uint(uv.y * 2160 * 4096 + uv.x * 4096), samples + smpl);
 		vec2 u = rand2(seed);
 		
 		//vec2 u = hammersley(smpl, samples); 

@@ -187,15 +187,12 @@ ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
 
 void Scene::UploadDirty(uint32 frameIndex)
 {
-	bool anyDirty = false;
-
 	bool requireUpdateAccel = false || forceUpdateAccel;
 	for (auto gm : Get<SceneGeometry>()) {
 		gm->prevTransform = gm->transform;
 		if (gm->isDirty[frameIndex]) {
 			requireUpdateAccel = true;
 			gm->isDirty = false;
-			anyDirty = true;
 		}
 	}
 
@@ -204,7 +201,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 		if (cam->isDirty[frameIndex]) {
 			cam->UploadUbo(frameIndex);
 			cam->isDirty[frameIndex] = false;
-			// anyDirty = true;
 		}
 	}
 
@@ -213,7 +209,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 			ig->UploadUbo(frameIndex);
 			requireUpdateAccel = true;
 			ig->isDirty[frameIndex] = false;
-			// anyDirty = true;
 		}
 	}
 
@@ -222,7 +217,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 			rp->UploadUbo(frameIndex);
 			requireUpdateAccel = true;
 			rp->isDirty[frameIndex] = false;
-			// anyDirty = true;
 		}
 	}
 
@@ -231,7 +225,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 			sl->UploadUbo(frameIndex);
 			sl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
-			anyDirty = true;
 		}
 	}
 
@@ -240,7 +233,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 			pl->UploadUbo(frameIndex);
 			pl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
-			anyDirty = true;
 		}
 	}
 
@@ -249,7 +241,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 			ql->UploadUbo(frameIndex);
 			ql->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
-			anyDirty = true;
 		}
 	}
 
@@ -258,7 +249,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 			dl->UploadUbo(frameIndex);
 			dl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
-			anyDirty = true;
 		}
 	}
 

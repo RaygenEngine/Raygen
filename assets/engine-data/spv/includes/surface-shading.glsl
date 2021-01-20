@@ -117,6 +117,19 @@ vec3 explicitBRDF(Surface surface, vec3 L)
     return (kd * brdf_d + ks * brdf_r);
 }
 
+vec3 explicitBRDF(Surface surface)
+{
+    vec3 ks = interfaceFresnel(surface);
+    vec3 kt = 1.0 - ks;
+    vec3 kd = kt * surface.opacity;
+
+    vec3 brdf_d = diffuseBRDF(surface);
+ 
+    float brdf_r = surface.a >= SPEC_THRESHOLD ? microfacetBRDF(surface) : hackSpecularBRDF(surface);
+
+    return (kd * brdf_d + ks * brdf_r);
+}
+
 // term elimination of fs * |o . n| / pdf
 //float finalWeight(Surface surface) 
 //{ 

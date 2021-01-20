@@ -144,7 +144,6 @@ void IrragridPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &ig->irradianceSamplerDescSet, 0u, nullptr);
 
-
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);
 	}
