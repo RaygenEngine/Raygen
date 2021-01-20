@@ -19,6 +19,7 @@ void PtLightBlend::MakeLayout()
 	std::array layouts{
 		Layouts->globalDescLayout.handle(),
 		Layouts->singleStorageBuffer.handle(), // quadlights
+		Layouts->accelLayout.handle(),
 	};
 
 	// pipeline layout
@@ -76,6 +77,9 @@ void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
 		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
+
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
+		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

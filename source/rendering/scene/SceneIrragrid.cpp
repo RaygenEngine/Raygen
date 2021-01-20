@@ -8,12 +8,17 @@
 using namespace vl;
 
 SceneIrragrid::SceneIrragrid()
-	: SceneStruct(sizeof(decltype(ubo)))
+	: SceneStruct(sizeof(Irragrid_UBO))
 {
 	environmentSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
 	environmentStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
 	irradianceSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
 	irradianceStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
+}
+
+void SceneIrragrid::UploadUbo(uint32 curFrame)
+{
+	UploadDataToUbo(curFrame, &ubo, sizeof(Irragrid_UBO));
 }
 
 void SceneIrragrid::Allocate()

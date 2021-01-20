@@ -78,7 +78,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 
 	sceneDesc.descSetPointlights = Layouts->singleStorageBuffer.AllocDescriptorSet();
 	sceneDesc.descSetReflprobes = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
-		static_cast<int32>(scene->Get<SceneReflprobe>().size()));
+		static_cast<int32>(2 * scene->Get<SceneReflprobe>().size())); // both irradiance and prefiltered map here
 
 	sceneDesc.descSetIrragrids = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneIrragrid>().size()));

@@ -4,7 +4,7 @@
 
 #include "global-descset.glsl"
 
-#include "lights/irragrid.glsl"
+#include "radiance.glsl"
 #include "surface.glsl"
 
 // out
@@ -50,6 +50,6 @@ void main( ) {
 		uv
 	);
 	
-	vec3 finalContribution = Irragrid_Contribution(grid, irradianceSamplers, surface);
+	vec3 finalContribution = Irragrid_EstimateDirect(grid, irradianceSamplers, surface);
 	outColor = vec4(finalContribution, 1);
 }

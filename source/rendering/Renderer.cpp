@@ -100,7 +100,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
 		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
-		rvk::writeDescriptorImages(m_globalDesc[i], 10u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
+		rvk::writeDescriptorImages(m_globalDesc[i], 11u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
 	}
 }
 

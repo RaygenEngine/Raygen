@@ -121,7 +121,6 @@ vec3 Reflprobe_EstimateDirect(Reflprobe rp, sampler2D brdfLutSampler, samplerCub
 	vec3 R = outOnbSpace(surface.basis, reflect(-surface.i));
 	vec3 reprojR = (surface.position - rp.position) + RaySphereIntersection(surface.position, R, rp.position, rp.radius) *  R;
 
-	// CHECK: roughness / a differences
 	float lod = sqrt(surface.a) * rp.lodCount; 
 	
 	float NoV = absNdot(surface.i);
@@ -156,14 +155,14 @@ vec3 SampleIrrad(Irragrid grid, samplerCubeArray irradianceSamplers, Surface sur
 	vec3 reprojN = (surface.position - irrPos) + intersectionDistanceAabb(aabb, surface.position, N) * N;
 
 	// SMATH: which normal
-	//vec3 kd = 1.0 - F_SchlickRoughness(surface.nov, surface.f0, surface.a);
+	vec3 kd = 1.0 - F_SchlickRoughness(absNdot(surface.i), surface.f0, surface.a);
 
-	return vec3(0);//kd * texture(irradianceSamplers, vec4(normalize(reprojN), i)).rgb
+	return kd * texture(irradianceSamplers, vec4(normalize(reprojN), i)).rgb
 	//	 * saturate(dot(N, irrPos - surface.position));
 	;
 }
 
-vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, Surface surface)
+vec3 Irragrid_EstimateDirect(Irragrid grid, samplerCubeArray irradianceSamplers, Surface surface)
 {
 	vec3 probeCount  = vec3(grid.width - 1, grid.height - 1, grid.depth - 1);
 	vec3 size = probeCount * grid.distToAdjacent;
@@ -189,8 +188,6 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 	   float bdist = distanceFromInside(aabb2, surface.position);
 	  
 	   attenfactor = (bdist * bdist) / ((sdist + bdist) * (sdist + bdist));
-	  
-	   //return vec3(attenfactor);
 	}
 
 	// if you don't saturate it will wrap arround
@@ -225,7 +222,7 @@ vec3 Irragrid_Contribution(Irragrid grid, samplerCubeArray irradianceSamplers, S
 
 	vec3 diffuseLight = mix(frontInt, backInt, backPercent);
 	
-	return diffuseLight * LambertianDiffuse(surface.albedo) * attenfactor;
+	return diffuseLight * diffuseBRDF(surface) * attenfactor;
 }
 
 #endif

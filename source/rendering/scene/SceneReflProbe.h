@@ -12,7 +12,7 @@ struct Reflprobe_UBO {
 
 struct SceneReflprobe : public SceneStruct {
 	SceneReflprobe();
-	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(decltype(ubo))); }
+	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(Reflprobe_UBO)); }
 
 	Reflprobe_UBO ubo{};
 

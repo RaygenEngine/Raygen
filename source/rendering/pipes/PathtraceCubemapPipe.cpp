@@ -26,8 +26,8 @@ vk::UniquePipelineLayout PathtraceCubemapPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->doubleStorageImage.handle(),          // images
-			Layouts->singleUboDescLayout.handle(),         // camera
+			Layouts->singleStorageImage.handle(),          // images
+			Layouts->singleUboDescLayout.handle(),         // probe
 			Layouts->accelLayout.handle(),                 // as
 			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture
 			Layouts->singleStorageBuffer.handle(),         // pointlights

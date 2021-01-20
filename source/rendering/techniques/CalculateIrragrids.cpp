@@ -20,13 +20,14 @@ void CalculateIrragrids::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRende
 
 			ig->environmentCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-				vk::PipelineStageFlagBits::eComputeShader);
+				vk::PipelineStageFlagBits::eFragmentShader);
 
 			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral,
 				vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eComputeShader);
 
 			// CHECK: use compute buffer
 			StaticPipes::Get<CubemapArrayConvolutionPipe>().Draw(cmdBuffer, sceneDesc, *ig);
+
 
 			ig->irradianceCubemaps.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,

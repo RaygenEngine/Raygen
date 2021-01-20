@@ -59,7 +59,7 @@ void TraceRay() {
 
 bool RRTerminationCheck(inout vec3 totalAttenuation) {
 
-	float p_spawn = max(max(totalAttenuation), 0.01); // NEXT: min 0.99
+	float p_spawn = min(max(totalAttenuation), 0.99);
 	if(rand(prd.seed) >= p_spawn) {
 		return true; 
 	}
