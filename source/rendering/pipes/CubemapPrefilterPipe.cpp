@@ -7,7 +7,6 @@
 #include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/wrappers/ImageView.h"
 
 namespace {
 struct PushConstant {

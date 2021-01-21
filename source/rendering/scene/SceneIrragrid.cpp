@@ -1,6 +1,5 @@
 #include "SceneIrragrid.h"
 
-#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/util/WriteDescriptorSets.h"
 

@@ -2,8 +2,8 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/Shader.h"
-#include "assets/pods/ShaderStage.h"
 #include "assets/pods/ShaderHeader.h"
+#include "assets/pods/ShaderStage.h"
 
 #include <fstream>
 

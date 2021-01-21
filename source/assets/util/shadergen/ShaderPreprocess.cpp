@@ -1,8 +1,6 @@
 #include "ShaderPreprocess.h"
 
-#include "assets/ShaderRegistry.h"
 #include "assets/util/shadergen/ShaderGen.h"
-#include "engine/Timer.h"
 
 namespace shd {
 // Include specification:

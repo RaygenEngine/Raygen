@@ -1,6 +1,5 @@
 #include "BdptPipe.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"

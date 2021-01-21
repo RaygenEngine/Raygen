@@ -1,7 +1,6 @@
 #include "MirrorPipe.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/Device.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
@@ -9,8 +8,6 @@
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneIrragrid.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 ConsoleVariable<int32> cons_mirrorDepth{ "r.mirror.depth", 1, "Set mirror depth" };
 

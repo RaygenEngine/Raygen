@@ -1,6 +1,5 @@
 #include "Pathtracer.h"
 
-#include "rendering/Layouts.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/scene/SceneCamera.h"
 

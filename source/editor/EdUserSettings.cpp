@@ -2,7 +2,6 @@
 
 #include "reflection/ReflectionTools.h"
 
-
 namespace ed {
 UserSettings UserSettings::Load(fs::path filename)
 {

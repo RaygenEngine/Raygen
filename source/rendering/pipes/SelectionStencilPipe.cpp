@@ -1,14 +1,12 @@
 #include "SelectionStencilPipe.h"
 
 #include "editor/Editor.h"
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
 #include "universe/components/StaticMeshComponent.h"
 

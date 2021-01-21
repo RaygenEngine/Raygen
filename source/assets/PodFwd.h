@@ -1,14 +1,14 @@
 #pragma once
-#include "core/MetaTemplates.h"
 #include "assets/PodFwdUtl.h"
+#include "core/MetaTemplates.h"
 
 
 // When adding a pod, add it to engine pod types
 // Then add it to PodIncludes.h
 
 #define ENGINE_POD_TYPES                                                                                               \
-	Image, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, EnvironmentMap, ShaderStage, MaterialArchetype,     \
-		MaterialInstance, ShaderHeader, Prefab
+	Image, Mesh, Shader, Sampler, SkinnedMesh, Animation, Cubemap, ShaderStage, MaterialArchetype, MaterialInstance,   \
+		ShaderHeader, Prefab
 
 
 ENGINE_PODS_FWD(ENGINE_POD_TYPES);

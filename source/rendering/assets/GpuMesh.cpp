@@ -1,9 +1,9 @@
 #include "GpuMesh.h"
 
+#include "assets/AssetRegistry.h"
 #include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"
-#include "assets/AssetRegistry.h"
 
 using namespace vl;
 

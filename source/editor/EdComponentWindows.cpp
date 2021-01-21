@@ -1,10 +1,10 @@
 #include "EdComponentWindows.h"
 
 #include "assets/AssetManager.h"
-#include "reflection/PodTools.h"
-#include "editor/EdUserSettings.h"
 #include "assets/PodIncludes.h"
+#include "editor/EdUserSettings.h"
 #include "editor/windows/editors/EdGenericAssetEditorWindow.h"
+#include "reflection/PodTools.h"
 
 namespace ed {
 

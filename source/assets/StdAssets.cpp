@@ -2,9 +2,8 @@
 
 #include "assets/AssetManager.h"
 #include "assets/pods/Image.h"
-#include "assets/pods/Mesh.h"
-
 #include "assets/pods/MaterialArchetype.h"
+#include "assets/pods/Mesh.h"
 
 template<typename T>
 typename StdAssets::StdAsset<T>::ConstHandleAssigner Load(const char* path)

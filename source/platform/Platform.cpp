@@ -1,6 +1,7 @@
 #include "Platform.h"
 
 #include "platform/GlfwUtl.h"
+
 #include <glfw/glfw3.h>
 
 Window* MainWindow{};

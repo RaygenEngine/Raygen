@@ -9,7 +9,6 @@
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
 #include "rendering/Pathtracer.h"
-#include "rendering/Renderer.h"
 #include "rendering/VulkanLoader.h"
 #include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/pipes/StaticPipes.h"

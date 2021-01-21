@@ -1,6 +1,8 @@
-#include "Editor.h"
+#include "EditorObject.h"
+
 #include "assets/pods/Mesh.h"
 #include "editor/EdUserSettings.h"
+#include "editor/Editor.h"
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/windows/WindowsRegistry.h"
 #include "editor/windows/general/EdAssetsWindow.h"
@@ -18,7 +20,6 @@
 #include "universe/components/StaticMeshComponent.h"
 
 #include <glfw/glfw3.h>
-
 
 EditorObject_::EditorObject_()
 	: m_captionBar(*this)

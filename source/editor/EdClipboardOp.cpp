@@ -1,8 +1,7 @@
 #include "EdClipboardOp.h"
 
-#include "universe/ComponentsDb.h"
-
 #include "reflection/ReflectionTools.h"
+#include "universe/ComponentsDb.h"
 
 #include <GLFW/glfw3.h>
 

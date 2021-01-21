@@ -4,14 +4,11 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
+#include "rendering/Layer.h"
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"
-#include "rendering/Layer.h"
 
 #include <glfw/glfw3.h>
-
-#include "platform/DynLibLoader.h"
-
 
 App_::App_()
 {

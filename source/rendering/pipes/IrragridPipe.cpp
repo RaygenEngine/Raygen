@@ -5,7 +5,6 @@
 #include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneIrragrid.h"
 
 namespace vl {

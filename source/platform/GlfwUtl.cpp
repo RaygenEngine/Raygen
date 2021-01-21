@@ -4,7 +4,6 @@
 #include "editor/EditorObject.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "engine/Engine.h"
 
 #include <glfw/glfw3.h>
 

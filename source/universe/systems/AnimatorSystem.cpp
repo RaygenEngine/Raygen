@@ -1,10 +1,10 @@
 #include "AnimatorSystem.h"
 
-#include "universe/components/SkinnedMeshComponent.h"
-#include "engine/profiler/ProfileScope.h"
 #include "assets/pods/Animation.h"
 #include "assets/pods/SkinnedMesh.h"
+#include "engine/profiler/ProfileScope.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "universe/components/SkinnedMeshComponent.h"
 
 namespace {
 std::vector<glm::mat4> TickSamplers(CSkinnedMesh& sm, float deltaSeconds)

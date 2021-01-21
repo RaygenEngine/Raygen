@@ -1,12 +1,10 @@
 #include "ShaderRegistry.h"
 
-#include "assets/pods/Shader.h"
+#include "assets/AssetImporterManager.h"
+#include "assets/PodEditor.h"
 #include "assets/pods/ShaderHeader.h"
 #include "assets/pods/ShaderStage.h"
-#include "assets/PodEditor.h"
 #include "assets/util/shadergen/ShaderPreprocess.h"
-#include "assets/AssetImporterManager.h"
-#include "engine/Timer.h"
 
 const std::string& ShaderRegistry::KNode::GetCode() const
 {

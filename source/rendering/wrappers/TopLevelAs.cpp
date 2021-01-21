@@ -2,7 +2,6 @@
 
 #include "assets/StdAssets.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuCubemap.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"

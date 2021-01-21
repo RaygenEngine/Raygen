@@ -10,7 +10,6 @@
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/util/DrawShapes.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 void Scene::EnqueueEndFrame()
 {

@@ -2,7 +2,6 @@
 
 #include "assets/util/SpirvCompiler.h"
 
-
 bool ShaderStage::Compile(TextCompilerErrors& outErrors)
 {
 	return CompileInternal("", &outErrors);
