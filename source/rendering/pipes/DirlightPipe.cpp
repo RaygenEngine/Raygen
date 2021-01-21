@@ -21,7 +21,7 @@ vk::UniquePipelineLayout DirlightPipe::MakePipelineLayout()
 
 vk::UniquePipeline DirlightPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/dirlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/lighting/dirlight.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<DirlightPipe>();
 	};

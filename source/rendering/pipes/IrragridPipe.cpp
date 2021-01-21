@@ -22,7 +22,7 @@ vk::UniquePipelineLayout IrragridPipe::MakePipelineLayout()
 
 vk::UniquePipeline IrragridPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/irragrid.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/lighting/irragrid.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<IrragridPipe>();
 	};

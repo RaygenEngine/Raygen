@@ -2,7 +2,6 @@
 
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/pipes/MirrorPipe.h"
-#include "rendering/pipes/PathtraceCubemapArrayPipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"

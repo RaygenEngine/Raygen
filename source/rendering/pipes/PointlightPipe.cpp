@@ -45,7 +45,7 @@ vk::UniquePipelineLayout PointlightPipe::MakePipelineLayout()
 
 vk::UniquePipeline PointlightPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/pointlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/lighting/pointlight.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<PointlightPipe>();
 	};

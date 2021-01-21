@@ -3,53 +3,16 @@
 
 #include "global.glsl"
 #include "random.glsl"
-#include "shading-math.glsl"
 
 layout (local_size_x = 32, local_size_y = 32) in;
 
 layout(push_constant) uniform PC {
-	int mip;
-	int samples;
+	mat4 viewInv;
+	mat4 projInv;
 };
 
-layout(set = 0, binding = 0, rgba32f) uniform imageCube prefilteredCube[10];
-layout(set = 1, binding = 0) uniform UBO_Reflprobe { Reflprobe rp; };
-layout(set = 2, binding = 0) uniform samplerCube envmapSampler;
-
-mat4 lookAtRH(vec3 eye, vec3 center, vec3 up)
-{
-	vec3 f = normalize(center - eye);
-	vec3 s = normalize(cross(f, up));
-	vec3 u = cross(s, f);
-
-	mat4 Result = mat4(1);
-	Result[0][0] = s.x;
-	Result[1][0] = s.y;
-	Result[2][0] = s.z;
-	Result[0][1] = u.x;
-	Result[1][1] = u.y;
-	Result[2][1] = u.z;
-	Result[0][2] =-f.x;
-	Result[1][2] =-f.y;
-	Result[2][2] =-f.z;
-	Result[3][0] =-dot(s, eye);
-	Result[3][1] =-dot(u, eye);
-	Result[3][2] = dot(f, eye);
-	return Result;
-}
-
-mat4 perspectiveRH_ZO(float fovy, float aspect, float zNear, float zFar)
-{
-	float tanHalfFovy = tan(fovy / 2.f);
-
-	mat4 Result = mat4(0);
-	Result[0][0] = 1.f / (aspect * tanHalfFovy);
-	Result[1][1] = 1.f / (tanHalfFovy);
-	Result[2][2] = zFar / (zNear - zFar);
-	Result[2][3] = -1.f;
-	Result[3][2] = -(zFar * zNear) / (zFar - zNear);
-	return Result;
-}
+layout(set = 0, binding = 0, rgba32f) uniform image2D image;
+layout(set = 1, binding = 0) uniform samplerCube envmapSampler;
 
 vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
 {	
@@ -74,13 +37,13 @@ vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
 	return normalize(sampleVec);
 }      
 
-vec3 envmapColorConvolution(vec3 dir, float roughness)
+vec3 envmapColorFiltering(vec3 dir, float roughness)
 {
     vec3 N = normalize(dir);    
     vec3 R = N;
     vec3 V = R;
 
-    const uint SAMPLE_COUNT = 1024u;
+    const uint SAMPLE_COUNT = 4096u;
     float totalWeight = 0.0;   
     vec3 prefilteredColor = vec3(0.0);     
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
@@ -103,36 +66,17 @@ vec3 envmapColorConvolution(vec3 dir, float roughness)
 
 void main() 
 {
-	// PERF:
-	mat4 projInverse = inverse(perspectiveRH_ZO(1.5708f, 1.f, 1.f, 25.f));
-	projInverse[1][1] *= -1;
+	float roughness = projInv[3][3];
 
-	// PERF:
-	mat4 viewInverses[] = {
-		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))),   // right
-		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0))),  // left
-		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 1.0))),   // up
-		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, -1.0))), // down
-		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, -1.0), vec3(0.0, 1.0, 0.0))),  // front
-		inverse(lookAtRH(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0))),   // back
-	};
+							// gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID;
+	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
+	const vec2 inUV        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+	vec2       d           = inUV * 2.0 - 1.0;
 
+	vec4 target    = projInv * vec4(d.x, d.y, 1, 1);
+	vec4 direction = viewInv * vec4(normalize(target.xyz), 0);
 
-	// for each face
-	for (int f = 0; f < 6; ++f) {
+	vec3 accumColor = envmapColorFiltering(direction.xyz, roughness);
 
-								// gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID;
-		const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
-		const vec2 inUV        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
-		vec2       d           = inUV * 2.0 - 1.0;
-
-		vec4 target    = projInverse * vec4(d.x, d.y, 1, 1);
-		vec4 direction = viewInverses[f] * vec4(normalize(target.xyz), 0);
-
-		float roughness = float(mip) / float(rp.lodCount - 1);
-
-		vec3 accumColor = envmapColorConvolution(direction.xyz, roughness);
-
-		imageStore(prefilteredCube[mip], ivec3(gl_GlobalInvocationID.xy, f), vec4(accumColor, 1.0));
-	}
+	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(accumColor, 1.0));	
 }

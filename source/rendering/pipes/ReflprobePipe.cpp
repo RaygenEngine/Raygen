@@ -48,7 +48,7 @@ vk::UniquePipelineLayout ReflprobePipe::MakePipelineLayout()
 
 vk::UniquePipeline ReflprobePipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/reflprobe.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/lighting/reflprobe.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<ReflprobePipe>();
 	};

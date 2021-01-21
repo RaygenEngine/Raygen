@@ -21,16 +21,6 @@ struct mergePayload
 	int visible;
 };
 
-layout(push_constant) uniform PC
-{
-	int bounces;
-	int frame;
-	int pointlightCount;
-	int spotlightCount;
-	int dirlightCount;
-	int quadlightCount;
-};
-
 layout(location = 1) rayPayloadInEXT mergePayload prd;
 
 void main() {

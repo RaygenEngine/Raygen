@@ -4,7 +4,8 @@
 struct SceneReflprobe;
 
 namespace vl {
-struct CubemapConvolutionPipe : public StaticPipeBase {
+
+struct CubemapPrefilterPipe : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 

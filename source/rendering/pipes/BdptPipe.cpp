@@ -27,7 +27,7 @@ vk::UniquePipelineLayout BdptPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->doubleStorageImage.handle(),          // images
+			Layouts->singleStorageImage.handle(),          // images
 			Layouts->singleUboDescLayout.handle(),         // camera
 			Layouts->accelLayout.handle(),                 // as
 			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture

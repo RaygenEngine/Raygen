@@ -80,7 +80,7 @@ void EditorCamera::Update(float deltaSeconds)
 	// WIP : remove
 	if (dirtyThisFrame) {
 		vl::Renderer->m_raytraceArealights.frame = 0;
-		vl::Pathtracer->frame = 0;
+		vl::Pathtracer->m_frame = 0;
 	}
 
 	dirtyThisFrame = true;

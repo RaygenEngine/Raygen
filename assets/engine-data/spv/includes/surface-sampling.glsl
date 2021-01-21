@@ -75,14 +75,4 @@ float cosineSampleHemisphere(inout Surface surface, inout uint seed)
     return cosineHemisphereSamplePdf(surface);
 }
 
-float nonSpecularReflectionPdf(Surface surface, bool isDiffusePath)
-{
-    return isDiffusePath ? cosineHemisphereSamplePdf(surface) : importanceReflectionSamplePdf(surface);
-}
-
-float nonSpecularReflectionSample(inout Surface surface, bool isDiffusePath, inout uint seed)
-{
-	return isDiffusePath ? cosineSampleHemisphere(surface, seed) : importanceReflectionSampleGGX(surface, seed);
-}
-
 #endif
