@@ -2,8 +2,8 @@
 
 #include "assets/AssetRegistry.h"
 #include "assets/pods/ShaderStage.h"
-#include "rendering/Device.h"
 #include "assets/util/SpirvCompiler.h"
+#include "rendering/Device.h"
 
 using namespace vl;
 

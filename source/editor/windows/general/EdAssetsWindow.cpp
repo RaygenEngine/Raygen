@@ -2,12 +2,12 @@
 #include "EdAssetsWindow.h"
 
 #include "assets/Assets.h"
+#include "editor/EditorObject.h"
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/utl/EdAssetUtils.h"
-#include "reflection/ReflectionTools.h"
-#include "reflection/PodTools.h"
-#include "editor/EditorObject.h"
 #include "engine/Input.h"
+#include "reflection/PodTools.h"
+#include "reflection/ReflectionTools.h"
 
 
 namespace ed {

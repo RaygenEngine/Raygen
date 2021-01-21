@@ -6,7 +6,6 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneQuadlight.h"
 #include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
 #include "universe/components/CameraComponent.h"
@@ -15,7 +14,6 @@
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/QuadlightComponent.h"
 #include "universe/components/ReflprobeComponent.h"
-#include "universe/components/SkinnedMeshComponent.h"
 #include "universe/components/SpotlightComponent.h"
 
 namespace {

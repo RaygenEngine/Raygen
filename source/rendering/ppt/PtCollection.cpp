@@ -1,9 +1,8 @@
 #include "PtCollection.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/ppt/techniques/PtLightBlend.h"
 #include "rendering/ppt/techniques/PtDebug.h"
-
+#include "rendering/ppt/techniques/PtLightBlend.h"
 
 namespace vl {
 
@@ -44,8 +43,9 @@ void PtCollection::Draw(vk::CommandBuffer buffers, const SceneRenderDesc& sceneD
 
 
 	for (auto& entry : m_postprocTechs) {
-		if (!entry.isEnabled)
-			[[unlikely]] { continue; }
+		if (!entry.isEnabled) [[unlikely]] {
+			continue;
+		}
 
 		entry.instance->Draw(buffers, sceneDesc);
 	}

@@ -2,7 +2,6 @@
 
 #include "editor/imgui/ImEd.h"
 
-
 namespace ed {
 
 Window::Window(std::string_view title, std::string_view identifier)

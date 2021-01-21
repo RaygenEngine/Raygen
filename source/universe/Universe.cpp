@@ -1,8 +1,8 @@
 #include "Universe.h"
 
+#include "App.h"
 #include "rendering/Layer.h"
 #include "rendering/scene/Scene.h"
-#include "App.h"
 
 namespace {
 std::optional<fs::path> worldToLoad{};

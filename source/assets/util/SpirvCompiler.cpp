@@ -1,17 +1,12 @@
 #include "SpirvCompiler.h"
 
-#include "core/StringConversions.h"
-#include "engine/Timer.h"
-#include "platform/DynLibLoader.h"
 #include "engine/console/ConsoleVariable.h"
+#include "platform/DynLibLoader.h"
 
-#include <SPIRV/GlslangToSpv.h>
-#include <StandAlone/DirStackFileIncluder.h>
 #include <StandAlone/ResourceLimits.h>
 #include <StandAlone/SharedLibCombined/SharedLibCombined.h>
-#include <mutex>
 #include <iostream>
-
+#include <mutex>
 
 EShLanguage FindLanguage(const std::string& filename);
 EShLanguage LangFromStage(ShaderStageType type);

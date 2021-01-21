@@ -1,8 +1,6 @@
 #include "CalculateShadowmaps.h"
 
-#include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/geometry/DepthmapPipe.h"
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
 

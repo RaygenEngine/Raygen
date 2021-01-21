@@ -2,16 +2,16 @@
 
 #include "assets/PodEditor.h"
 #include "assets/pods/Image.h"
-#include "editor/windows/editors/EdMaterialArchetypeEditor.h"
 #include "editor/windows/EdMeshGenerator.h"
+#include "editor/windows/editors/EdMaterialArchetypeEditor.h"
 #include "editor/windows/general/EdAssetListWindow.h"
 #include "editor/windows/general/EdAssetsWindow.h"
+#include "editor/windows/general/EdAttachmentDebuggerWindow.h"
 #include "editor/windows/general/EdConsoleWindow.h"
 #include "editor/windows/general/EdMiscWindow.h"
+#include "editor/windows/general/EdOutlinerWindow.h"
 #include "editor/windows/general/EdProfilerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
-#include "editor/windows/general/EdOutlinerWindow.h"
-#include "editor/windows/general/EdAttachmentDebuggerWindow.h"
 
 
 namespace ed {

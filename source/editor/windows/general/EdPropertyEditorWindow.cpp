@@ -1,14 +1,14 @@
 #include "EdPropertyEditorWindow.h"
 
 #include "assets/PodEditor.h"
+#include "editor/EdClipboardOp.h"
 #include "editor/imgui/ImAssetSlot.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
+#include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "reflection/ReflectionTools.h"
 #include "universe/ComponentsDb.h"
 #include "universe/World.h"
-#include "engine/Input.h"
-#include "editor/EdClipboardOp.h"
 
 
 inline float* FromVec4(glm::vec4& vec4)

@@ -1,9 +1,9 @@
 #include "PodDuplication.h"
 
-#include "reflection/ReflectionTools.h"
-#include "reflection/PodTools.h"
-#include "assets/StdAssets.h"
 #include "assets/PodEditor.h"
+#include "assets/StdAssets.h"
+#include "reflection/PodTools.h"
+#include "reflection/ReflectionTools.h"
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/string.hpp>

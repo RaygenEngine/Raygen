@@ -1,13 +1,11 @@
 #include "BillboardPipe.h"
 
 #include "editor/imgui/ImguiImpl.h"
-#include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneIrragrid.h"
 #include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
 #include "universe/components/CameraComponent.h"

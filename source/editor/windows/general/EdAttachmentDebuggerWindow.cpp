@@ -4,7 +4,6 @@
 #include "engine/Events.h"
 #include "rendering/Layer.h"
 #include "rendering/Pathtracer.h"
-#include "rendering/Renderer.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
 

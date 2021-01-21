@@ -1,9 +1,9 @@
 #include "SkinnedMeshComponent.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/scene/SceneGeometry.h"
 #include "assets/pods/SkinnedMesh.h"
+#include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
+#include "rendering/scene/SceneGeometry.h"
 
 DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 {

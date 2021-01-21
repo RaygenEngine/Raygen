@@ -1,8 +1,6 @@
 #include "BottomLevelAs.h"
 
-#include "assets/AssetManager.h"
 #include "assets/pods/MaterialArchetype.h"
-#include "assets/pods/MaterialInstance.h"
 #include "rendering/Device.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"

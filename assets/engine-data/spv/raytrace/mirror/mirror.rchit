@@ -70,7 +70,7 @@ void main() {
 			radiance += Dirlight_EstimateDirect(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
 		}
 
-//		for(int i = 0; i < quadlightCount; ++i) { WIP:
+//		for(int i = 0; i < quadlightCount; ++i) { WIP: handle using the direct tricks and point light shadows
 //			Quadlight ql = quadlights.light[i];
 //			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
 //		}

@@ -2,8 +2,6 @@
 
 #include "assets/AssetRegistry.h"
 #include "assets/pods/Cubemap.h"
-#include "rendering/Layouts.h"
-#include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/Buffer.h"
 
 using namespace vl;

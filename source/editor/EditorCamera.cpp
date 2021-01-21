@@ -5,8 +5,6 @@
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "rendering/Pathtracer.h" // WIP: remove
-#include "rendering/Renderer.h"   // WIP: remove
-#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace ed {

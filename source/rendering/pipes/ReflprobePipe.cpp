@@ -1,6 +1,5 @@
 #include "ReflprobePipe.h"
 
-#include "assets/StdAssets.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/pipes/StaticPipes.h"

@@ -2,19 +2,18 @@
 
 #include "assets/PodIncludes.h"
 #include "assets/Serialization.h"
+#include "assets/ShaderRegistry.h" // TODO: Remove
+#include "assets/StdAssets.h"
 #include "assets/specializations/PodDuplication.h"
 #include "assets/specializations/PodExport.h"
 #include "assets/util/FindPodUsers.h"
-#include "assets/ShaderRegistry.h" // TODO: Remove
-#include "assets/StdAssets.h"
-#include "engine/console/ConsoleVariable.h"
 #include "engine/Timer.h"
+#include "engine/console/ConsoleVariable.h"
 #include "reflection/PodTools.h"
 
 #include <nlohmann/json.hpp>
-#include <thread>
 #include <set>
-
+#include <thread>
 
 ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetRegistry::SaveAll(); },
 	"Saves all currently unsaved assets" };

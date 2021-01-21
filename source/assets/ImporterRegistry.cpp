@@ -2,17 +2,16 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/importers/CubemapImporter.h"
-#include "assets/importers/EnvironmentMapImporter.h"
 #include "assets/importers/GltfImporter.h"
 #include "assets/importers/ImageImporter.h"
-#include "assets/importers/ShaderImporter.h"
 #include "assets/importers/MaterialArchetypeImporter.h"
 #include "assets/importers/MaterialInstanceImporter.h"
+#include "assets/importers/ShaderImporter.h"
 
 ImporterRegistry::ImporterRegistry()
 {
 	RegisterImporters<ImageImporter, GltfImporter, ShaderStageImporter, ShaderImporter, ShaderHeaderImporter,
-		CubemapImporter, EnvironmentMapImporter, MaterialArchetypeImporter, MaterialInstanceImporter>();
+		CubemapImporter, MaterialArchetypeImporter, MaterialInstanceImporter>();
 }
 
 void ImporterRegistry::ReimportEntry(PodEntry* entry)

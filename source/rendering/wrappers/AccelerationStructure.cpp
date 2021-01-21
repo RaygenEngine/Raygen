@@ -1,6 +1,5 @@
 #include "AccelerationStructure.h"
 
-#include "rendering/Device.h"
 
 namespace vl {
 void RAccelerationStructure::AllocateMemory()

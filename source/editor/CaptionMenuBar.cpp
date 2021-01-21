@@ -1,10 +1,10 @@
 #include "CaptionMenuBar.h"
 
+#include "App.h"
 #include "editor/EditorObject.h"
 #include "engine/Engine.h"
 #include "platform/Platform.h"
 #include "universe/Universe.h"
-#include "App.h"
 
 #include <glfw/glfw3.h>
 

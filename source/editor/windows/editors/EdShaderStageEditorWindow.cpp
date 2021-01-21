@@ -1,8 +1,8 @@
 #include "EdShaderStageEditorWindow.h"
 
 #include "assets/PodEditor.h"
-#include "assets/pods/ShaderStage.h"
 #include "assets/pods/ShaderHeader.h"
+#include "assets/pods/ShaderStage.h"
 #include "assets/util/SpirvCompiler.h"
 #include "editor/imgui/ImEd.h"
 
@@ -141,7 +141,6 @@ void ed::ShaderHeaderEditorWindow::UpdateForGpu()
 	// Dummy boilerplate to compile code
 	auto compileCode = R"(
 #extension GL_GOOGLE_include_directive : enable
-#include "global.glsl"
 #line 1
 )" + pod->code + "\nvoid main() {}";
 
