@@ -11,9 +11,7 @@ SceneIrragrid::SceneIrragrid()
 	: SceneStruct(sizeof(Irragrid_UBO))
 {
 	environmentSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
-	environmentStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
 	irradianceSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
-	irradianceStorageDescSet = Layouts->cubemapArrayStorage.AllocDescriptorSet();
 }
 
 void SceneIrragrid::UploadUbo(uint32 curFrame)
@@ -28,6 +26,11 @@ void SceneIrragrid::Allocate()
 	uint32 arraySize = ubo.width * ubo.height * ubo.depth;
 	ubo.builtCount = arraySize;
 
+	if (arraySize * 6u > 2048) {
+		LOG_ERROR("Reduce Irragrid's count of probes");
+		return;
+	}
+
 	irradianceCubemaps = RCubemapArray(
 		fmt::format("IrrCubes: CHECK:Irragrid"), irrResolution, vk::Format::eR32G32B32A32Sfloat, arraySize);
 
@@ -36,13 +39,7 @@ void SceneIrragrid::Allocate()
 
 	rvk::writeDescriptorImages(environmentSamplerDescSet, 0u, { environmentCubemaps.view() });
 
-	rvk::writeDescriptorImages(environmentStorageDescSet, 0u, { environmentCubemaps.view() },
-		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-
 	rvk::writeDescriptorImages(irradianceSamplerDescSet, 0u, { irradianceCubemaps.view() });
-
-	rvk::writeDescriptorImages(irradianceStorageDescSet, 0u, { irradianceCubemaps.view() },
-		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 	shouldBuild.Set();
 }

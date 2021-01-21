@@ -12,8 +12,9 @@
 
 namespace {
 struct PushConstant {
+	int32 iteration;
+	int32 samples;
 	int32 bounces;
-	int32 frame;
 	int32 pointlightCount;
 	int32 spotlightCount;
 	int32 dirlightCount;
@@ -28,8 +29,8 @@ vk::UniquePipelineLayout StochasticPathtracePipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->doubleStorageImage.handle(),          // images
-			Layouts->singleUboDescLayout.handle(),         // camera
+			Layouts->singleStorageImage.handle(),          // images
+			Layouts->singleUboDescLayout.handle(),         // viewer
 			Layouts->accelLayout.handle(),                 // as
 			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture
 			Layouts->singleStorageBuffer.handle(),         // pointlights
@@ -79,15 +80,15 @@ vk::UniquePipeline StochasticPathtracePipe::MakePipeline()
 }
 
 void StochasticPathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame, int32 bounces) const
+	vk::DescriptorSet storageImageDescSet, vk::DescriptorSet viewerDescSet, const vk::Extent3D& extent, int32 iteration,
+	int32 samples, int32 bounces) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u, 1u, &storageImagesDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u, 1u, &storageImageDescSet, 0u, nullptr);
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u,
-		&sceneDesc.viewer.uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 1u, 1u, &viewerDescSet, 0u, nullptr);
 
 	cmdBuffer.bindDescriptorSets(
 		vk::PipelineBindPoint::eRayTracingKHR, layout(), 2u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
@@ -108,8 +109,9 @@ void StochasticPathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRende
 		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
 
 	PushConstant pc{
+		iteration,
+		samples,
 		bounces,
-		frame,
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,

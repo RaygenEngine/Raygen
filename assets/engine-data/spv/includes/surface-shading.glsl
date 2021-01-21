@@ -51,24 +51,7 @@ float microfacetBTDF(Surface surface)
     return dots * numerator / denominator; 
 }
 
-vec3 nonSpecularBRDF(Surface surface, bool isDiffusePath)
-{
-	vec3 ks = interfaceFresnel(surface);
-    vec3 kt = 1.0 - ks;
-    vec3 kd = kt * surface.opacity; // TODO: trans material
-
-	return isDiffusePath ? kd * diffuseBRDF(surface) : ks * microfacetBRDF(surface);
-}
-
-vec3 nonSpecularBRDF(Surface surface)
-{
-	vec3 ks = interfaceFresnel(surface);
-    vec3 kt = 1.0 - ks;
-    vec3 kd = kt * surface.opacity; // TODO: trans material
-
-	return kd * diffuseBRDF(surface) + ks * microfacetBRDF(surface);
-}
-
+// used for delta lights
 float hackSpecularBRDF(Surface surface)
 {
     return BlinnPhongSpecular(absNdot(surface.h), surface.a);
@@ -129,12 +112,5 @@ vec3 explicitBRDF(Surface surface)
 
     return (kd * brdf_d + ks * brdf_r);
 }
-
-// term elimination of fs * |o . n| / pdf
-//float finalWeight(Surface surface) 
-//{ 
-//    // PERF: this maybe wrong
-//    return absdot(surface.i, surface.h) * G_Smith(surface.i, surface.h, surface.o, surface.a) / (absNdot(surface.i) * absNdot(surface.h));
-//}
 
 #endif

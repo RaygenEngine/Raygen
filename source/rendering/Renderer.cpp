@@ -24,8 +24,7 @@
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/techniques/CalculateIrragrids.h"
-#include "rendering/techniques/CalculateReflprobes.h"
+#include "rendering/techniques/BakeProbes.h"
 #include "rendering/techniques/CalculateShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
 #include "rendering/util/WriteDescriptorSets.h"
@@ -116,7 +115,7 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 {
 	// if camera changed
-	if (sceneDesc.scene->activeCamera != viewerId[sceneDesc.frameIndex]) [[unlikely]] {
+	if (sceneDesc.scene->activeCamera != m_viewerId[sceneDesc.frameIndex]) [[unlikely]] {
 
 		vk::DescriptorBufferInfo bufferInfo{};
 
@@ -134,7 +133,7 @@ void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 			.setBufferInfo(bufferInfo);
 
 		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
-		viewerId[sceneDesc.frameIndex] = sceneDesc.scene->activeCamera;
+		m_viewerId[sceneDesc.frameIndex] = sceneDesc.scene->activeCamera;
 	}
 
 	sceneDesc.globalDesc = m_globalDesc[sceneDesc.frameIndex];
@@ -188,8 +187,8 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDes
 	// calculates: shadowmaps, gi maps
 	// requires: -
 	CalculateShadowmaps::RecordCmd(cmdBuffer, sceneDesc);
-	CalculateReflprobes::RecordCmd(cmdBuffer, sceneDesc);
-	CalculateIrragrids::RecordCmd(cmdBuffer, sceneDesc);
+	// TODO: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
+	BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
 
 	// calculates: gbuffer, direct lights, gi, ambient
 	// requires: shadowmaps, gi maps

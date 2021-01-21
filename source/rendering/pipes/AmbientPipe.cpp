@@ -49,7 +49,7 @@ vk::UniquePipelineLayout AmbientPipe::MakePipelineLayout()
 
 vk::UniquePipeline AmbientPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/gi/ambient.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/lighting/ambient.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<AmbientPipe>();
 	};

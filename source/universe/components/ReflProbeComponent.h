@@ -26,15 +26,14 @@ struct CReflprobe : CSceneBase {
 
 	float radius{ 1.5f };
 
-	int32 ptSamples{ 16 };
-	int32 ptBounces{ 3 };
+	int32 ptSamples{ 32 };
+	int32 ptBounces{ 1 };
 
 	int32 irrResolution{ 32 };
 
-	int32 prefLodCount{ 5 };
+	int32 prefLodCount{ 3 };
 	int32 prefSamples{ 1024 };
 
-	// TODO: remove irradiance from reflprobes alltogether
 	bool applyIrradiance{ true };
 	bool notifyBuild{ true };
 };

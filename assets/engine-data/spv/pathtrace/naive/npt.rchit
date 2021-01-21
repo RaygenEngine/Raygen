@@ -23,16 +23,6 @@ struct hitPayload
 	uint seed;
 };
 
-layout(push_constant) uniform PC
-{
-	int bounces;
-	int frame;
-	int pointlightCount;
-	int spotlightCount;
-	int dirlightCount;
-	int quadlightCount;
-};
-
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
 void main() {
@@ -41,15 +31,13 @@ void main() {
 
 	prd.radiance = surface.emissive;
 
-	bool isDiffusePath, isRefractedPath;
-	float pdf_path, pdf_bsdf;
-	if(!sampleBSDF(surface, prd.attenuation, pdf_path, pdf_bsdf, isDiffusePath, isRefractedPath, prd.seed)) {
+	bool isSpecialPath;
+	float pdf;
+	if(!sampleBSDF(surface, prd.attenuation, pdf, isSpecialPath, prd.seed)) {
 		prd.attenuation = vec3(0);
 		prd.hitType = 2;
 		return;
 	}
-
-	float pdf = pdf_path * pdf_bsdf;
 
 	// bsdf * nol / pdf
 	prd.attenuation = prd.attenuation * absNdot(surface.o) / pdf;

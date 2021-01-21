@@ -19,10 +19,7 @@ struct SceneIrragrid : public SceneStruct {
 	Irragrid_UBO ubo{};
 
 	vk::DescriptorSet environmentSamplerDescSet;
-	vk::DescriptorSet environmentStorageDescSet;
-
 	vk::DescriptorSet irradianceSamplerDescSet;
-	vk::DescriptorSet irradianceStorageDescSet;
 
 	vl::RCubemapArray environmentCubemaps;
 	vl::RCubemapArray irradianceCubemaps;

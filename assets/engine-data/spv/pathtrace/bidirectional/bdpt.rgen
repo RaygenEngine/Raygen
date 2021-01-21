@@ -50,7 +50,6 @@ layout(push_constant) uniform PC
 };
 
 layout(set = 0, binding = 0, rgba32f) uniform image2D image;
-layout(set = 0, binding = 1, rgba32f) uniform image2D progressive;
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 7, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
@@ -212,7 +211,7 @@ void main() {
 //		float pdf_pixelArea = 1.0 / (1.0 * 1.0);
 	}
 
-#define maxLightPath 15
+#define maxLightPath 4
 
 	// picked light
 	Quadlight ql;
@@ -288,7 +287,6 @@ void main() {
 	if(frame == 0)
 	{
 		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0));
-		imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), vec4(0));
 		return;
 	}
 

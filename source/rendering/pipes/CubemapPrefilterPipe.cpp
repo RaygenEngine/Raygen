@@ -1,4 +1,4 @@
-#include "CubemapConvolutionPipe.h"
+#include "CubemapPrefilterPipe.h"
 
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -19,22 +19,25 @@ static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-vk::UniquePipelineLayout CubemapConvolutionPipe::MakePipelineLayout()
+
+vk::UniquePipelineLayout CubemapPrefilterPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
 			Layouts->singleStorageImage.handle(),
 			Layouts->singleSamplerDescLayout.handle(),
+			Layouts->singleUboDescLayout.handle(),
 		},
 		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
 }
 
-vk::UniquePipeline CubemapConvolutionPipe::MakePipeline()
+vk::UniquePipeline CubemapPrefilterPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/compute/irradiance.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/compute/prefiltered.shader");
 	gpuShader.onCompileRayTracing = [&]() {
-		StaticPipes::Recompile<CubemapConvolutionPipe>();
+		StaticPipes::Recompile<CubemapPrefilterPipe>();
 	};
+
 
 	vk::ComputePipelineCreateInfo pipelineInfo{};
 	pipelineInfo
@@ -46,7 +49,7 @@ vk::UniquePipeline CubemapConvolutionPipe::MakePipeline()
 	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
 }
 
-void CubemapConvolutionPipe::Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet storageImageDescSet,
+void CubemapPrefilterPipe::Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet storageImageDescSet,
 	vk::DescriptorSet environmentSamplerDescSet, const vk::Extent3D& extent, const glm::mat4& viewInv,
 	const glm::mat4& projInv) const
 {
@@ -64,7 +67,7 @@ void CubemapConvolutionPipe::Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1);
+	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1); // TODO: fix for resolution < 32
 }
 
 } // namespace vl

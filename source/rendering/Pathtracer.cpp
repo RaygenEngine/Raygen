@@ -2,6 +2,7 @@
 
 #include "rendering/Layouts.h"
 #include "rendering/output/OutputPassBase.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
@@ -11,13 +12,6 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 } // namespace
 
 namespace vl {
-
-Pathtracer_::Pathtracer_()
-{
-	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_globalDesc[i] = Layouts->globalDescLayout.AllocDescriptorSet();
-	}
-}
 
 void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
 {
@@ -35,14 +29,17 @@ InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_progressivePathtrace.result[i].view(); // WIP: [0]
+		views[i] = m_progressivePathtrace.progressive.view(); // WIP: [0]
 	}
 	return views;
 }
 
 void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
 {
-	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, frame++);
+	// PERF: only if camera is dirty
+	m_progressivePathtrace.UpdateViewer(sceneDesc.viewer.ubo.viewInv, sceneDesc.viewer.ubo.projInv, 0.0);
+
+	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, m_frame++);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

@@ -108,7 +108,7 @@ float PowerHeuristic(uint numf, float fPdf, uint numg, float gPdf)
 }
 
 // MIS
-vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, bool isDiffusePath, inout uint seed)
+vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed)
 {
 	vec3 directLighting = vec3(0);
 
@@ -122,20 +122,26 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 
 	Li = Quadlight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
 
+	vec3 ks = interfaceFresnel(surface);
+
+	// diffuse component
+	directLighting += pdf_light >= BIAS ? Li * absNdot(surface.o) * (1.0 - ks) * surface.opacity * diffuseBRDF(surface) / pdf_light : vec3(0);
+
 	if(pdf_light >= BIAS){
-		pdf_brdf = nonSpecularReflectionPdf(surface, isDiffusePath);
+		pdf_brdf = importanceReflectionSamplePdf(surface);
 
 		if(pdf_brdf >= BIAS){
-			f = nonSpecularBRDF(surface, isDiffusePath);
+			f = ks * microfacetBRDF(surface);
 			weight = PowerHeuristic(1, pdf_light, 1, pdf_brdf);
 
-			directLighting += f * Li * absNdot(surface.o) * weight / pdf_light;
+			directLighting += Li * f * absNdot(surface.o) * weight / pdf_light;
 		}
 	}
 
 	// Sample bsdf
 	
-	f = sampleNonSpecularBRDF(surface, isDiffusePath, pdf_brdf, seed);
+	f = vec3(sampleBRDF(surface, pdf_brdf, seed));
+	f *= interfaceFresnel(surface);
 	
 	if(pdf_brdf >= BIAS){
 		pdf_light = Quadlight_PdfLi(topLevelAs, ql, areaLightId, surface);
@@ -148,13 +154,13 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 		Li = ql.color * ql.intensity;
 		weight = PowerHeuristic(1, pdf_brdf, 1, pdf_light);
 
-		directLighting += f * Li * absNdot(surface.o) * weight / pdf_brdf;
+		directLighting += Li * f * absNdot(surface.o) * weight / pdf_brdf;
 	}
 
 	return directLighting;
 }
 
-vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface, bool isDiffusePath)
+vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight pl, Surface surface)
 {
 	vec3 L = normalize(pl.position - surface.position);
 
@@ -173,10 +179,10 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
   			     pl.quadraticTerm * (dist * dist));
 
 	vec3 Li = pl.color * pl.intensity * attenuation;  
-	return Li * nonSpecularBRDF(surface, isDiffusePath) * absNdot(surface.o);
+	return Li * explicitBRDFcosTheta(surface);
 }
 
-vec3 Spotlight_EstimateDirect(accelerationStructureEXT topLevelAs, Spotlight sl, Surface surface, bool isDiffusePath)
+vec3 Spotlight_EstimateDirect(accelerationStructureEXT topLevelAs, Spotlight sl, Surface surface)
 {
 	vec3 L = normalize(sl.position - surface.position);
 
@@ -204,10 +210,10 @@ vec3 Spotlight_EstimateDirect(accelerationStructureEXT topLevelAs, Spotlight sl,
   			     sl.quadraticTerm * (dist * dist));
 
 	vec3 Li = sl.color * sl.intensity * attenuation * spotEffect;  
-	return Li * nonSpecularBRDF(surface, isDiffusePath) * absNdot(surface.o);
+	return Li * explicitBRDFcosTheta(surface);
 }
 
-vec3 Dirlight_EstimateDirect(accelerationStructureEXT topLevelAs, Dirlight dl, Surface surface, bool isDiffusePath)
+vec3 Dirlight_EstimateDirect(accelerationStructureEXT topLevelAs, Dirlight dl, Surface surface)
 {
 	vec3 L = normalize(-dl.front);
 
@@ -222,7 +228,7 @@ vec3 Dirlight_EstimateDirect(accelerationStructureEXT topLevelAs, Dirlight dl, S
 	}
 
 	vec3 Li = dl.color * dl.intensity; 
-	return Li * nonSpecularBRDF(surface, isDiffusePath) * absNdot(surface.o);
+	return Li * explicitBRDFcosTheta(surface);
 }
 
 #endif

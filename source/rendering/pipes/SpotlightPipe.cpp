@@ -22,7 +22,7 @@ vk::UniquePipelineLayout SpotlightPipe::MakePipelineLayout()
 
 vk::UniquePipeline SpotlightPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/light/spotlight.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/lighting/spotlight.shader");
 	gpuShader.onCompile = [&]() {
 		StaticPipes::Recompile<SpotlightPipe>();
 	};
