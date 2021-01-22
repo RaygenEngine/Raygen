@@ -1,6 +1,8 @@
 #pragma once
 
-#include "rendering/wrappers/Buffer.h"
+namespace vl {
+struct RBuffer;
+}
 
 namespace rvk {
 

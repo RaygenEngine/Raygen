@@ -1,7 +1,6 @@
 #include "SceneIrragrid.h"
 
 #include "rendering/scene/Scene.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 
 using namespace vl;

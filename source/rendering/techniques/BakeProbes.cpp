@@ -7,7 +7,6 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/util/WriteDescriptorSets.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
 namespace {
@@ -171,22 +170,7 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 		viewer[i] = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-		vk::DescriptorBufferInfo bufferInfo{};
-
-		bufferInfo
-			.setBuffer(viewer[i].handle()) //
-			.setOffset(0u)
-			.setRange(uboSize);
-		vk::WriteDescriptorSet descriptorWrite{};
-
-		descriptorWrite
-			.setDstSet(viewerDescSet[i]) //
-			.setDstBinding(0u)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setBufferInfo(bufferInfo);
-
-		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		rvk::writeDescriptorBuffer(viewerDescSet[i], 0u, viewer[i].handle());
 
 		UBO_viewer data = {
 			viewInverses[i],

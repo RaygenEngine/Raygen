@@ -1,8 +1,6 @@
-
 #include "RenderPassLayout.h"
 
 #include "rendering/Device.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 namespace vl {
 

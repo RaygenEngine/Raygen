@@ -6,7 +6,6 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/ScenePointlight.h"
-#include "rendering/util/DrawShapes.h"
 
 namespace {
 struct PushConstant {
@@ -163,15 +162,20 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void PointlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void PointlightPipe::Draw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,
+		{
+			sceneDesc.globalDesc,
+			inputDescSet,
+		},
+		nullptr);
 
 	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
+		vk::PipelineBindPoint::eGraphics, layout(), 3u, { sceneDesc.scene->sceneAsDescSet }, nullptr);
 
 	// bind unit sphere once
 	rvk::bindSphere18x9(cmdBuffer);
@@ -182,7 +186,7 @@ void PointlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &pl->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
+			vk::PipelineBindPoint::eGraphics, layout(), 2u, { pl->uboDescSet[sceneDesc.frameIndex] }, nullptr);
 
 		rvk::drawSphere18x9(cmdBuffer);
 	}

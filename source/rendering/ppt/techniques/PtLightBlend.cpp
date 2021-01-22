@@ -66,20 +66,19 @@ void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scen
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u,
+		{
+			sceneDesc.globalDesc,
+			sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex],
+			sceneDesc.scene->sceneAsDescSet,
+		},
+		nullptr);
+
 	PushConstant pc{
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 
 	cmdBuffer.pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 1u, 1u,
-		&sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex], 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 2u, 1u,
-		&sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

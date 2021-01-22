@@ -2,7 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
@@ -127,21 +126,26 @@ vk::UniquePipeline IrragridPipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void IrragridPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void IrragridPipe::Draw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,
+		{
+			sceneDesc.globalDesc,
+			inputDescSet,
+		},
+		nullptr);
 
 	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
 
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &ig->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &ig->irradianceSamplerDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u,
+			{
+				ig->uboDescSet[sceneDesc.frameIndex],
+				ig->irradianceSamplerDescSet,
+			},
+			nullptr);
 
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

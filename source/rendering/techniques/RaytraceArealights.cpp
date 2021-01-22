@@ -5,7 +5,6 @@
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 // TODO: use specific for each technique instance and waitIdle() resize
 ConsoleVariable<float> cons_arealightsScale{ "r.arealights.scale", 1.f, "Set arealights scale" };

@@ -2,7 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneSpotlight.h"
@@ -50,19 +49,25 @@ vk::UniquePipeline SpotlightPipe::MakePipeline()
 		*Layouts->mainPassLayout.compatibleRenderPass, colorBlending, 1u);
 }
 
-void SpotlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void SpotlightPipe::Draw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,
+		{
+			sceneDesc.globalDesc,
+			inputDescSet,
+		},
+		nullptr);
 
 	for (auto sp : sceneDesc->Get<SceneSpotlight>()) {
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &sp->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u,
-			&sp->shadowmapDescSet[sceneDesc.frameIndex], 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u,
+			{
+				sp->uboDescSet[sceneDesc.frameIndex],
+				sp->shadowmapDescSet[sceneDesc.frameIndex],
+			},
+			nullptr);
 
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

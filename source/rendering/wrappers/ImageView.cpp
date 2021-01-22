@@ -2,7 +2,6 @@
 
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 namespace vl {
 RImage::RImage(vk::ImageType imageType, const std::string& name, vk::Extent3D extent, vk::Format format,

@@ -6,7 +6,6 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneReflProbe.h"
-#include "rendering/util/DrawShapes.h"
 
 namespace {
 struct PushConstant {
@@ -169,29 +168,31 @@ vk::UniquePipeline ReflprobePipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void ReflprobePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void ReflprobePipe::Draw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,
+		{
+			sceneDesc.globalDesc,
+			inputDescSet,
+		},
+		nullptr);
 
 	// bind unit sphere once
 	rvk::bindSphere18x9(cmdBuffer);
 
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
 
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 2u, 1u, &rp->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 3u, 1u, &rp->environmentSamplerDescSet, 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 4u, 1u, &rp->irradianceSamplerDescSet, 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, layout(), 5u, 1u, &rp->prefilteredSamplerDescSet, 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u,
+			{
+				rp->uboDescSet[sceneDesc.frameIndex],
+				rp->environmentSamplerDescSet,
+				rp->irradianceSamplerDescSet,
+				rp->prefilteredSamplerDescSet,
+			},
+			nullptr);
 
 		PushConstant pc{
 			sceneDesc.viewer.ubo.viewProj * math::transformMat(rp->ubo.radius, rp->ubo.position),

@@ -1,7 +1,6 @@
 #include "SceneSpotlight.h"
 
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 void SceneSpotlight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {

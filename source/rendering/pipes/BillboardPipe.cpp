@@ -3,10 +3,8 @@
 #include "editor/imgui/ImguiImpl.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
@@ -243,7 +241,7 @@ void BillboardPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 	rvk::bindUnitRectTriangleStrip(cmdBuffer);
 
 	auto fontDescSet = ImguiImpl::GetIconFontDescriptorSet();
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &fontDescSet, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, { fontDescSet }, nullptr);
 
 	DrawComponent<CReflprobe>(cmdBuffer, sceneDesc, layout());
 	DrawComponent<CPointlight>(cmdBuffer, sceneDesc, layout());

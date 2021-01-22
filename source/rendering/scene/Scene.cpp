@@ -9,7 +9,6 @@
 #include "rendering/scene/SceneQuadlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/util/DrawShapes.h"
 
 void Scene::EnqueueEndFrame()
 {

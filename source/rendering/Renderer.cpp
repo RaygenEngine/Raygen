@@ -19,7 +19,6 @@
 #include "rendering/techniques/BakeProbes.h"
 #include "rendering/techniques/CalculateShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 
 ConsoleFunction<> cons_arealightsReset{ "r.arealights.reset", []() { vl::Renderer->m_raytraceArealights.frame = 0; },
@@ -109,22 +108,9 @@ void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 	// if camera changed
 	if (sceneDesc.scene->activeCamera != m_viewerId[sceneDesc.frameIndex]) [[unlikely]] {
 
-		vk::DescriptorBufferInfo bufferInfo{};
+		rvk::writeDescriptorBuffer(m_globalDesc[sceneDesc.frameIndex], 16u,
+			sceneDesc.viewer.buffer[sceneDesc.frameIndex].handle(), sceneDesc.viewer.uboSize); // WIP: binding index
 
-		bufferInfo
-			.setBuffer(sceneDesc.viewer.buffer[sceneDesc.frameIndex].handle()) //
-			.setOffset(0u)
-			.setRange(sceneDesc.viewer.uboSize);
-		vk::WriteDescriptorSet descriptorWrite{};
-
-		descriptorWrite
-			.setDstSet(m_globalDesc[sceneDesc.frameIndex]) //
-			.setDstBinding(16u)                            // WIP:
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setBufferInfo(bufferInfo);
-
-		Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
 		m_viewerId[sceneDesc.frameIndex] = sceneDesc.scene->activeCamera;
 	}
 
@@ -136,34 +122,21 @@ void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDe
 	m_mainPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		GbufferPipe::RecordCmd(cmdBuffer, sceneDesc);
 
-		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<SpotlightPipe>().layout(), 1u,
-			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
-
-		StaticPipes::Get<SpotlightPipe>().Draw(cmdBuffer, sceneDesc);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<PointlightPipe>().layout(), 1u,
-			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
-
-		StaticPipes::Get<PointlightPipe>().Draw(cmdBuffer, sceneDesc);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<DirlightPipe>().layout(), 1u,
-			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
-
-		StaticPipes::Get<DirlightPipe>().Draw(cmdBuffer, sceneDesc);
+		auto inputDescSet = m_mainPassInst[sceneDesc.frameIndex].internalDescSet;
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<ReflprobePipe>().layout(), 1u,
-			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
+		StaticPipes::Get<SpotlightPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
 
-		StaticPipes::Get<ReflprobePipe>().Draw(cmdBuffer, sceneDesc);
+		StaticPipes::Get<PointlightPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
 
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, StaticPipes::Get<IrragridPipe>().layout(), 1u,
-			1u, &m_mainPassInst[sceneDesc.frameIndex].internalDescSet, 0u, nullptr);
+		StaticPipes::Get<DirlightPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
 
-		StaticPipes::Get<IrragridPipe>().Draw(cmdBuffer, sceneDesc);
+		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
+
+		StaticPipes::Get<ReflprobePipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
+
+		StaticPipes::Get<IrragridPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
 	});
 
 	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(

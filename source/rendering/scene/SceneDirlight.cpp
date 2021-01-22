@@ -2,7 +2,6 @@
 
 #include "core/math-ext/Frustum.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 void SceneDirlight::MaybeResizeShadowmap(uint32 width, uint32 height)
 {
