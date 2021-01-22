@@ -7,7 +7,6 @@
 #include "shading-math.glsl"
 #include "surface.glsl"
 
-// WIP: SMATH: fix smooth contribution and backfacing surfaces
 float ShadowCalculationSmooth(sampler2DShadow shadowmap, mat4 lightMatrix, vec3 fragPos, float maxBias, int samples, float invSpread)
 {
 	const vec2 poissonDisk16[16] = vec2[](
