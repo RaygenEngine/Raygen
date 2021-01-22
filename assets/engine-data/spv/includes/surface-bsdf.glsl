@@ -113,8 +113,8 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 	}
 
 	// BIAS: stop erroneous paths
-	return !(isRefractedPath && !isOutgoingDirPassingThrough(surface) || // reflect but under actual geometry
-	         !isRefractedPath && isOutgoingDirPassingThrough(surface) || // transmit but above actual geometry        
+	return !(isRefractedPath && !isOutgoingDirPassingThrough(surface) || // refract but does NOT pass through geometry
+	         !isRefractedPath && isOutgoingDirPassingThrough(surface) || // reflect but passing throught geometry        
 	         pdf < BIAS                            // very small pdf
 			 );                          
 }

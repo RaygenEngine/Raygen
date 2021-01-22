@@ -9,7 +9,7 @@
 #define RAY
 #include "global.glsl"
 
-#include "random.glsl"
+#include "pathtrace/gltf-surface.glsl"
 
 struct hitPayload
 {
@@ -23,126 +23,10 @@ struct hitPayload
 	uint seed;
 };
 
-hitAttributeEXT vec2 baryCoord;
 layout(location = 0) rayPayloadInEXT hitPayload prd;
 
-struct Vertex
-{
-	float posX;
-	float posY;
-	float posZ;
-	float nrmX;
-	float nrmY;
-	float nrmZ;
-	float tngX;
-	float tngY;
-	float tngZ;
-	float u;
-	float v;
-};
-
-struct OldVertex
-{
-	vec3 position;
-	vec3 normal;
-	vec3 tangent;
-	vec2 uv;
-};
-
-struct samplerRef {
-	int index;
-};
-
-struct GltfMat {
-	// factors
-	vec4 baseColorFactor;
-	vec4 emissiveFactor;
-	float metallicFactor;
-	float roughnessFactor;
-	float normalScale;
-	float occlusionStrength;
-	float baseReflectivity;
-
-	// alpha mask
-	float alphaCutoff;
-	int mask;
-
-	samplerRef baseColor;
-	samplerRef metallicRough;
-	samplerRef occlusion;
-	samplerRef normal;
-	samplerRef emissive;
-};
-
-layout(buffer_reference, std430) buffer Vertices { Vertex v[]; };
-layout(buffer_reference, std430) buffer Indicies { uint i[]; };
-layout(buffer_reference, std430) buffer Material { GltfMat m; };
-
-struct GeometryGroup {
-
-	mat4 invTransform;
-
-	Vertices vtxBuffer;
-	Indicies indBuffer;
-	Material materialUbo;
-
-	uint indexOffset;
-	uint primOffset;
-
-	mat4 transform;
-};
-
-OldVertex fromVertex(Vertex p) {
-	OldVertex vtx;
-	
-	vtx.position = vec3(p.posX, p.posY, p.posZ);
-	vtx.normal = vec3(p.nrmX, p.nrmY, p.nrmZ);
-	vtx.tangent = vec3(p.tngX, p.tngY, p.tngZ);
-	
-	vtx.uv = vec2(p.u, p.v);
-	
-	return vtx;
-}
-
-layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
-layout(set = 3, binding = 0, std430) readonly buffer GeometryGroups { GeometryGroup g[]; } geomGroups;
-layout(set = 3, binding = 1) uniform sampler2D textureSamplers[];
-
-vec4 texture(samplerRef s, vec2 uv) {
-	return texture(textureSamplers[nonuniformEXT(s.index)], uv);
-}
-
 void main() {
-	int matId = gl_InstanceCustomIndexEXT;
-
-	GeometryGroup gg = geomGroups.g[nonuniformEXT(matId)];
-
-	const uint indOffset = gg.indexOffset;
-	const uint primOffset = gg.primOffset;
-	
-	// Indices of the triangle
-	ivec3 ind = ivec3(gg.indBuffer.i[3 * (gl_PrimitiveID + primOffset)],   //
-					  gg.indBuffer.i[3 * (gl_PrimitiveID + primOffset) + 1],   //
-					  gg.indBuffer.i[3 * (gl_PrimitiveID + primOffset) + 2]) + ivec3(indOffset);  //
-
-
-	const vec3 barycentrics = vec3(1.0 - baryCoord.x - baryCoord.y, baryCoord.x, baryCoord.y);
-	
-	// Vertex of the triangle
-	OldVertex v0 = fromVertex(gg.vtxBuffer.v[ind.x]);
-	OldVertex v1 = fromVertex(gg.vtxBuffer.v[ind.y]);
-	OldVertex v2 = fromVertex(gg.vtxBuffer.v[ind.z]);
-
-	vec2 uv = v0.uv * barycentrics.x + v1.uv * barycentrics.y + v2.uv * barycentrics.z;
-		
-	GltfMat mat = gg.materialUbo.m;
-
-	// sample material textures
-	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
-	
-	float opacity = sampledBaseColor.a;
-	// mask mode and cutoff
-	if(mat.mask == 1 && opacity < mat.alphaCutoff) {
+	if(surfaceIgnoreIntersectionTest()) {
 		ignoreIntersectionEXT;
 	}
 }
