@@ -143,7 +143,8 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 	f = vec3(sampleBRDF(surface, pdf_brdf, seed));
 	f *= interfaceFresnel(surface);
 	
-	if(pdf_brdf >= BIAS){
+						   // if passing thourgh pdf = 0
+	if(pdf_brdf >= BIAS && !isOutgoingDirPassingThrough(surface)) {
 		pdf_light = Quadlight_PdfLi(topLevelAs, ql, areaLightId, surface);
 
 		// didn't hit light
