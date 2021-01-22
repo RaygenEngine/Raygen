@@ -56,11 +56,10 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 	vec3 kr = interfaceFresnel(surface);
 
 	// handle total intereflection
-	float p_reflect = k < 0.0 ? 1.0 : max(kr);
+	float p_reflect = k < 0.0 ? 1.0 : max(kr); // max for case of metal surface is better
 
 	// transmission
 	if(rand(seed) > p_reflect) {
-		
 		bsdf *= 1.0 - kr; // kt
 		pdf *= 1 - p_reflect;
 		
@@ -68,8 +67,10 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 
 		// diffuse 
 		if(rand(seed) > p_transparency) {
-        	bsdf *= sampleDiffuseBRDF(surface, pdf, seed);
-			pdf *= 1 - p_transparency;
+			float pdfd;
+        	bsdf *= sampleDiffuseBRDF(surface, pdfd, seed);
+			pdf *= pdfd;
+			pdf *= (1 - p_transparency);
 		}
 
 		// refraction
