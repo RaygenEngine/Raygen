@@ -22,7 +22,7 @@ vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 	return rvk::makePipelineLayoutEx(
 		{
 			Layouts->globalDescLayout.handle(),            // gbuffer and stuff
-			Layouts->doubleStorageImage.handle(),          // image result
+			Layouts->tripleStorageImage.handle(),          // image result
 			Layouts->accelLayout.handle(),                 // accel structure
 			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture
 			Layouts->singleStorageBuffer.handle(),         // quadlights

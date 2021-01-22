@@ -30,7 +30,8 @@ layout(push_constant) uniform PC
 layout(location = 0) rayPayloadEXT ShadowPayload prd;
 
 layout(set = 1, binding = 0, rgba32f) uniform image2D image;
-layout(set = 1, binding = 1, rgba32f) uniform image2D progressive;
+layout(set = 1, binding = 1, rgba32f) uniform image2D progressiveResult;
+layout(set = 1, binding = 2, rgba32f) uniform image2D momentsBuffer;
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 4, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
@@ -106,6 +107,14 @@ float Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql
 	return 0.0;
 }
 
+struct ReprojectionData {
+	vec3 color;
+	vec2 moments;
+	float historyLength; // 0 means reprojection was invalid
+};
+
+ReprojectionData GetReprojection(vec2 uv);
+
 void main() {
 
 	if(quadlightCount == 0) {
@@ -115,6 +124,11 @@ void main() {
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
 
 	float depth = texture(g_DepthSampler, uv).r;
+
+	if(depth == 1.0) {
+		imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(0.0, 0.0, 0.0, 0.0));
+		return; 
+	}
 
 	Surface surface = surfaceFromGBuffer(
 	    cam,
@@ -127,6 +141,18 @@ void main() {
 		uv
 	);
 
+	ReprojectionData reproj = GetReprojection(uv);
+	float historyLength = reproj.historyLength;
+
+	vec3 accumColor = vec3(0);
+	uint actualSamples = 1;
+
+	float historyCalculated = 1.;
+	if (historyLength < 2) {
+	   actualSamples = 1;
+	   historyCalculated = 1.;
+	}
+
 	// pick 1 light
 	uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
 
@@ -137,20 +163,137 @@ void main() {
 
 	Quadlight ql = quadlights.light[i];
 
-	float val = Quadlight_EstimateDirect(topLevelAs, ql, i, surface, seed);
+	float val = 0;
+	for(int s = 0; s < 10; ++s) {
 
-	vec4 finalColor = vec4(0);
-
-	// Do accumulation
-	if(frame > 0)
-	{
-		float a = 1.0f / float(frame);
-		finalColor = imageLoad(progressive, ivec2(gl_LaunchIDEXT.xy));
-		val = mix(finalColor[i], val, a);
+		val += Quadlight_EstimateDirect(topLevelAs, ql, i, surface, seed);
 	}
-	
-	finalColor[i] = val;
+	vec3 curColor = vec3(0);
+	curColor[i] = val / 10.f;
 
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), finalColor);
-	imageStore(progressive, ivec2(gl_LaunchIDEXT.xy), finalColor);
+	vec2 moments;
+	moments.r = luminance(curColor);
+	moments.g = moments.r * moments.r;
+
+	// Mix reprojection
+	{
+		#define minColorAlpha 0.05
+		#define minMomentsAlpha 0.05
+
+		const float colorAlpha = max(1. / (historyLength + 1.), minColorAlpha);
+		const float momentsAlpha = max(1. / (historyLength + 1.), minMomentsAlpha);
+
+		moments = mix(reproj.moments, moments, momentsAlpha);
+		curColor = mix(reproj.color, curColor, colorAlpha);
+	}
+
+	// from SVGF paper:
+	float variance = max(0., moments.g - moments.r * moments.r);
+
+	variance *= 16.f / max(historyLength + historyCalculated, 32.f);
+
+	if (historyLength < 10) {
+		variance += 0.2;
+
+	}
+
+	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
+
+	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, depth, historyLength + historyCalculated));
+}
+
+//
+//  PRE PROCESS (reproject)
+//
+
+bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
+{
+	if (coord.x < 0 || coord.y < 0 || coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
+		return false;
+	}
+
+	momentsSample = imageLoad(momentsBuffer, coord);
+	if (abs(expectedPrevDepth - momentsSample.z) > 5e-3) {
+		return false;
+	}
+
+	
+
+	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	if (abs(thisUvDrawIndex.z - centerUvDrawIndex.z) > 0.5) {
+		return false;
+	}
+
+	return true;
+}
+
+
+ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expectedPrevDepth)
+{
+	ivec2 pixelPos = ivec2(floor(sampleUv));
+	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
+
+	float x = fract(sampleUv.x);
+	float y = fract(sampleUv.y);
+
+	float w[4] = { 
+		(1 - x) * (1 - y),
+		      x * (1 - y),
+		(1 - x) * y,
+		      x * y 
+	};
+
+	vec4 color = vec4(0);
+	vec4 moments = vec4(0);
+	float sumW = 0;
+	
+	for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
+		ivec2 loc = pixelPos + offset[sampleIdx];
+		vec4 momentsSample;
+		if (IsReprojValid(loc, expectedPrevDepth, centerUvDrawIndex, momentsSample)) {
+			color += w[sampleIdx] * imageLoad(progressiveResult, loc);
+			moments += w[sampleIdx] * momentsSample;
+			sumW += w[sampleIdx];
+		}
+	}
+
+
+	// This "valid" check should probably have min bias
+	if (sumW > 0) {
+		color /= sumW;
+		moments /= sumW;
+	}
+
+	ReprojectionData reproj;
+	reproj.color = color.rgb;
+	reproj.moments = moments.rg;
+
+	reproj.historyLength = moments.a;
+	return reproj;
+}
+
+ReprojectionData GetReprojection(vec2 uv) {
+	// PERF:
+	if (frame < 1) {
+		ReprojectionData repr;
+		repr.color = vec3(0);
+		repr.moments = vec2(0);
+		repr.historyLength = 0;
+		return repr;
+	}
+
+	// xy: ScreenSpace (uv) motion vector
+	// z: expected previous depth
+	const vec4 motionSample = texture(g_VelocitySampler, uv);
+
+	const vec2 motion = motionSample.xy;
+	const float expectedDepth = motionSample.z;
+
+	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
+
+
+	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_LaunchIDEXT.xy), 0);
+
+	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }

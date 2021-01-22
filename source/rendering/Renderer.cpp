@@ -83,10 +83,10 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_raytraceArealights.result[i].view());        // reserved0
-		views.emplace_back(m_raytraceArealights.result[i].view());        // reserved1
-		views.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror buffer
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
+		views.emplace_back(m_raytraceArealights.svgfRenderPassInstance.framebuffer[0].view()); // reserved0
+		views.emplace_back(m_raytraceArealights.progressive.view());                           // reserved1
+		views.emplace_back(m_raytraceMirrorReflections.result[i].view());                      // mirror buffer
+		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                 // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
 		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
