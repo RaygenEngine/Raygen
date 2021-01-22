@@ -79,7 +79,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 	auto& secondaryFramebuffer = vl::Renderer->m_secondaryPassInst.at(0).framebuffer;
 	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
 	auto& mirrorRes = vl::Renderer->m_raytraceMirrorReflections.result.at(0);
-	auto& arealightsRes = vl::Renderer->m_raytraceArealights.result.at(0);
+	auto& arealightsRes = vl::Renderer->m_raytraceArealights.progressive;
 	auto& progpath = vl::Pathtracer->m_progressivePathtrace.progressive;
 
 

@@ -25,7 +25,7 @@ layout(push_constant) uniform PC
 layout(set = 1, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-float VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
+bool VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
 
 	// Initializes a ray query object but does not start traversal
 	rayQueryEXT rayQuery;
@@ -45,34 +45,13 @@ float VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
 	// Returns type of committed (true) intersection
 	if(rayQueryGetIntersectionTypeEXT(rayQuery, true) != gl_RayQueryCommittedIntersectionNoneEXT) {
 		// Got an intersection == Shadow
-		return 0.0;
+		return false;
 	}
 
-	return 1.0;
+	return true;
 }
 
-//vec4 AmbientInfoBlurredOcclusion()
-//{
-//	float Offsets[4] = float[]( -1.5, -0.5, 0.5, 1.5 );
-//
-//    vec4 color = texture(aoSampler, uv);
-//
-//    for (int i = 0 ; i < 4 ; i++) {
-//        for (int j = 0 ; j < 4 ; j++) {
-//            vec2 tc = uv;
-//            tc.x = uv.x + Offsets[j] / textureSize(aoSampler, 0).x;
-//            tc.y = uv.y + Offsets[i] / textureSize(aoSampler, 0).y;
-//            color.a += texture(aoSampler, tc).a;
-//        }
-//    }
-//
-//    color.a /= 16.0;
-//
-//    return color;
-//}
-
-// WIP:
-vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
+vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 {
 	if(surface.a < SPEC_THRESHOLD) {
 		return vec3(0);
@@ -85,8 +64,9 @@ vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 	// we need to rotate the reflection ray to force intersection with quad's plane
 	float t;
 	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
+		return vec3(0);
 		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
-		vec3 pointOnPlane = ql.center + perp_r_n * 100; // WIP: something big
+		vec3 pointOnPlane = ql.center + perp_r_n * INF; // WIP: something big
 		L = normalize(pointOnPlane - surface.position);
 	}
 
@@ -98,13 +78,31 @@ vec3 Quadlight_AfterContribution(Quadlight ql, Surface surface)
 	}
 
 	L = normalize(p - surface.position);
-	addOutgoingDir(surface, L);
 
+	float cosTheta_o = dot(ql.normal, -L);
+
+	if (cosTheta_o < BIAS) {
+		return vec3(0);
+	}
+
+	addOutgoingDir(surface, L);
 	if(isOutgoingDirPassingThrough(surface)) { 
 		return vec3(0);
 	}
 
-	return ql.color * ql.intensity * explicitBRDF(surface);// * VisibilityOfRay(surface.position, L, 0.001, distance(surface.position, p)); // we lose the L, and Li(p, L) data - but at least we got smooth shadows - yey
+	float dist = distance(p, surface.position);
+
+	if(!VisibilityOfRay(surface.position, L, 0.001, dist)) {
+		return vec3(0);
+	}
+
+	return ql.color * ql.intensity * microfacetBRDF(surface);
+	
+}
+
+vec3 Quadlight_DiffuseContribution(Quadlight ql, Surface surface) 
+{
+	return ql.color * ql.intensity * diffuseBRDF(surface);
 }
 
 void main()
@@ -143,7 +141,17 @@ void main()
     for (int i = 0; i < quadlightCount; ++i) {
 		if(i > 3) break;
 		Quadlight ql = quadlights.light[i];
-		arealights += Quadlight_AfterContribution(ql, surface) * arealightShadowing[i];
+
+		vec3 L = normalize(ql.center - surface.position);
+		addOutgoingDir(surface, L);
+
+		arealights += ql.color * ql.intensity * explicitBRDF(surface) * arealightShadowing[i];
+
+		//vec3 ks = interfaceFresnel(surface);
+		//vec3 kd = (1.0 - ks) * surface.opacity;
+
+		//arealights += kd * Quadlight_DiffuseContribution(ql, surface) * arealightShadowing[i];
+		//arealights += ks * Quadlight_SpecularContribution(ql, surface) * arealightShadowing[i];
     }
 
 	vec3 final =  directLight + (indirectLight * ambientInfo.a) + surface.emissive + mirror + arealights;

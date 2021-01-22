@@ -2,7 +2,7 @@
 #extension GL_GOOGLE_include_directive: enable
 #include "global.glsl"
 
-#include "attachments.glsl"
+#include "global-descset.glsl"
 
 // out
 
