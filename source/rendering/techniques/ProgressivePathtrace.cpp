@@ -7,7 +7,6 @@
 #include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 namespace {
 enum class PtMode
@@ -48,22 +47,7 @@ ProgressivePathtrace::ProgressivePathtrace()
 	viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	vk::DescriptorBufferInfo bufferInfo{};
-
-	bufferInfo
-		.setBuffer(viewer.handle()) //
-		.setOffset(0u)
-		.setRange(uboSize);
-	vk::WriteDescriptorSet descriptorWrite{};
-
-	descriptorWrite
-		.setDstSet(viewerDescSet) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-		.setBufferInfo(bufferInfo);
-
-	vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	rvk::writeDescriptorBuffer(viewerDescSet, 0u, viewer.handle());
 }
 
 void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 iteration)

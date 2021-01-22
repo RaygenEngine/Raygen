@@ -8,8 +8,6 @@
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/core/PipeUtl.h"
-#include "rendering/util/WriteDescriptorSets.h"
 
 namespace vl {
 

@@ -7,7 +7,6 @@
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 
-
 using namespace vl;
 
 GpuMaterialInstance::GpuMaterialInstance(PodHandle<MaterialInstance> podHandle)
@@ -48,21 +47,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 			}
 			uboBuf.UploadData(matInst->descriptorSet.uboData);
 
-			vk::DescriptorBufferInfo bufferInfo{};
-			bufferInfo
-				.setBuffer(uboBuf.handle()) //
-				.setOffset(0u)
-				.setRange(matArch->descriptorSetLayout.SizeOfUbo());
-			vk::WriteDescriptorSet descriptorWrite{};
-
-			descriptorWrite
-				.setDstSet(descSet) //
-				.setDstBinding(0u)
-				.setDstArrayElement(0u)
-				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				.setBufferInfo(bufferInfo);
-
-			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+			rvk::writeDescriptorBuffer(descSet, 0u, uboBuf.handle(), matArch->descriptorSetLayout.SizeOfUbo());
 		}
 
 		int32 samplersBeginOffset = gpuArch.descLayout.HasUbo() && uboSize > 0 ? 1 : 0;
@@ -70,22 +55,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		auto UpdateImageSamplerInDescriptorSet = [&](vk::Sampler sampler, GpuHandle<Image> image, uint32 dstBinding) {
 			auto& img = image.Lock();
 
-			vk::DescriptorImageInfo imageInfo{};
-			imageInfo
-				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal) //
-				.setImageView(img.image.view())
-				.setSampler(sampler);
-
-			vk::WriteDescriptorSet descriptorWrite{};
-			descriptorWrite
-				.setDstSet(descSet) //
-				.setDstBinding(dstBinding)
-				.setDstArrayElement(0u)
-				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				.setImageInfo(imageInfo);
-
-			// PERF: Use a single descriptor update
-			Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+			rvk::writeDescriptorImages(descSet, dstBinding, { img.image.view() }, sampler);
 		};
 
 

@@ -30,5 +30,7 @@ void writeDescriptorImageArray(vk::DescriptorSet descSet, uint32 targetBinding, 
 	vk::DescriptorType descriptorType = vk::DescriptorType::eCombinedImageSampler,
 	vk::ImageLayout layout = vk::ImageLayout::eShaderReadOnlyOptimal);
 
+void writeDescriptorBuffer(vk::DescriptorSet descSet, uint32 targetBinding, vk::Buffer buffer, size_t size = VK_WHOLE_SIZE, vk::DescriptorType descriptorType = vk::DescriptorType::eUniformBuffer);
+
 
 } // namespace rvk

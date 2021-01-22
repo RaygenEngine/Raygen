@@ -1,5 +1,7 @@
 #include "DrawShapes.h"
 
+#include "rendering/wrappers/Buffer.h"
+
 // PERF:
 namespace {
 

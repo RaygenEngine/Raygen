@@ -89,3 +89,24 @@ void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, 
 {
 	rvk::writeDescriptorImages(descSet, firstBinding, std::move(imageViews), descriptorType, layout, sampler);
 }
+
+void rvk::writeDescriptorBuffer(
+	vk::DescriptorSet descSet, uint32 targetBinding, vk::Buffer buffer, size_t size, vk::DescriptorType descriptorType)
+{
+	vk::DescriptorBufferInfo bufferInfo{};
+
+	bufferInfo
+		.setBuffer(buffer) //
+		.setOffset(0u)
+		.setRange(size);
+	vk::WriteDescriptorSet descriptorWrite{};
+
+	descriptorWrite
+		.setDstSet(descSet) //
+		.setDstBinding(targetBinding)
+		.setDstArrayElement(0u)
+		.setDescriptorType(descriptorType)
+		.setBufferInfo(bufferInfo);
+
+	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+}

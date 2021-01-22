@@ -16,22 +16,7 @@ void SceneAnimatedGeometry::ResizeJoints(uint32 curFrame)
 	buffer[i] = vl::RBuffer{ GetBufferSize(), vk::BufferUsageFlagBits::eStorageBuffer,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-	vk::DescriptorBufferInfo bufferInfo{};
-
-	bufferInfo
-		.setBuffer(buffer[i].handle()) //
-		.setOffset(0u)
-		.setRange(GetBufferSize());
-	vk::WriteDescriptorSet descriptorWrite{};
-
-	descriptorWrite
-		.setDstSet(descSet[i]) //
-		.setDstBinding(0u)
-		.setDstArrayElement(0u)
-		.setDescriptorType(vk::DescriptorType::eStorageBuffer)
-		.setBufferInfo(bufferInfo);
-
-	vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	rvk::writeDescriptorBuffer(descSet[i], 0u, buffer[i].handle(), GetBufferSize(), vk::DescriptorType::eStorageBuffer);
 }
 
 void SceneAnimatedGeometry::MaybeResizeJoints(size_t newSize)

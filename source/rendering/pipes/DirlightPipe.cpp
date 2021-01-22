@@ -2,7 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/core/PipeUtl.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneDirlight.h"
@@ -49,21 +48,27 @@ vk::UniquePipeline DirlightPipe::MakePipeline()
 		*Layouts->mainPassLayout.compatibleRenderPass, colorBlending, 1u);
 }
 
-void DirlightPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void DirlightPipe::Draw(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
 	auto& pipeLayout = StaticPipes::GetLayout<DirlightPipe>();
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, pipeLayout, 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 0u,
+		{
+			sceneDesc.globalDesc,
+			inputDescSet,
+		},
+		nullptr);
 
 	for (auto dl : sceneDesc->Get<SceneDirlight>()) {
-		cmdBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics, pipeLayout, 2u, 1u, &dl->uboDescSet[sceneDesc.frameIndex], 0u, nullptr);
-
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 3u, 1u,
-			&dl->shadowmapDescSet[sceneDesc.frameIndex], 0u, nullptr);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeLayout, 2u,
+			{
+				dl->uboDescSet[sceneDesc.frameIndex],
+				dl->shadowmapDescSet[sceneDesc.frameIndex],
+			},
+			nullptr);
 
 		// big triangle
 		cmdBuffer.draw(3u, 1u, 0u, 0u);

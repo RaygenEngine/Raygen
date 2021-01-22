@@ -245,8 +245,7 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 
 
 			if (mat.hasDescriptorSet) {
-				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, { mat.descSet }, nullptr);
 			}
 
 			cmdBuffer.drawIndexed(gg.indexCount, 1u, 0u, 0u, 0u);
@@ -270,12 +269,11 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 			if (mat.hasDescriptorSet) {
-				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, { mat.descSet }, nullptr);
 			}
 
 			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, plLayout, 2u, 1u, &geom->descSet[sceneDesc.frameIndex], 0u, nullptr);
+				vk::PipelineBindPoint::eGraphics, plLayout, 2u, { geom->descSet[sceneDesc.frameIndex] }, nullptr);
 
 			auto& gpuMesh = geom->mesh.Lock();
 			cmdBuffer.bindVertexBuffers(0u, { gpuMesh.combinedVertexBuffer.handle() }, { gg.vertexBufferOffset });

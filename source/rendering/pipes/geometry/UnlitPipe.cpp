@@ -189,11 +189,10 @@ void UnlitPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 			cmdBuffer.pushConstants(plLayout, vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
 			cmdBuffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics, plLayout, 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
+				vk::PipelineBindPoint::eGraphics, plLayout, 0u, { sceneDesc.globalDesc }, nullptr);
 
 			if (mat.hasDescriptorSet) {
-				cmdBuffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics, plLayout, 1u, 1u, &mat.descSet, 0u, nullptr);
+				cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, plLayout, 1u, { mat.descSet }, nullptr);
 			}
 
 			auto& gpuMesh = geom->mesh.Lock();

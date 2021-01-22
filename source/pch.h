@@ -71,7 +71,10 @@ struct TextCompilerErrors {
 
 
 #include "rendering/DebugName.h"
+#include "rendering/core/DrawShapes.h"
+#include "rendering/core/WriteDescriptorSets.h"
 #include "rendering/core/ImageUtl.h"
+#include "rendering/core/PipeUtl.h"
 
 class World;
 #include "universe/Entity.h"

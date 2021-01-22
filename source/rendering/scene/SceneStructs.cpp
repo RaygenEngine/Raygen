@@ -11,22 +11,7 @@ SceneStruct::SceneStruct(size_t _uboSize)
 		buffer[i] = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-		vk::DescriptorBufferInfo bufferInfo{};
-
-		bufferInfo
-			.setBuffer(buffer[i].handle()) //
-			.setOffset(0u)
-			.setRange(uboSize);
-		vk::WriteDescriptorSet descriptorWrite{};
-
-		descriptorWrite
-			.setDstSet(uboDescSet[i]) //
-			.setDstBinding(0u)
-			.setDstArrayElement(0u)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setBufferInfo(bufferInfo);
-
-		vl::Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+		rvk::writeDescriptorBuffer(uboDescSet[i], 0u, buffer[i].handle(), uboSize);
 	}
 }
 

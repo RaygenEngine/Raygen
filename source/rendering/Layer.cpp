@@ -13,7 +13,6 @@
 #include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/util/DrawShapes.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };

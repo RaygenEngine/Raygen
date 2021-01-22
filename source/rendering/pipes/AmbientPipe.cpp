@@ -159,6 +159,13 @@ void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,
+		{
+			sceneDesc.globalDesc,
+			sceneDesc.scene->sceneAsDescSet,
+		},
+		nullptr);
+
 	PushConstant pc{
 		console_aoBias,
 		console_aoStrength,
@@ -167,12 +174,6 @@ void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 0u, 1u, &sceneDesc.globalDesc, 0u, nullptr);
-
-	cmdBuffer.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, layout(), 1u, 1u, &sceneDesc.scene->sceneAsDescSet, 0u, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

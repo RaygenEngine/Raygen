@@ -6,7 +6,6 @@
 #include "rendering/assets/GpuShader.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/util/DrawShapes.h"
 #include "universe/Universe.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
