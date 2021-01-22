@@ -35,6 +35,8 @@ float sampleBTDF(inout Surface surface, out float pdf, inout uint seed)
 
 // currently special paths are the refracted and the specular
 bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool isSpecialPath, inout uint seed) {
+	
+	// sample microfacet direction - or specular
 	// mirror H = N 
 	float LoH = absNdot(surface.i);
 	surface.h = vec3(0, 0, 1); // surface space N
@@ -58,23 +60,25 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 	// handle total intereflection
 	float p_reflect = k < 0.0 ? 1.0 : max(kr); // max for case of metal surface is better
 
-	// transmission
-	if(rand(seed) > p_reflect) {
-		bsdf *= 1.0 - kr; // kt
+	// transmission - light that originates from inside surface
+	if(rand(seed) > p_reflect) {	
 		pdf *= 1 - p_reflect;
 		
 		float p_transparency = 1.0 - surface.opacity; // TODO: trans material
 
-		// diffuse 
+		// diffuse - light entered and diffusely scattered from the same spot on surface
 		if(rand(seed) > p_transparency) {
 			float pdfd;
         	bsdf *= sampleDiffuseBRDF(surface, pdfd, seed);
+			vec3 kd = 1.0 - interfaceFresnel(surface); // we change
+			bsdf *= kd;
 			pdf *= pdfd;
 			pdf *= (1 - p_transparency);
 		}
 
 		// refraction
 		else {
+			bsdf *= 1.0 - kr; // kt
 			pdf *= p_transparency;
 			isSpecialPath = true;
 			isRefractedPath = true;
@@ -93,7 +97,7 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 		}
 	}
 
-	// reflection
+	// reflection light that originates from outside the surface 
 	else {
 	    bsdf *= kr;
 		pdf *= p_reflect;
