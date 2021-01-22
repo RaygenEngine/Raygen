@@ -27,9 +27,9 @@ void main() {
 	int quadId = gl_InstanceCustomIndexEXT;
 	Quadlight ql = quadlights.light[quadId];
 
-	float LnoL = dot(ql.normal, -gl_WorldRayDirectionEXT);
+	float cosTheta_o = dot(ql.normal, -gl_WorldRayDirectionEXT);
 
-	if (LnoL < BIAS) {
+	if (cosTheta_o < BIAS) {
 		prd.radiance = vec3(0); 
 		prd.hitType = 2;
 		return;

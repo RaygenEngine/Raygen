@@ -129,8 +129,8 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 
 	if(pdf_light >= BIAS){
 		pdf_brdf = importanceReflectionSamplePdf(surface);
-
-		if(pdf_brdf >= BIAS){
+								// if passing thourgh pdf = 0
+		if(pdf_brdf >= BIAS && !isOutgoingDirPassingThrough(surface)){
 			f = ks * microfacetBRDF(surface);
 			weight = PowerHeuristic(1, pdf_light, 1, pdf_brdf);
 
