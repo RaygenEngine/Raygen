@@ -33,6 +33,7 @@ layout(push_constant) uniform PC
 	int dirlightCount;
 	int irragridCount;
 	int quadlightCount;
+	int reflprobeCount;
 };
 
 layout(location = 0) rayPayloadInEXT hitPayload prd;
@@ -46,6 +47,8 @@ layout(set = 6, binding = 1) uniform sampler2DShadow dirlightShadowmap[];
 layout(set = 7, binding = 0, std430) readonly buffer Irragrids { Irragrid grid[]; } irragrids;
 layout(set = 7, binding = 1) uniform samplerCubeArray irradianceSamplers[];
 layout(set = 8, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
+layout(set = 9, binding = 0, std430) readonly buffer Reflprobes { Reflprobe probe[]; } reflprobes;
+layout(set = 9, binding = 1) uniform samplerCube reflprobeSamplers[];
 
 void main() {
 	Surface surface = surfaceFromGeometryGroup();
@@ -60,6 +63,11 @@ void main() {
 //			radiance +=  Pointlight_EstimateDirect(topLevelAs, pl, surface);
 //		}
 
+//		for(int i = 0; i < quadlightCount; ++i) { WIP: handle using the direct tricks and point light shadows
+//			Quadlight ql = quadlights.light[i];
+//			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
+//		}
+
 		for(int i = 0; i < spotlightCount; ++i) {
 			Spotlight sl = spotlights.light[i];
 			radiance += Spotlight_EstimateDirect(sl, spotlightShadowmap[nonuniformEXT(i)], surface);
@@ -70,35 +78,26 @@ void main() {
 			radiance += Dirlight_EstimateDirect(dl, dirlightShadowmap[nonuniformEXT(i)], surface);
 		}
 
-//		for(int i = 0; i < quadlightCount; ++i) { WIP: handle using the direct tricks and point light shadows
-//			Quadlight ql = quadlights.light[i];
-//			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
-//		}
-
-			// INDIRECT Diffuse WIP:
-		//    {
-		//		for(int i = 0; i < irragridCount; ++i) {
-		//			Irragrid ig = irragrids.grid[i];
-		//			radiance += Irragrid_Contribution(ig, irradianceSamplers[nonuniformEXT(i)], surface);
-		//		}
-		//    }
-
-			// if roughness...
-			// INDIRECT Specular -> reflprobe
-			//if(surface.a >= SPEC_THRESHOLD) {
-			//	prd.radiance = radiance + surface.emissive;
-			//	return;
-			//}
+		for(int i = 0; i < irragridCount; ++i) {
+			Irragrid ig = irragrids.grid[i];
+			radiance += Irragrid_EstimateDirect(ig, irradianceSamplers[nonuniformEXT(i)], surface);
+		}
 	}
 
 	prd.radiance = radiance + surface.emissive;
 
-	// Next ray
-
 	if(surface.a >= SPEC_THRESHOLD) {
+		// PERF:
+		for(int i = 0; i < reflprobeCount; ++i) {
+			Reflprobe rp = reflprobes.probe[i];
+			prd.radiance += Reflprobe_EstimateDirect(rp, std_BrdfLut, reflprobeSamplers[i], reflprobeSamplers[i+1], surface);
+		}
 		prd.done = true;
 		return;
 	}
+
+
+	// Next ray
 
 	prd.attenuation = vec3(sampleSpecularBRDF(surface));
 	prd.attenuation *= absNdot(surface.o);

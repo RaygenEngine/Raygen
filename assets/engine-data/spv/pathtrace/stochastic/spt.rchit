@@ -51,7 +51,7 @@ void main() {
 
 	vec3 radiance = vec3(0.f);
 	
-	if(quadlightCount > 0) {
+	if(quadlightCount > 0 && surface.a >= SPEC_THRESHOLD) {
 		int totalLights = quadlightCount; 
 		float u = rand(prd.seed);
 		int qIndex = int(floor(u * totalLights));
