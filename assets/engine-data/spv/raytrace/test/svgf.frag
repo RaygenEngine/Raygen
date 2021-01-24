@@ -70,12 +70,7 @@ float computeVarianceCenter(ivec2 iuv)
 bool IsReprojValid(ivec2 coord, float centerDrawId)
 {
 	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
-	ivec2 iuv = ivec2(gl_FragCoord.xy);
-	float a = texelFetch(g_SpecularSampler, coord, 0).a;
-	float a2 = texelFetch(g_SpecularSampler, iuv, 0).a;
-	
-	if(abs(sqrt(a) - sqrt(a2)) > 0.1) return false;
-	
+
 	if (abs(thisUvDrawIndex.z - centerDrawId) >= 1) {
 		return false;
 	}
@@ -87,7 +82,6 @@ bool IsReprojValid(ivec2 coord, float centerDrawId)
 void DebugRenderPasses();
 
 void OutputColor(vec4 color);
-void OutputColor(vec4 color, bool mixAlbedo);
 
 bool IsInside(ivec2 p, ivec2 screenSize) {
 	return p.x >= 0 && p.y >= 0 && p.x < screenSize.x && p.y < screenSize.y;
@@ -140,7 +134,7 @@ void main() {
 
 	// Skybox
     if (center.depth >= 1.f) {
-    	OutputColor(color, false);
+    	OutputColor(color);
 		return;
     }
 
@@ -197,19 +191,9 @@ void main() {
 // 
 //
 
-void OutputColor(vec4 color, bool mixAlbedo) {
+void OutputColor(vec4 color) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
 	if (iteration >= totalIter - 1) {
-	    if (mixAlbedo) {
-	    	vec4 colorSampleSpec = texelFetch(g_SpecularSampler, iuv, 0);
-			vec4 colorSampleAlbe = texelFetch(g_AlbedoSampler, iuv, 0);
-			float metallic = texelFetch(g_UVDrawIndexSampler, iuv, 0).a;
-
-			vec4 p = max(mix(colorSampleAlbe, colorSampleSpec, metallic), vec4(0.1));
-	    	
-			//color *= p;    	
-	    	
-	    }
    	    outColor = color;
 	}
 	else {
@@ -219,10 +203,6 @@ void OutputColor(vec4 color, bool mixAlbedo) {
 	if (iteration == progressiveFeedbackIndex) {
 		imageStore(progressiveResult, iuv, color);
 	}
-}
-
-void OutputColor(vec4 color) {
-	OutputColor(color, true);
 }
 
 void DebugRenderPasses() {

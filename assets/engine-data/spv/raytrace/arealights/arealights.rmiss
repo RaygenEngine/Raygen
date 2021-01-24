@@ -10,7 +10,7 @@ struct ShadowPayload {
 	bool hit;  
 };
 
-layout(location = 1) rayPayloadInEXT ShadowPayload prd;
+layout(location = 0) rayPayloadInEXT ShadowPayload prd;
 
 void main() {
 	prd.hit = false;

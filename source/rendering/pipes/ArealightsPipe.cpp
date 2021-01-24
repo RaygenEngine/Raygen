@@ -1,5 +1,6 @@
 #include "ArealightsPipe.h"
 
+#include "engine/console/ConsoleVariable.h"
 #include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
@@ -10,11 +11,14 @@
 namespace {
 struct PushConstant {
 	int32 frame;
+	int32 samples;
 	int32 quadlightCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
+
+ConsoleVariable<int32> cons_arealightSamples{ "r.arealights.samples", 1, "Set arealights sampler" };
 
 namespace vl {
 vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
@@ -80,6 +84,7 @@ void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 	PushConstant pc{
 		frame,
+		std::max(*cons_arealightSamples, 0),
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 

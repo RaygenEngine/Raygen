@@ -24,6 +24,7 @@ struct ShadowPayload
 layout(push_constant) uniform PC
 {
 	int frame;
+	int samples;
 	int quadlightCount;
 };
 
@@ -153,23 +154,20 @@ void main() {
 	   historyCalculated = 1.;
 	}
 
-	// pick 1 light
 	uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
 
-	int totalLights = quadlightCount;
-	float u = rand(seed);
-	int i = int(floor(u * totalLights)) % 4; // TODO: max 4 quadlights
-	float pdf_pickLight = 1.0 / float(totalLights); // pick one of the lights
+	
 
-	Quadlight ql = quadlights.light[i];
-
-	float val = 0;
-	for(int s = 0; s < 10; ++s) {
-
-		val += Quadlight_EstimateDirect(topLevelAs, ql, i, surface, seed);
+	vec4 val = vec4(0);
+	for(int s = 0; s < samples; ++s) {
+		for(int i = 0; i < quadlightCount; ++i) {
+			Quadlight ql = quadlights.light[i];
+			val[i] += Quadlight_EstimateDirect(topLevelAs, ql, i, surface, seed);
+		}
 	}
-	vec3 curColor = vec3(0);
-	curColor[i] = val / 10.f;
+
+	// WIP: paper
+	vec3 curColor = val.rgb / float(samples);
 
 	vec2 moments;
 	moments.r = luminance(curColor);
