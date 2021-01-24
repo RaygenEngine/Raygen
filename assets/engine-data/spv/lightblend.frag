@@ -97,7 +97,6 @@ vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 	}
 
 	return ql.color * ql.intensity * microfacetBRDF(surface);
-	
 }
 
 vec3 Quadlight_DiffuseContribution(Quadlight ql, Surface surface) 

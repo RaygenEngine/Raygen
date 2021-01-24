@@ -1,5 +1,5 @@
-#ifndef shadow_glsl
-#define shadow_glsl
+#ifndef radiance_glsl
+#define radiance_glsl
 
 #include "aabb.glsl"
 #include "intersection.glsl"
@@ -113,7 +113,7 @@ vec3 Spotlight_EstimateDirectSmooth(Spotlight sl, sampler2DShadow shadowmap, Sur
 
 vec3 Reflprobe_EstimateDirect(Reflprobe rp, sampler2D brdfLutSampler, samplerCube irradianceSampler, samplerCube prefilteredSampler, Surface surface)
 {	
-	if(distance(rp.position, surface.position) > rp.radius) {
+	if(surface.a < SPEC_THRESHOLD || distance(rp.position, surface.position) > rp.radius) {
 		return vec3(0);
 	}
 
