@@ -11,14 +11,6 @@
 
 #include "pathtrace/gltf-surface.glsl"
 
-struct ShadowPayload {
-	int id;
-	float dist;
-	bool hit; 
-};
-
-layout(location = 0) rayPayloadInEXT ShadowPayload prd;
-
 void main() {
 	if(surfaceIgnoreIntersectionTest()) {
 		ignoreIntersectionEXT;
