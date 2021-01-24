@@ -18,6 +18,7 @@ struct PushConstant {
 	int32 dirlightCount;
 	int32 irragridCount;
 	int32 quadlightCount;
+	int32 reflprobeCount;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -36,7 +37,8 @@ vk::UniquePipelineLayout MirrorPipe::MakePipelineLayout()
 			Layouts->bufferAndSamplersDescLayout.handle(), // spotlights
 			Layouts->bufferAndSamplersDescLayout.handle(), // dirlights
 			Layouts->bufferAndSamplersDescLayout.handle(), // irragrids
-			Layouts->singleStorageBuffer.handle()          // quadlights
+			Layouts->singleStorageBuffer.handle(),         // quadlights
+			Layouts->bufferAndSamplersDescLayout.handle(), // reflprobes
 		},
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
 }
@@ -90,6 +92,7 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 			sceneDesc.scene->tlas.sceneDesc.descSetDirlights[sceneDesc.frameIndex],
 			sceneDesc.scene->tlas.sceneDesc.descSetIrragrids[sceneDesc.frameIndex],
 			sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex],
+			sceneDesc.scene->tlas.sceneDesc.descSetReflprobes[sceneDesc.frameIndex],
 		},
 		nullptr);
 
@@ -100,6 +103,7 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
 		sceneDesc.scene->tlas.sceneDesc.irragridCount,
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+		sceneDesc.scene->tlas.sceneDesc.reflprobeCount,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,

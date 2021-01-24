@@ -29,7 +29,7 @@ layout (input_attachment_index = 7, set = 1, binding = 7) uniform subpassInput g
 layout(set = 2, binding = 0) uniform UBO_Pointlight { Pointlight pl; };
 layout(set = 3, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
-// WIP: this can't handle alpha mask - maybe it would be easier to put those in the raytraced lights (arealights currently) pipeline
+// WIP: this can't handle alpha mask
 float ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
 { 
 	// Initializes a ray query object but does not start traversal

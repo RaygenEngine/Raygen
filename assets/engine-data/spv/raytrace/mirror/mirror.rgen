@@ -33,6 +33,7 @@ layout(push_constant) uniform PC
 	int dirlightCount;
 	int irragridCount;
 	int quadlightCount;
+	int reflprobeCount;
 };
 
 layout(set = 1, binding = 0, rgba32f) uniform image2D image;
@@ -43,7 +44,7 @@ layout(location = 0) rayPayloadEXT hitPayload prd;
 void TraceRay() {
 	prd.radiance = vec3(0);
 
-    uint  rayFlags = gl_RayFlagsOpaqueEXT | gl_RayFlagsCullFrontFacingTrianglesEXT;
+    uint  rayFlags = gl_RayFlagsCullFrontFacingTrianglesEXT;
     float tMin     = 0.01;
     float tMax     = 10000.0;
 

@@ -42,8 +42,8 @@ vk::UniquePipeline ArealightsPipe::MakePipeline()
 	};
 
 	// all rt shaders here
-	auto& ptshader = getShader("engine-data/spv/raytrace/arealights/arlights.shader");
-	auto& ptQuadlightShader = getShader("engine-data/spv/raytrace/arealights/arlights-quadlight.shader");
+	auto& ptshader = getShader("engine-data/spv/raytrace/arealights/arealights.shader");
+	auto& ptQuadlightShader = getShader("engine-data/spv/raytrace/arealights/arealights-quadlight.shader");
 
 	auto get = [](auto shader) {
 		return *shader.Lock().module;

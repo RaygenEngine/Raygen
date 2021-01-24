@@ -29,9 +29,17 @@ layout(set = 8, binding = 0, std430) readonly buffer Quadlights { Quadlight ligh
 void main() {
 
 	int quadId = gl_InstanceCustomIndexEXT;
-
 	Quadlight ql = quadlights.light[nonuniformEXT(quadId)];
 
-	prd.radiance = ql.color * ql.intensity;
 	prd.done = true;
+
+	float LnoL = dot(ql.normal, -gl_WorldRayDirectionEXT);
+
+		// behind
+	if(LnoL < BIAS) {
+		prd.radiance = vec3(0);
+		return;
+	}
+
+	prd.radiance = ql.color * ql.intensity;
 }
