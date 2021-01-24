@@ -11,6 +11,7 @@
 
 #include "global-descset.glsl"
 #include "pathtrace/gltf-surface.glsl"
+#include "radiance-rt.glsl"
 #include "radiance.glsl"
 
 
@@ -58,15 +59,15 @@ void main() {
 	// DIRECT
 	{
 		// for each light
-//		for(int i = 0; i < pointlightCount; ++i) { // WIP:
-//			Pointlight pl = pointlights.light[i];
-//			radiance +=  Pointlight_EstimateDirect(topLevelAs, pl, surface);
-//		}
+		for(int i = 0; i < pointlightCount; ++i) {
+			Pointlight pl = pointlights.light[i];
+			radiance += Pointlight_EstimateDirect(topLevelAs, pl, surface);
+		}
 
-//		for(int i = 0; i < quadlightCount; ++i) { WIP: handle using the direct tricks and point light shadows
-//			Quadlight ql = quadlights.light[i];
-//			radiance += Quadlight_FastContribution(topLevelAs, ql, surface);
-//		}
+		for(int i = 0; i < quadlightCount; ++i) {
+			Quadlight ql = quadlights.light[i];
+			radiance += Quadlight_EstimateDirect(topLevelAs, ql, surface);
+		}
 
 		for(int i = 0; i < spotlightCount; ++i) {
 			Spotlight sl = spotlights.light[i];

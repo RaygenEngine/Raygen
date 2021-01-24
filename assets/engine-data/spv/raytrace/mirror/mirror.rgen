@@ -86,6 +86,10 @@ void main() {
 	}
 
 	prd.attenuation = vec3(sampleSpecularBRDF(surface));
+
+	vec3 ks = interfaceFresnel(surface);
+
+	prd.attenuation *= ks;
 	prd.attenuation *= absNdot(surface.o);
 
 	vec3 L = getOutgoingDir(surface);
