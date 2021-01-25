@@ -85,12 +85,12 @@ void main()
 	vec3 center  = (cam.view * vec4(surface.position, 1.0)).xyz;
 
 	Onb view = branchlessOnb(N.xyz);
+	
+	// TODO: get res from global desc set -> render scale also should be factored here
+	uint seed = tea16(uint(uv.y * 2160 * 4096 + uv.x * 4096), samples);
 
 	float occlusion = 0;
 	for(uint smpl = 0; smpl < samples; ++smpl){
-
-	    // TODO: get res from global desc set -> render scale also should be factored here
-		uint seed = tea16(uint(uv.y * 2160 * 4096 + uv.x * 4096), samples + smpl);
 		vec2 u = rand2(seed);
 		
 		//vec2 u = hammersley(smpl, samples); 
@@ -98,25 +98,8 @@ void main()
 		
 		// sample random direction, random magnitude (for screen space)
 		vec3 L = uniformSampleHemisphere(u) * m; 
-		// view space
-		L = normalize(outOnbSpace(view, L));
 
-		vec3 samplePos = center + radius * L;
-	
-		vec4 clipPos = cam.proj * vec4(samplePos, 1.0); // clip space
-		vec3 ndc = clipPos.xyz / clipPos.w; // NDC
-		ndc.y *= -1;
-		ndc.xyz = ndc.xyz * 0.5 + 0.5; // 0 to 1
-		float d = texture(g_DepthSampler, ndc.xy).r;
-		float sampleRealDepth = reconstructEyePosition(d, ndc.xy, cam.projInv).z;
-
-		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(center.z - sampleRealDepth));
-
-		bool screenSpace =  !(ndc.x < 0 || ndc.x > 1 || ndc.y < 0 || ndc.y > 1);
-		occlusion += screenSpace 
-		
-		? (sampleRealDepth >= samplePos.z + bias  ? strength : 0.0) * rangeCheck
-		: VisibilityOfRay(surface.position, (cam.viewInv * vec4(normalize(L), 0)).xyz, bias, radius);
+		occlusion += VisibilityOfRay(surface.position, normalize(outOnbSpace(surface.basis, L)), bias, radius); // WIP: radius
 	}
 
 	// object occlusion

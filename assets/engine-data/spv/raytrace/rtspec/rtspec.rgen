@@ -231,7 +231,7 @@ ReprojectionData GetReprojection(vec2 uv) {
 	const vec2 motion = motionSample.xy;
 	const float expectedDepth = motionSample.z;
 
-	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
+	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) + vec2(motion * gl_LaunchSizeEXT.xy);
 
 
 	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_LaunchIDEXT.xy), 0);
