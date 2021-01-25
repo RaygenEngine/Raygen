@@ -64,7 +64,7 @@ vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 	// we need to rotate the reflection ray to force intersection with quad's plane
 	float t;
 	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
-		return vec3(0);
+		//return vec3(0);
 		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
 		vec3 pointOnPlane = ql.center + perp_r_n * INF; // WIP: something big
 		L = normalize(pointOnPlane - surface.position);
@@ -92,9 +92,9 @@ vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 
 	float dist = distance(p, surface.position);
 
-	if(!VisibilityOfRay(surface.position, L, 0.001, dist)) {
-		return vec3(0);
-	}
+	//if(!VisibilityOfRay(surface.position, L, 0.001, dist)) {
+	//	return vec3(0);
+	//}
 
 	return ql.color * ql.intensity * microfacetBRDF(surface);
 }
@@ -102,6 +102,26 @@ vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 vec3 Quadlight_DiffuseContribution(Quadlight ql, Surface surface) 
 {
 	return ql.color * ql.intensity * diffuseBRDF(surface);
+}
+
+float AmbientInfoBlurredOcclusion()
+{
+	float Offsets[4] = float[]( -1.5, -0.5, 0.5, 1.5 );
+
+    float color = texture(aoSampler, uv).a;
+
+    for (int i = 0 ; i < 4 ; i++) {
+        for (int j = 0 ; j < 4 ; j++) {
+            vec2 tc = uv;
+            tc.x = uv.x + Offsets[j] / textureSize(aoSampler, 0).x;
+            tc.y = uv.y + Offsets[i] / textureSize(aoSampler, 0).y;
+            color += texture(aoSampler, tc).a;
+        }
+    }
+
+    color /= 16.0;
+
+    return color;
 }
 
 void main()
@@ -136,24 +156,24 @@ void main()
 
     vec3 arealights = vec3(0);
 
-	// WIP: max 4 quadlights atm
+	// WIP: max 3 quadlights atm
     for (int i = 0; i < quadlightCount; ++i) {
-		if(i > 3) break;
+		if(i > 2) break;
 		Quadlight ql = quadlights.light[i];
 
 		vec3 L = normalize(ql.center - surface.position);
 		addOutgoingDir(surface, L);
 
-		arealights += ql.color * ql.intensity * explicitBRDF(surface) * arealightShadowing[i];
+		//arealights += ql.color * ql.intensity * explicitBRDF(surface) * arealightShadowing[i];
 
-		//vec3 ks = interfaceFresnel(surface);
-		//vec3 kd = (1.0 - ks) * surface.opacity;
+		vec3 ks = interfaceFresnel(surface);
+		vec3 kd = (1.0 - ks) * surface.opacity;
 
-		//arealights += kd * Quadlight_DiffuseContribution(ql, surface) * arealightShadowing[i];
-		//arealights += ks * Quadlight_SpecularContribution(ql, surface) * arealightShadowing[i];
+		arealights += kd * Quadlight_DiffuseContribution(ql, surface) * arealightShadowing[i];
+		arealights += ks * Quadlight_SpecularContribution(ql, surface) * arealightShadowing[i];
     }
 
-	vec3 final =  directLight + (indirectLight * ambientInfo.a) + surface.emissive + mirror + arealights;
+	vec3 final =  directLight + (indirectLight *  AmbientInfoBlurredOcclusion()) + surface.emissive + mirror + arealights;
 
 	outColor = vec4(final, 1.0);
 }

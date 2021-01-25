@@ -78,9 +78,6 @@ bool IsReprojValid(ivec2 coord, float centerDrawId)
 	return true;
 }
 
-
-void DebugRenderPasses();
-
 void OutputColor(vec4 color);
 
 bool IsInside(ivec2 p, ivec2 screenSize) {
@@ -93,8 +90,6 @@ struct PixelData {
 	float depth;
 	float luminance;
 };
-
-
 
 PixelData LoadPixelData(ivec2 iuv, ivec2 screenSize) {
 	PixelData data;
@@ -182,9 +177,7 @@ void main() {
     }
 	
 	sumIndirect = vec4(sumIndirect / vec4(sumWIndirect.xxx, sumWIndirect * sumWIndirect));
-
 	OutputColor(sumIndirect);
-	//outColor = vec4(vec3(phiLIndirect) / 100., 1.f);
 }                               
 
 //
@@ -202,25 +195,5 @@ void OutputColor(vec4 color) {
 
 	if (iteration == progressiveFeedbackIndex) {
 		imageStore(progressiveResult, iuv, color);
-	}
-}
-
-void DebugRenderPasses() {
-	ivec2 iuv = ivec2(gl_FragCoord.xy);
-	vec3 color = imageLoad(svgfInput, iuv).xyz;
-
-	if ((iteration * 10) < iuv.x + 5
-	 	&& ((iteration+1) * 10) > iuv.x ) {
-			color += 
-				iteration % 2 == 0 ? 
-					vec3(0.1, 0, 0) : vec3(0, 0.1, 0);
-
-	}
-
-	if (iteration == totalIter - 1) {
-	    outColor = vec4(color, 1.f); 
-	}
-	else {
-		imageStore(svgfOutput, iuv, vec4(color, 1.));
 	}
 }

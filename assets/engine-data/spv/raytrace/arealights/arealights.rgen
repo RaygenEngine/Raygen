@@ -102,7 +102,7 @@ float Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql
 	Quadlight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
 
 	if(pdf_light >= BIAS){
-		return absNdot(surface.o) / pdf_light;  // this is basically the G factor (costhetai * costhetao * V / dist ^ 2)
+		return absNdot(surface.o) / pdf_light; 
 	}
 
 	return 0.0;
@@ -116,12 +116,8 @@ struct ReprojectionData {
 
 ReprojectionData GetReprojection(vec2 uv);
 
+
 void main() {
-
-	if(quadlightCount == 0) {
-		return;
-	}
-
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
 
 	float depth = texture(g_DepthSampler, uv).r;
@@ -142,21 +138,7 @@ void main() {
 		uv
 	);
 
-	ReprojectionData reproj = GetReprojection(uv);
-	float historyLength = reproj.historyLength;
-
-	vec3 accumColor = vec3(0);
-	uint actualSamples = 1;
-
-	float historyCalculated = 1.;
-	if (historyLength < 2) {
-	   actualSamples = 1;
-	   historyCalculated = 1.;
-	}
-
 	uint seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame);
-
-	
 
 	vec4 val = vec4(0);
 	for(int s = 0; s < samples; ++s) {
@@ -166,39 +148,40 @@ void main() {
 		}
 	}
 
-	// WIP: paper
-	vec3 curColor = val.rgb / float(samples);
+	vec3 color = val.rgb / float(samples);
+
+
+	ReprojectionData reproj = GetReprojection(uv);
+	bool success = reproj.historyLength > 0;
+	float historyLength = min(32.0f, success ? reproj.historyLength + 1.0f : 1.0f);
 
 	vec2 moments;
-	moments.r = luminance(curColor);
+	moments.r = luminance(color);
 	moments.g = moments.r * moments.r;
 
 	// Mix reprojection
-	{
-		#define minColorAlpha 0.05
-		#define minMomentsAlpha 0.05
+	
+	#define minColorAlpha 0.05
+	#define minMomentsAlpha 0.05
 
-		const float colorAlpha = max(1. / (historyLength + 1.), minColorAlpha);
-		const float momentsAlpha = max(1. / (historyLength + 1.), minMomentsAlpha);
+	const float colorAlpha = success ? max(1.0 / historyLength, minColorAlpha) : 1.0;
+	const float momentsAlpha = success ? max(1.0 / historyLength, minMomentsAlpha) : 1.0;
 
-		moments = mix(reproj.moments, moments, momentsAlpha);
-		curColor = mix(reproj.color, curColor, colorAlpha);
-	}
+	moments = mix(reproj.moments, moments, momentsAlpha);
+	color = mix(reproj.color, color, colorAlpha);
+	
 
 	// from SVGF paper:
 	float variance = max(0., moments.g - moments.r * moments.r);
 
-	variance *= 16.f / max(historyLength + historyCalculated, 32.f);
-
-	if (historyLength < 10) {
+	if (historyLength < 2) {
 		variance += 0.2;
-
 	}
 
-	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, variance));
+	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(color, variance));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, variance));
 
-	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, depth, historyLength + historyCalculated));
+	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, depth, historyLength));
 }
 
 //
@@ -207,7 +190,8 @@ void main() {
 
 bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
 {
-	if (coord.x < 0 || coord.y < 0 || coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
+	if (coord.x < 0 || coord.y < 0 || 
+	    coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
 		return false;
 	}
 
@@ -215,8 +199,6 @@ bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex,
 	if (abs(expectedPrevDepth - momentsSample.z) > 5e-3) {
 		return false;
 	}
-
-	
 
 	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
 	if (abs(thisUvDrawIndex.z - centerUvDrawIndex.z) > 0.5) {
@@ -288,8 +270,7 @@ ReprojectionData GetReprojection(vec2 uv) {
 	const vec2 motion = motionSample.xy;
 	const float expectedDepth = motionSample.z;
 
-	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) - vec2(motion * gl_LaunchSizeEXT.xy);
-
+	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) + vec2(motion * gl_LaunchSizeEXT.xy) ;
 
 	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_LaunchIDEXT.xy), 0);
 

@@ -7,10 +7,10 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-ConsoleVariable<float> console_aoBias{ "ao.bias", 0.025f, "Set ao bias" };
+ConsoleVariable<float> console_aoBias{ "ao.bias", 0.001f, "Set ao bias" };
 ConsoleVariable<float> console_aoStrength{ "ao.strength", 1.0f, "Set ao strength" };
-ConsoleVariable<float> console_aoRadius{ "ao.radius", .1f, "Set ao radius" };
-ConsoleVariable<int32> console_aoSamples{ "ao.samples", 10, "Set ao samples" };
+ConsoleVariable<float> console_aoRadius{ "ao.radius", .2f, "Set ao radius" };
+ConsoleVariable<int32> console_aoSamples{ "ao.samples", 4, "Set ao samples" };
 
 namespace {
 struct PushConstant {

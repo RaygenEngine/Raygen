@@ -70,6 +70,10 @@ vk::UniquePipeline ArealightsPipe::MakePipeline()
 void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
 	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame) const
 {
+	if (!sceneDesc.scene->tlas.sceneDesc.quadlightCount) {
+		return;
+	}
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u,
