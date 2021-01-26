@@ -12,7 +12,7 @@ RBuffer::RBuffer(vk::DeviceSize inSize, vk::BufferUsageFlags usage, vk::MemoryPr
 		std::max(inSize, 1llu)) // Fixes many allocation of 0 errors. Better if checks can usually workaround these
 								// calls but in general we just do something that will not crash and spit out a warning
 {
-	CLOG_WARN(inSize == 0, "RBuffer requested with size 0 bytes. A buffer of size 1 byte will be given instead.");
+	CLOG_DEBUG(inSize == 0, "RBuffer requested with size 0 bytes. A buffer of size 1 byte will be given instead.");
 
 	vk::BufferCreateInfo bufferInfo{};
 	bufferInfo
