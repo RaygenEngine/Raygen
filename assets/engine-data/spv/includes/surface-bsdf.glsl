@@ -51,7 +51,7 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
     float k = 1.0 - eta * eta * (1.0 - LoH * LoH);
 	
 	bool isRefractedPath = false;
-	isSpecialPath = false;
+	isSpecialPath = surface.a < SPEC_THRESHOLD;
     bsdf = vec3(1);
     pdf = 1.0;
 
@@ -105,7 +105,6 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 		// specular
 		if(surface.a < SPEC_THRESHOLD){
 			bsdf *= sampleSpecularBRDF(surface);
-			isSpecialPath = true;
 		}
 
 		// glossy
