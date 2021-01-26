@@ -15,7 +15,7 @@ public:
 	fs::path fileDialogPath{ "." };
 	fs::path templateScene{ "engine-data/default.json" };
 	// If left empty, template Scene gets used as primary scene
-	fs::path localScene{ "local.json" };
+	fs::path localScene{};
 
 	std::string windowTitle{ "Raygen" };
 
