@@ -69,7 +69,7 @@ RayCastResult PhysicsIntersection::RayCast(glm::vec3 start, glm::vec3 end) const
 RayCastEntityHit PhysicsIntersection::RayCastChitSelection(glm::vec3 start, glm::vec3 end) const
 {
 	RayCastEntityHit result;
-	TIMER_SCOPE("RayCast");
+	// TIMER_SCOPE("RayCast");
 	auto originalHits = tree->RayCastExactHit(start, end);
 
 	result.distance = std::numeric_limits<float>::max();

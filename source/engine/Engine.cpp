@@ -20,9 +20,24 @@ Engine_::~Engine_()
 	// Destruction of objects is done at Deinit
 }
 
+static void FixStartupPath()
+{
+	auto path = fs::current_path();
+
+	auto absStr = fs::absolute(path).generic_string();
+
+	size_t index = absStr.rfind("/bin/");
+	if (index != std::string::npos) {
+		fs::current_path(absStr.substr(0, index));
+	}
+}
+
 void Engine_::InitEngine(App_* app)
 {
 	m_initToFrameTimer.Start();
+
+	FixStartupPath();
+
 
 	fs::current_path(fs::current_path() / app->workingDirPath);
 
