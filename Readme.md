@@ -1,5 +1,7 @@
 # Raygen
 
+![logo](https://repository-images.githubusercontent.com/203851357/02671300-60c7-11eb-97f7-587bcf0bc68b "Logo")
+
 Raygen is a game engine focused on exploring real-time applications of ray tracing. Developed by two colleagues with a common interest and enthusiasm in the worlds of video games and software development. The engine is written in C++20 and uses the Vulkan API. 
 
 ## Requirements
