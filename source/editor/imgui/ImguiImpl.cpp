@@ -362,6 +362,10 @@ void ImguiImpl::InitContext()
 	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
 	ImGui_ImplGlfw_InitForVulkan(Platform::GetMainHandle(), true);
+
+	if (!fs::exists("EditorImgui.ini")) {
+		ImGui::LoadIniSettingsFromDisk("engine-data/DefaultEditorImgui.ini");
+	}
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
 	InitVulkan();
 }

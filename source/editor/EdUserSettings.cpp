@@ -9,7 +9,14 @@ UserSettings UserSettings::Load(fs::path filename)
 	UserSettings inst{};
 	inst.loadedFrom = filename;
 
-	refltools::FromJsonFile(&inst, filename);
+	if (fs::exists(filename)) {
+		refltools::FromJsonFile(&inst, filename);
+	}
+	else {
+		inst.openWindows = { "Outliner", "Asset Browser", "Property Editor", "Console" };
+		inst.MarkDirty();
+	}
+
 
 	return inst;
 }

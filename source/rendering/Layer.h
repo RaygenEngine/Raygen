@@ -24,6 +24,8 @@ public:
 
 	void ResetMainScene();
 
+	BoolFlag swapRenderer;
+
 private:
 	InFlightResources<vk::UniqueFence> m_frameFence;
 	InFlightResources<vk::UniqueSemaphore> m_renderFinishedSem;
