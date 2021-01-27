@@ -10,11 +10,12 @@ Raygen is a game engine focused on exploring real-time applications of ray traci
 ## Getting started
 
 ```
- git clone --recursive https://github.com/Renoras/Raygen
- cd Raygen
- mkdir build
- cd build
- cmake ..
+git clone --recursive https://github.com/Renoras/Raygen
+cd Raygen
+mkdir build
+cd build
+cmake ..
+cmake --build . --target Raygen-App --config Release
  ```
 
 If you are using the .sln to build remember to change the startup project to Raygen.
