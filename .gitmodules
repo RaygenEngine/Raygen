@@ -8,7 +8,7 @@
 	branch = v1.x
 [submodule "dependencies/imgui"]
 	path = dependencies/imgui
-	url = https://github.com/raygengroup/imgui
+	url = https://github.com/RaygenEngine/imgui
 	branch = master
 [submodule "dependencies/magic_enum"]
 	path = dependencies/magic_enum
@@ -28,11 +28,11 @@
 	branch = master
 [submodule "assets/gltf-samples"]
 	path = assets/gltf-samples
-	url = https://github.com/katagis/gltf-sample-models
+	url = https://github.com/RaygenEngine/gltf-sample-models
 	branch = master
 [submodule "dependencies/glfw"]
 	path = dependencies/glfw
-	url = https://github.com/raygengroup/glfw
+	url = https://github.com/RaygenEngine/glfw
 	branch = master
 [submodule "dependencies/catch2"]
 	path = dependencies/catch2
@@ -43,16 +43,16 @@
 	url = https://github.com/uscilab/cereal
 [submodule "dependencies/nativefiledialog"]
 	path = dependencies/nativefiledialog
-	url = https://github.com/raygengroup/nativefiledialog
+	url = https://github.com/RaygenEngine/nativefiledialog
 [submodule "dependencies/spirv-cross"]
 	path = dependencies/spirv-cross
 	url = https://github.com/khronosgroup/spirv-cross
 [submodule "dependencies/imguicolortextedit"]
 	path = dependencies/imguicolortextedit
-	url = https://github.com/RaygenGroup/ImGuiColorTextEdit
+	url = https://github.com/RaygenEngine/ImGuiColorTextEdit
 [submodule "dependencies/entt"]
 	path = dependencies/entt
 	url = https://github.com/skypjack/entt
 [submodule "dependencies/glslang"]
 	path = dependencies/glslang
-	url = https://github.com/raygengroup/glslang
+	url = https://github.com/RaygenEngine/glslang
