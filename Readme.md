@@ -22,26 +22,6 @@ cmake --build . --target Raygen-App --config Release
 
 If you are using the .sln to build remember to change the startup project to Raygen.
 
-## Dependencies (included as submodules)
-
-_Links to original repos, even if we use our own slightly modified forks._
-
-* [catch2](https://github.com/catchorg/Catch2)
-* [cereal](https://github.com/uscilab/cereal)
-* [entt](https://github.com/skypjack/entt)
-* [glfw](https://github.com/glfw/glfw)
-* [glm](https://github.com/g-truc/glm)
-* [glslang](https://github.com/KhronosGroup/glslang)
-* [imgui](https://github.com/ocornut/imgui)
-* [imguicolortextedit](https://github.com/BalazsJako/ImGuiColorTextEdit)
-* [magic_enum ](https://github.com/Neargye/magic_enum)
-* [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
-* [nlohmann](https://github.com/nlohmann/json)
-* [spdlog](https://github.com/gabime/spdlog)
-* [spirv-cross](https://github.com/khronosgroup/spirv-cross)
-* [stb](https://github.com/nothings/stb)
-* [tinygltf](https://github.com/syoyo/tinygltf)
-
 ## Features Included
 
 * Cpu and Gpu asset management (importing, caching, exporting to engine assets)
@@ -91,6 +71,27 @@ _Links to original repos, even if we use our own slightly modified forks._
 ![screenshot](./doc/sponzaprobes.jpg "Probes in scene")
 ![screenshot](./doc/hybsponza.jpg "Hybrid sponza") 
 
+
+## Dependencies (included as submodules)
+
+_Links to original repos, even if we use our own slightly modified forks._
+
+* [Vulkan SDK](https://www.khronos.org/vulkan/) (Installation detected through cmake)
+* [catch2](https://github.com/catchorg/Catch2)
+* [cereal](https://github.com/uscilab/cereal)
+* [entt](https://github.com/skypjack/entt)
+* [glfw](https://github.com/glfw/glfw)
+* [glm](https://github.com/g-truc/glm)
+* [glslang](https://github.com/KhronosGroup/glslang)
+* [imgui](https://github.com/ocornut/imgui)
+* [imguicolortextedit](https://github.com/BalazsJako/ImGuiColorTextEdit)
+* [magic_enum ](https://github.com/Neargye/magic_enum)
+* [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
+* [nlohmann](https://github.com/nlohmann/json)
+* [spdlog](https://github.com/gabime/spdlog)
+* [spirv-cross](https://github.com/khronosgroup/spirv-cross)
+* [stb](https://github.com/nothings/stb)
+* [tinygltf](https://github.com/syoyo/tinygltf)
 
 ## Authors
 
