@@ -55,7 +55,7 @@ std::string_view trimLine(std::string_view s)
 
 BasePodHandle MaterialArchetypeImporter::Import(const fs::path& path)
 {
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<MaterialArchetype>(
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<MaterialArchetype>(
 		path.generic_string(), "ARCH " + path.filename().replace_extension().generic_string(), false, true);
 
 

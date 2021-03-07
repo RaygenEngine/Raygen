@@ -1,9 +1,14 @@
 #pragma once
+#include "assets/AssetImporterManager.h"
 #include "assets/AssetRegistry.h"
 #include "assets/ImporterRegistry.h"
 #include "assets/UriLibrary.h"
 
-inline class AssetImporterManager_ {
+#include <nlohmann/json.hpp>
+
+inline AssetImporterManager_* AssetImporterManager{};
+
+class AssetImporterManager_ {
 	friend class AssetManager_;
 	friend class AssetRegistry;
 
@@ -178,7 +183,7 @@ private:
 	[[nodiscard]] std::pair<PodHandle<PodType>, PodType*> CreateEntryFromImportImpl(
 		const uri::Uri& importPath, const uri::Uri& name, bool transient, bool reimportOnLoad, bool exportOnSave)
 	{
-		auto& [entry, ptr] = AssetRegistry::CreateEntry<PodType>(
+		auto&& [entry, ptr] = AssetRegistry::CreateEntry<PodType>(
 			transient ? AssetRegistry::SuggestPath(name) : GeneratePath(importPath, name), transient, importPath,
 			reimportOnLoad, exportOnSave);
 
@@ -189,4 +194,4 @@ private:
 
 		return std::make_pair(handle, ptr);
 	}
-} * AssetImporterManager{};
+};

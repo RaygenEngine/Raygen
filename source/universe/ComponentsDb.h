@@ -100,7 +100,7 @@ public:
 
 			clearFunctions.emplace_back([](entt::registry& r) {
 				if constexpr (CCreateDestoryComp<T>) {
-					for (auto& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
+					for (auto&& [ent, comp] : r.view<T, typename T::Destroy>().each()) {
 						r.remove<T>(ent);
 					}
 					r.clear<typename T::Create, typename T::Destroy>();

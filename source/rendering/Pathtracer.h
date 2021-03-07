@@ -19,7 +19,7 @@ inline class Pathtracer_ : public RendererBase {
 public:
 	void ResizeBuffers(uint32 width, uint32 height) override;
 
-	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass) override;
+	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) override;
 
 	InFlightResources<vk::ImageView> GetOutputViews() const override;
 

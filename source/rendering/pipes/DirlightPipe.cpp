@@ -51,7 +51,7 @@ vk::UniquePipeline DirlightPipe::MakePipeline()
 void DirlightPipe::Draw(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
-	auto& pipeLayout = StaticPipes::GetLayout<DirlightPipe>();
+	auto&& pipeLayout = StaticPipes::GetLayout<DirlightPipe>();
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 

@@ -9,7 +9,7 @@ template<CScriptlikeComp T>
 void ExecuteBeginPlayCmds(entt::registry& reg)
 {
 	auto view = reg.view<T>();
-	for (auto& [ent, sc] : view.each()) {
+	for (auto&& [ent, sc] : view.each()) {
 		sc.BeginPlay();
 	}
 }
@@ -18,7 +18,7 @@ template<CScriptlikeComp T>
 void ExecuteEndPlayCmds(entt::registry& reg)
 {
 	auto view = reg.view<T>();
-	for (auto& [ent, sc] : view.each()) {
+	for (auto&& [ent, sc] : view.each()) {
 		sc.EndPlay();
 	}
 }
@@ -27,7 +27,7 @@ template<componentdetail::CTickableComp T>
 void ExecuteTickCmds(entt::registry& reg, float deltaSeconds)
 {
 	auto view = reg.view<T>();
-	for (auto& [ent, sc] : view.each()) {
+	for (auto&& [ent, sc] : view.each()) {
 		sc.Tick(deltaSeconds);
 	}
 }

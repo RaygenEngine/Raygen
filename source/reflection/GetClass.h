@@ -3,8 +3,6 @@
 #include "reflection/PodReflection.h"
 #include "reflection/ReflClass.h"
 
-class Node;
-
 namespace refl {
 namespace detail {
 	template<typename Visitor, typename... PodTs>
@@ -44,7 +42,7 @@ namespace detail {
 	template<typename T>
 	constexpr bool SupportsGetClassF()
 	{
-		return std::is_base_of_v<Node, T> || std::is_base_of_v<AssetPod, T> || Reflected<T>;
+		return std::is_base_of_v<AssetPod, T> || Reflected<T>;
 	}
 } // namespace detail
 
@@ -52,11 +50,7 @@ template<typename T>
 const ReflClass& GetClass(const T* obj)
 {
 	static_assert(detail::SupportsGetClassF<T>(), "Cannot get class from this object type.");
-	if constexpr (std::is_base_of_v<Node, T>) {
-		// Virtual call to get the lowest reflector even if T == Node
-		return obj->GetClass();
-	}
-	else if constexpr (std::is_base_of_v<AssetPod, T>) {
+	if constexpr (std::is_base_of_v<AssetPod, T>) {
 		if constexpr (std::is_same_v<AssetPod, T>) {
 			const ReflClass* ptr;
 			auto l = [&ptr](auto pod) {

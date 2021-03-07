@@ -58,24 +58,6 @@ void ComponentWindows::ToggleUnique(mti::Hash hash)
 	OpenUnique(hash);
 }
 
-template<typename DrawFunc>
-void ComponentWindows::InternalDraw(DrawFunc&& func)
-{
-	m_openUniqueWindows.BeginSafeRegion();
-	for (auto& [hash, window] : m_openUniqueWindows.map) {
-		if (!func(window)) {
-			CloseUnique(hash);
-		}
-	}
-	m_openUniqueWindows.EndSafeRegion();
-
-	m_multiWindows.BeginSafeRegion();
-	for (auto& window : m_multiWindows.vec) {
-		func(window.get());
-	}
-	m_multiWindows.EndSafeRegion();
-}
-
 void ComponentWindows::Draw()
 {
 	m_openUniqueWindows.BeginSafeRegion();

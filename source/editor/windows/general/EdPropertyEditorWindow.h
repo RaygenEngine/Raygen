@@ -4,7 +4,6 @@
 #include "editor/windows/EdWindow.h"
 #include "reflection/Property.h"
 
-class Node;
 
 namespace ed {
 
@@ -41,8 +40,6 @@ public:
 	bool m_localMode{ true };
 	bool m_displayMatrix{ false };
 	bool m_lockedScale{ false };
-
-	Node* m_prevNode{ nullptr };
 
 	bool m_lookAtMode{ false };
 

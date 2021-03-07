@@ -23,7 +23,7 @@ std::string StringFromFile(const std::string& path)
 
 BasePodHandle ShaderStageImporter::Import(const fs::path& path)
 {
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<ShaderStage>(path.generic_string(),
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<ShaderStage>(path.generic_string(),
 		path.filename().replace_extension().generic_string() + "_" + path.extension().string().substr(1), true, true);
 
 	CompilePod(pod, path.generic_string());
@@ -66,7 +66,7 @@ void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 
 BasePodHandle ShaderImporter::Import(const fs::path& path)
 {
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<Shader>(
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<Shader>(
 		path.generic_string(), path.filename().replace_extension().string());
 
 	fs::path tmpPath = path;
@@ -97,7 +97,7 @@ BasePodHandle ShaderImporter::Import(const fs::path& path)
 
 BasePodHandle ShaderHeaderImporter::Import(const fs::path& path)
 {
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<ShaderHeader>(path.generic_string(),
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<ShaderHeader>(path.generic_string(),
 		path.filename().replace_extension().generic_string() + "_" + path.extension().string().substr(1), true, true);
 
 	pod->code = str::rtrim(StringFromFile(path.generic_string()), " \n\r") + "\n";

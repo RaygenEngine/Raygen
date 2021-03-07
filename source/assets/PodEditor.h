@@ -85,6 +85,13 @@ public:
 		optionalEditor.MarkEdit();
 	}
 
+	PodEditor(PodHandle<PodType>&& handle)
+		: optionalEditor(handle)
+	{
+		pod = optionalEditor.BeginOptionalEditRegion();
+		optionalEditor.MarkEdit();
+	}
+
 	// Return the editable pointer of the pod. Lock is already done during construction
 	[[deprecated, nodiscard]] PodType* GetEditablePtr() const { return pod; }
 	[[nodiscard]] AssetUpdateInfo& GetUpdateInfoRef() { return optionalEditor.info; }

@@ -465,7 +465,7 @@ struct ToStringVisitor {
 	void operator()(std::vector<T>& ref, const Property& p)
 	{
 		os << p.GetName() << ": ";
-		for (auto& r : ref) {
+		for (auto&& r : ref) {
 			os << "\t" << r << ",\n";
 		}
 	}

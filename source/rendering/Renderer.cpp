@@ -143,7 +143,7 @@ void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDe
 		cmdBuffer, vk::SubpassContents::eInline, [&]() { StaticPipes::Get<AmbientPipe>().Draw(cmdBuffer, sceneDesc); });
 }
 
-void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
+void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
 {
 	PROFILE_SCOPE(Renderer);
 

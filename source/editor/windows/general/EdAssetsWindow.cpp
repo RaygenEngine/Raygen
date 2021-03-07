@@ -462,7 +462,7 @@ void AssetsWindow::RunEmptySpaceContext()
 
 			if (make) {
 				podtools::VisitPodHash(m_newAssetTypeId.hash(), [&]<typename PodType>() {
-					auto& [entry, _] = AssetRegistry::CreateEntry<PodType>(m_currentPath + m_newAssetNameString);
+					auto&& [entry, _] = AssetRegistry::CreateEntry<PodType>(m_currentPath + m_newAssetNameString);
 					m_selectedEntry = entry;
 				});
 				ReloadEntries();

@@ -10,7 +10,7 @@ namespace gltfutl {
 GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::Scene& scene)
 	: m_cache(cache)
 {
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<Mesh>(
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<Mesh>(
 		m_cache.gltfFilePath, std::string(uri::GetFilenameNoExt(m_cache.gltfFilePath)));
 
 	m_loadedPod = handle;
@@ -83,7 +83,7 @@ GltfSceneToStaticMeshLoader::GltfSceneToStaticMeshLoader(GltfCache& cache, tg::S
 						"the total materials included.");
 
 					GeometrySlot& slot = pod->geometrySlots[materialIndex];
-					auto& [lastBegin, lastSize]
+					auto&& [lastBegin, lastSize]
 						= LoadBasicDataIntoGeometrySlot<GeometrySlot, Vertex>(slot, *m_cache.gltfData, prim);
 
 					// Bake transform
