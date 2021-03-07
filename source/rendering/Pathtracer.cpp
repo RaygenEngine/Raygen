@@ -33,7 +33,7 @@ InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
 	return views;
 }
 
-void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc, OutputPassBase& outputPass)
+void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
 {
 	// PERF: only if camera is dirty
 	m_progressivePathtrace.UpdateViewer(sceneDesc.viewer.ubo.viewInv, sceneDesc.viewer.ubo.projInv, 0.0);

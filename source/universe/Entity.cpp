@@ -29,7 +29,9 @@ void Entity::Destroy()
 		current = next;
 	}
 
-	registry->get_or_emplace<CDestroyFlag>(entity);
+	if (!registry->has<CDestroyFlag>(entity)) {
+		registry->emplace<CDestroyFlag>(entity);
+	}
 }
 
 

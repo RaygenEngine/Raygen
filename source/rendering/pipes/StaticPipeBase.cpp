@@ -73,7 +73,7 @@ vk::UniquePipeline StaticRaytracingPipeBase::MakeRtPipeline(vk::RayTracingPipeli
 	uint32 sbtSize = groupCount * baseAlignment;
 
 	std::vector<byte> shaderHandleStorage(sbtSize);
-	Device->getRayTracingShaderGroupHandlesKHR(
+	(void)Device->getRayTracingShaderGroupHandlesKHR(
 		pipeline.value.get(), 0, groupCount, sbtSize, shaderHandleStorage.data());
 	// Write the handles in the SBT
 	m_rtSBTBuffer = RBuffer{ sbtSize,
@@ -110,6 +110,6 @@ vk::UniquePipeline StaticRaytracingPipeBase::MakeRtPipeline(vk::RayTracingPipeli
 	}
 	Device->unmapMemory(mem);
 
-	return pipeline;
+	return std::move(pipeline.value);
 }
 } // namespace vl

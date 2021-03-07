@@ -172,7 +172,7 @@ namespace {
 		auto icon = ComponentsDb::GetType<T>()->clPtr->GetIcon();
 		auto uv = ImguiImpl::GetIconUV(U8(icon));
 
-		for (auto& [ent, comp, bc] : Universe::MainWorld->GetView<T, BasicComponent>().each()) {
+		for (auto&& [ent, comp, bc] : Universe::MainWorld->GetView<T, BasicComponent>().each()) {
 
 			PushConstant pc{
 				sceneDesc.viewer.ubo.viewProj,
@@ -203,7 +203,7 @@ namespace {
 		auto uv = ImguiImpl::GetIconUV(U8(icon));
 
 
-		for (auto& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
+		for (auto&& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
 
 			if (ig.hideBillboards) {
 				continue;

@@ -119,8 +119,8 @@ void Layer_::DrawFrame()
 	{
 		PROFILE_SCOPE(Renderer);
 
-		Device->waitForFences({ *m_frameFence[m_currentFrame] }, true, UINT64_MAX);
-		Device->resetFences({ *m_frameFence[m_currentFrame] });
+		(void)Device->waitForFences({ *m_frameFence[m_currentFrame] }, true, UINT64_MAX);
+		(void)Device->resetFences({ *m_frameFence[m_currentFrame] });
 
 		mainScene->UploadDirty(m_currentFrame);
 		mainScene->forceUpdateAccel = false;
@@ -129,7 +129,7 @@ void Layer_::DrawFrame()
 	uint32 imageIndex;
 
 	// TODO: could this be a swapOut func?
-	Device->acquireNextImageKHR(
+	(void)Device->acquireNextImageKHR(
 		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
 
 	swapOutput->SetOutputImageIndex(imageIndex);
@@ -163,7 +163,7 @@ void Layer_::DrawFrame()
 		.setSwapchains(swapchain)
 		.setImageIndices(imageIndex);
 
-	CmdPoolManager->presentQueue.presentKHR(presentInfo);
+	(void)CmdPoolManager->presentQueue.presentKHR(presentInfo);
 }
 
 void Layer_::ResetMainScene()

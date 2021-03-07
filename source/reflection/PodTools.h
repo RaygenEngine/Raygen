@@ -63,7 +63,7 @@ namespace detail {
 
 // Visits operator() of Visitor v with the proper pod type after casting it.
 template<typename Visitor>
-void VisitPod(AssetPod* pod, Visitor& v)
+void VisitPod(AssetPod* pod, Visitor&& v)
 {
 	detail::PodVisit_Impl<Visitor, ENGINE_POD_TYPES>(pod, v);
 }
@@ -78,7 +78,7 @@ void VisitPodType(TypeId type, Visitor& v)
 
 // Visits operator() of Visitor v with the proper type
 template<typename Visitor>
-void VisitPodHash(mti::Hash hash, Visitor& v)
+void VisitPodHash(mti::Hash hash, Visitor&& v)
 {
 	detail::PodVisitHash_Impl<Visitor, ENGINE_POD_TYPES>(hash, v);
 }
@@ -94,7 +94,7 @@ namespace detail {
 
 // Visits operator() of visitor once with each pod type
 template<typename Visitor>
-void ForEachPodType(Visitor& visitor)
+void ForEachPodType(Visitor&& visitor)
 {
 	detail::VisitPerType_Impl<Visitor, ENGINE_POD_TYPES>(visitor);
 }

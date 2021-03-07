@@ -84,16 +84,3 @@ private:
 	BasePodHandle lastClickAssetSelected{};
 
 } * EditorObject{};
-
-template<typename Lambda>
-void RecurseNodes(Node* root, Lambda f, int32 depth = 0)
-{
-	if (!root) {
-		return;
-	}
-
-	f(root, depth);
-	for (auto& c : root->GetChildren()) {
-		RecurseNodes(c.get(), f, depth + 1);
-	}
-}

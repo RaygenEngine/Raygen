@@ -33,7 +33,7 @@ BasePodHandle CubemapImporter::Import(const fs::path& path)
 
 	};
 
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<Cubemap>(
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<Cubemap>(
 		path.generic_string(), path.filename().replace_extension().string());
 
 	AssetImporterManager->PushPath(path.filename().replace_extension());

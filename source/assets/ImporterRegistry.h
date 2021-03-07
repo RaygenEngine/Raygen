@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
+#include "assets/AssetRegistry.h"
 #include "assets/PodHandle.h"
 #include "core/StringUtl.h"
 

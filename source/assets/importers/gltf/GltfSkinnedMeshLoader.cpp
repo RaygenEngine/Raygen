@@ -98,7 +98,7 @@ void GltfSkinnedMeshLoader::LoadSkinMesh()
 						"the total materials included.");
 
 					SkinnedGeometrySlot& slot = skinPod->skinnedGeometrySlots[materialIndex];
-					auto& [lastBegin, lastSize] = LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(
+					auto&& [lastBegin, lastSize] = LoadBasicDataIntoGeometrySlot<SkinnedGeometrySlot, SkinnedVertex>(
 						slot, *cache.gltfData, prim);
 
 					// Also load extra stuff
@@ -220,7 +220,7 @@ GltfSkinnedMeshLoader::GltfSkinnedMeshLoader(GltfCache& inCache, uint32 inSkinIn
 	, gltfSkin(skin)
 	, skinIndex(inSkinIndex)
 {
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<SkinnedMesh>(
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<SkinnedMesh>(
 		cache.gltfFilePath, std::string(uri::GetFilenameNoExt(cache.gltfFilePath)) + "_skinned_" + skin.name);
 
 	skinHandle = handle;
@@ -300,7 +300,7 @@ void GltfSkinnedMeshLoader::LoadAnimations()
 		auto animPath = uri::MakeChildJson(cache.gltfFilePath, data);
 
 		std::string name = anim.name.empty() ? cache.filename + "_Anim_" + std::to_string(animationIndex) : anim.name;
-		auto& [handle, pod] = AssetImporterManager->CreateEntry<Animation>(animPath, name);
+		auto&& [handle, pod] = AssetImporterManager->CreateEntry<Animation>(animPath, name);
 
 
 		float maxInputTime = 0.f;

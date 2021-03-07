@@ -118,7 +118,7 @@ template<typename T>
 struct InFlightCmdBuffers : public CmdBuffers<T> {
 	InFlightCmdBuffers() = default;
 	explicit InFlightCmdBuffers(vk::CommandBufferLevel level)
-		: CmdBuffers(level, c_framesInFlight)
+		: CmdBuffers<T>(level, c_framesInFlight)
 	{
 	}
 };

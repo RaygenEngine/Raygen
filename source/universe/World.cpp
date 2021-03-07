@@ -140,7 +140,7 @@ void World::BeginPlay()
 	ScriptlikeRunnerSystem::BeginPlay(reg);
 
 	auto v = reg.view<CCamera>();
-	for (auto& [bc, camera] : v.each()) {
+	for (auto&& [bc, camera] : v.each()) {
 		SetActiveCamera(camera);
 		break;
 	}

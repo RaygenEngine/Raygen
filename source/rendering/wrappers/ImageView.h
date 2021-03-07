@@ -101,7 +101,7 @@ struct RCubemap : RImage {
 		: RImage(vk::ImageType::e2D, name, vk::Extent3D{ res, res, 1u }, format, mipLevels, 6u, finalLayout,
 			memoryFlags, usageFlags, vk::ImageCreateFlagBits::eCubeCompatible){};
 
-	void RCubemap::CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount);
+	void CopyBuffer(const RBuffer& buffers, size_t pixelSize, uint32 mipCount);
 
 	std::vector<vk::UniqueImageView> GetFaceViews(uint32 atMip = 0u) const;
 	std::vector<vk::UniqueImageView> GetMipViews() const;

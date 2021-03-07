@@ -23,7 +23,7 @@ BasePodHandle MaterialInstanceImporter::Import(const fs::path& path)
 		return {};
 	}
 
-	auto& [handle, pod] = AssetImporterManager->CreateEntry<MaterialInstance>(
+	auto&& [handle, pod] = AssetImporterManager->CreateEntry<MaterialInstance>(
 		path.generic_string(), "INST " + path.filename().replace_extension().generic_string(), false, true);
 
 	{

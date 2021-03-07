@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/AssetManager.h"
+#include "assets/AssetRegistry.h"
 
 class Assets {
 	friend class Engine_;
@@ -20,7 +21,7 @@ public:
 	template<CAssetPod T>
 	static PodHandle<T> GetAsyncHandle(const uri::Uri& str)
 	{
-		return AssetManager->GetAsyncHandle(str);
+		return AssetRegistry->GetAsyncHandle(str);
 	}
 
 	static uri::Uri GetPodUri(BasePodHandle handle) { return AssetRegistry::GetPodUri(handle); }

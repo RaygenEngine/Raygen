@@ -92,12 +92,17 @@ void BasicComponent::SetParent(Entity newParent, bool preserveWorldTransform, in
 
 void BasicComponent::MarkDirtySrt()
 {
-	self.registry->get_or_emplace<DirtySrtComp>(self.entity);
+	if (!self.registry->has<DirtySrtComp>(self.entity)) {
+		self.registry->emplace<DirtySrtComp>(self.entity);
+	}
 }
 
 void BasicComponent::MarkDirtyMoved()
 {
-	self.registry->get_or_emplace<DirtyMovedComp>(self.entity);
+	if (!self.registry->has<DirtyMovedComp>(self.entity)) {
+		self.registry->emplace<DirtyMovedComp>(self.entity);
+	}
+
 	MarkDirtySrt();
 }
 

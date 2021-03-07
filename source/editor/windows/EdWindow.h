@@ -2,11 +2,10 @@
 #include "editor/EdInput.h"
 #include "engine/Listener.h"
 #include "assets/PodHandle.h"
+#include "assets/PodEntry.h"
 
 #include <concepts>
 #include <string>
-
-struct PodEntry;
 
 // Code example for imgui drawing:
 //
