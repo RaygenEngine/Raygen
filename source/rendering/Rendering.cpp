@@ -2,8 +2,6 @@
 
 #include "rendering/Layer.h"
 
-using namespace vl;
-
 void Rendering::Init()
 {
 	Layer = new Layer_();

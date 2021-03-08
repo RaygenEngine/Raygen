@@ -1,7 +1,6 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
 
-namespace vl {
 inline class GpuAssetManager_ {
 	// NOTE: whenever any operation on this may move the vector, gpuassetdetail ::gpuAssetListData should be updated
 	std::vector<GpuAssetBase*> gpuAssets;
@@ -79,4 +78,3 @@ private:
 public:
 	void ConsumeAssetUpdates();
 } * GpuAssetManager{};
-} // namespace vl

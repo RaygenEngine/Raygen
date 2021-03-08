@@ -15,7 +15,7 @@ DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 		geom.transform = bc.world().transform;
 		if constexpr (FullDirty) {
 			geom.meshPod = skinnedMesh;
-			geom.mesh = vl::GpuAssetManager->GetGpuHandle(skinnedMesh);
+			geom.mesh = GpuAssetManager->GetGpuHandle(skinnedMesh);
 
 			// Dirty-ness of joints length is checked on scene object side
 			// geom.MaybeResizeJoints(jointsLen);

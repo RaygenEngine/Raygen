@@ -3,8 +3,6 @@
 
 struct Scene;
 
-namespace vl {
-
 class SwapchainOutputPass;
 class RendererBase;
 
@@ -29,4 +27,3 @@ private:
 	uint32 m_currentFrame{ 0 };
 
 } * Layer{};
-} // namespace vl

@@ -5,7 +5,6 @@
 #include "core/iterable/IterableSafeVector.h"
 
 
-namespace vl {
 GpuAssetManager_::~GpuAssetManager_()
 {
 	for (auto& asset : gpuAssets) {
@@ -116,5 +115,3 @@ void GpuAssetManager_::ConsumeAssetUpdates()
 		AssetRegistry::ClearGpuUpdateRequests();
 	}
 }
-
-} // namespace vl

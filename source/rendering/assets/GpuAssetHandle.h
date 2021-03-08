@@ -1,12 +1,11 @@
 #pragma once
 // Included in pch
 
-namespace vl {
 struct GpuAssetBase;
 
 namespace gpuassetdetail {
-	// Updated from Gpu Asset Manager
-	inline GpuAssetBase** gpuAssetListData{ nullptr };
+// Updated from Gpu Asset Manager
+inline GpuAssetBase** gpuAssetListData{ nullptr };
 } // namespace gpuassetdetail
 
 template<CAssetPod T>
@@ -19,4 +18,3 @@ struct GpuHandle : public BasePodHandle {
 		return static_cast<GpuAsset<T>&>(*gpuassetdetail::gpuAssetListData[uid]);
 	}
 };
-} // namespace vl

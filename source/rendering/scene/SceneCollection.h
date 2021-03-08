@@ -24,9 +24,6 @@ protected:
 	}
 };
 
-namespace vl {
-struct TopLevelAs;
-}
 //
 template<CSceneElem T>
 struct SceneCollection : public SceneCollectionBase {
@@ -39,7 +36,6 @@ struct SceneCollection : public SceneCollectionBase {
 
 private:
 	friend struct Scene;
-	friend struct vl::TopLevelAs; // TODO: remove this when toplevelas is refactored
 
 
 	T* Get(size_t uid) { return reinterpret_cast<T*>(elements[uid]); }

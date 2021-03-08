@@ -2,8 +2,6 @@
 
 #include "rendering/assets/GpuAssetManager.h"
 
-using namespace vl;
-
 std::vector<size_t> GpuAssetBase::GetUsers()
 {
 	return GpuAssetManager->GetUsersFor(podUid);

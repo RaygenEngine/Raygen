@@ -18,16 +18,14 @@ public:                                                                         
 		static ReflClass cl = ReflClass::Generate<Class>(FA_MAIL_BULK);                                                \
 		return cl;                                                                                                     \
 	}                                                                                                                  \
-	using GpuAssetType = vl::Gpu##Class;                                                                               \
+	using GpuAssetType = Gpu##Class;                                                                                   \
                                                                                                                        \
 public:                                                                                                                \
 	static void GenerateReflection(ReflClass& refl)
 
 
-#define FWD_GPU_POD(Class)                                                                                             \
-	namespace vl {                                                                                                     \
-	struct Class;                                                                                                      \
-	}
+#define FWD_GPU_POD(Class) struct Class;
+
 
 //
 //

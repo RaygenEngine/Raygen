@@ -1,7 +1,6 @@
 #pragma once
 #include "assets/AssetUpdateInfo.h"
 
-namespace vl {
 
 // Generic base for a gpu asset
 struct GpuAssetBase {
@@ -66,6 +65,3 @@ struct GpuAssetTemplate : public GpuAssetBase {
 		// We should check the underlying pod type here of the handle but that requires an asset manager include
 	}
 };
-
-
-} // namespace vl

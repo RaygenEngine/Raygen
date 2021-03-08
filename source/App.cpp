@@ -50,7 +50,7 @@ void App_::MainLoop()
 		Input.Z_ClearFrameState();
 		Platform::PollEvents();
 
-		Universe::MainWorld->UpdateWorld(vl::Layer->mainScene);
+		Universe::MainWorld->UpdateWorld(Layer->mainScene);
 
 		Rendering::DrawFrame();
 
@@ -61,7 +61,7 @@ void App_::MainLoop()
 void App_::WhileResizing()
 {
 	Universe::LoadPendingWorlds();
-	Universe::MainWorld->UpdateWorld(vl::Layer->mainScene);
+	Universe::MainWorld->UpdateWorld(Layer->mainScene);
 
 	Rendering::DrawFrame();
 	Engine.ReportFrameDrawn();
