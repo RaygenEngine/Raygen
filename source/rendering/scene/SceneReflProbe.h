@@ -1,6 +1,5 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
-#include "rendering/wrappers/ImageView.h"
 
 struct Reflprobe_UBO {
 	int32 lodCount{ 1 };
@@ -12,17 +11,9 @@ struct Reflprobe_UBO {
 
 struct SceneReflprobe : public SceneStruct {
 	SceneReflprobe();
-	void UploadUbo(uint32 curFrame) { UploadDataToUbo(curFrame, &ubo, sizeof(Reflprobe_UBO)); }
 
 	Reflprobe_UBO ubo{};
 
-	vk::DescriptorSet environmentSamplerDescSet;
-	vk::DescriptorSet irradianceSamplerDescSet;
-	vk::DescriptorSet prefilteredSamplerDescSet;
-
-	vl::RCubemap environment;
-	vl::RCubemap irradiance;
-	vl::RCubemap prefiltered;
 
 	int32 ptSamples{ 16 };
 	int32 ptBounces{ 3 };
@@ -33,5 +24,4 @@ struct SceneReflprobe : public SceneStruct {
 
 
 	BoolFlag shouldBuild{ true };
-	void Allocate();
 };

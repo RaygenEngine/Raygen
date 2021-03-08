@@ -1,6 +1,5 @@
 #pragma once
 #include "assets/importers/PodImporter.h"
-#include "assets/util/SpirvCompiler.h"
 
 struct ShaderStageImporter : public PodImporter<ShaderStage> {
 	ShaderStageImporter(std::string_view name)

@@ -63,23 +63,14 @@ if(MSVC)
 	set_property(TARGET Raygen-App PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
-# Vulkan
-find_package(Vulkan REQUIRED)
-
 # 3rd party libraries
 target_link_libraries(Raygen
 	NativeFileDialog
 	XInput.lib
-	Vulkan::Vulkan
 	ImGui
 	spdlog
-	# shader compiler
-	SPIRV
-	glslang-default-resource-limits
-	#end of shader compiler
 	glfw
 	${GLFW_LIBRARIES}
-	${RAYGEN_SPIRV_CROSS_MODULES}
 	ImGuiColorTextEdit
     Raygen-Dynlib
 )
@@ -88,14 +79,7 @@ target_link_libraries(Raygen-App
 	Raygen
 )
 
-# Instead of slapping everything in the dll specifically add what is used, when required
-# This might be problematic when we mix debug/release libs in the dll
-target_link_libraries(Raygen-Dynlib
-	Vulkan::Vulkan
-)
-
 # instruct glfw to globaly include vulkan headers
-add_compile_definitions(GLFW_INCLUDE_VULKAN)
 add_compile_definitions(GLFW_INCLUDE_NONE)
 
 # dependencies (build order)
@@ -118,7 +102,7 @@ if (MSVC)
 	endforeach()
 endif()
 
-target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR})
+#target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 							  
@@ -133,7 +117,7 @@ target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/imfilebrowser
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/GLFW/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/cereal/include)
 target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/nativefiledialog/src/include)
-target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/spirv-cross/include)
+#target_include_directories(Raygen PUBLIC ${DEPENDENCIES_DIRECTORY}/spirv-cross/include)
 
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(Raygen PUBLIC ${CMAKE_CURRENT_BINARY_DIR})

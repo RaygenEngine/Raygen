@@ -21,24 +21,24 @@ inline void Scene::EnqueueCmdInCtx(size_t uid, std::function<void(T&)>&& command
 		"EnqueueCmdInCtx was called with incorrect context. Use SetCtx before this call or EnqueueCmd if you only "
 		"want a single cmd (slower per call).");
 
-	currentCmdBuffer->emplace_back(
-		[&, cmd = std::move(command), collection = static_cast<SceneCollection<T>*>(ctxCollection), uid]() {
-			T& sceneElement = *collection->Get(uid);
-			cmd(sceneElement);
-			auto& dirtyVec = sceneElement.isDirty;
-			std::fill(dirtyVec.begin(), dirtyVec.end(), true);
-		});
+	// currentCmdBuffer->emplace_back(
+	//	[&, cmd = std::move(command), collection = static_cast<SceneCollection<T>*>(ctxCollection), uid]() {
+	//		T& sceneElement = *collection->Get(uid);
+	//		cmd(sceneElement);
+	//		auto& dirtyVec = sceneElement.isDirty;
+	//		std::fill(dirtyVec.begin(), dirtyVec.end(), true);
+	//	});
 }
 
 template<CSceneElem T>
 inline void Scene::EnqueueCmd(size_t uid, std::function<void(T&)>&& command)
 {
-	currentCmdBuffer->emplace_back([&, cmd = std::move(command), uid]() {
+	/*currentCmdBuffer->emplace_back([&, cmd = std::move(command), uid]() { NEW::
 		T& sceneElement = *Get<T>().Get(uid);
 		cmd(sceneElement);
 		auto& dirtyVec = sceneElement.isDirty;
 		std::fill(dirtyVec.begin(), dirtyVec.end(), true);
-	});
+	});*/
 }
 
 template<CSceneElem T>
@@ -64,10 +64,7 @@ void Scene::EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::ve
 
 	currentCmdBuffer->emplace_back([&, destr = std::move(destructions), constr = std::move(constructions)]() {
 		if (!destr.empty() || !constr.empty()) {
-			forceUpdateAccel = true;
 		}
-		// TODO: deferred deleting of scene objects
-		vl::Device->waitIdle();
 		for (auto uid : destr) {
 			delete type.Get(uid);
 			type.Set(uid, nullptr);
@@ -84,8 +81,6 @@ void Scene::EnqueueCreateDestoryCmds(std::vector<size_t>&& destructions, std::ve
 			type.condensedToUid.emplace_back(uid);
 			type.condensedLocation[uid] = type.condensed.size() - 1;
 		}
-
-		forceUpdateAccel = true;
 	});
 }
 

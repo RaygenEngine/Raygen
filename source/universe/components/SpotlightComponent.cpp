@@ -42,8 +42,6 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 			sl.ubo.samples = samples;
 			sl.ubo.sampleInvSpread = 1 / radius;
 			sl.ubo.hasShadow = hasShadow;
-
-			sl.MaybeResizeShadowmap(shadowMapWidth, shadowMapHeight);
 		}
 	};
 }

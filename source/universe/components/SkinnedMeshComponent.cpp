@@ -2,7 +2,6 @@
 
 #include "assets/pods/SkinnedMesh.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/scene/SceneGeometry.h"
 
 DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
@@ -19,7 +18,7 @@ DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 			geom.mesh = vl::GpuAssetManager->GetGpuHandle(skinnedMesh);
 
 			// Dirty-ness of joints length is checked on scene object side
-			geom.MaybeResizeJoints(jointsLen);
+			// geom.MaybeResizeJoints(jointsLen);
 		}
 	};
 }

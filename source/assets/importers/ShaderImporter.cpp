@@ -40,24 +40,24 @@ void ShaderStageImporter::Reimport(PodEntry* intoEntry, const uri::Uri& uri)
 
 void ShaderStageImporter::CompilePod(ShaderStage* pod, const uri::Uri& uri)
 {
-	pod->code = str::rtrim(StringFromFile(uri), " \r\n") + "\n";
-	pod->stage = shd::ExtToStage(uri::GetDiskExtension(uri));
-	TextCompilerErrors errors;
-	// PERF: Copying data, can pass by ref and avoid editing in compiler
+	// pod->code = str::rtrim(StringFromFile(uri), " \r\n") + "\n"; NEW::
+	// pod->stage = shd::ExtToStage(uri::GetDiskExtension(uri));
+	// TextCompilerErrors errors;
+	//// PERF: Copying data, can pass by ref and avoid editing in compiler
 
-	auto bincode = ShaderCompiler::Compile(pod->code, std::string(uri::GetFilename(uri)), &errors);
+	// auto bincode = ShaderCompiler::Compile(pod->code, std::string(uri::GetFilename(uri)), &errors);
 
-	if (bincode.size() > 0) {
-		pod->binary.swap(bincode);
-		//	pod->reflection = SpirvReflector::Reflect(pod->binary);
-	}
+	// if (bincode.size() > 0) {
+	//	pod->binary.swap(bincode);
+	//	//	pod->reflection = SpirvReflector::Reflect(pod->binary);
+	//}
 
-	if (!errors.errors.empty()) {
-		LOG_ERROR("Errors during shader imporing: {}", uri);
-		for (auto& [key, val] : errors.errors) {
-			LOG_ERROR("\nLine {:<3}: {}", key, val);
-		}
-	}
+	// if (!errors.errors.empty()) {
+	//	LOG_ERROR("Errors during shader imporing: {}", uri);
+	//	for (auto& [key, val] : errors.errors) {
+	//		LOG_ERROR("\nLine {:<3}: {}", key, val);
+	//	}
+	//}
 }
 
 //

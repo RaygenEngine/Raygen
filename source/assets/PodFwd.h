@@ -14,7 +14,7 @@
 ENGINE_PODS_FWD(ENGINE_POD_TYPES);
 
 
-// Returns the default uid for this pod in the asset manager, all pod handles are initialized with the the valid
+// Returns the default uid for this pod in the asset manager, all pod handles are initialized with the valid
 // "default"
 template<typename PodType>
 constexpr size_t GetDefaultPodUid()

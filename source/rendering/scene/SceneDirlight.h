@@ -27,15 +27,5 @@ struct SceneDirlight : SceneStruct {
 
 	Dirlight_Ubo ubo;
 
-	InFlightResources<vl::RenderingPassInstance> shadowmapPass;
-	InFlightResources<vk::DescriptorSet> shadowmapDescSet;
-
-	vk::Sampler depthSampler;
-
-	glm::vec3 up;
-
 	std::string name;
-
-	void MaybeResizeShadowmap(uint32 width, uint32 height);
-	void UpdateBox(const math::Frustum& frustum, glm::vec3 apex);
 };

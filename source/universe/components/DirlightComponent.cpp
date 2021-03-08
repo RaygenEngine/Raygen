@@ -29,8 +29,6 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 
 	return [=](SceneDirlight& dl) {
 		dl.name = "direct depth: " + bc.name;
-
-		dl.up = bc.world().up();
 		dl.ubo.front = glm::vec4(bc.world().front(), 0.f);
 		dl.ubo.viewProj = viewProj;
 
@@ -42,8 +40,6 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 			dl.ubo.samples = samples;
 			dl.ubo.sampleInvSpread = 1 / radius;
 			dl.ubo.hasShadow = hasShadow;
-
-			dl.MaybeResizeShadowmap(shadowMapWidth, shadowMapHeight);
 		}
 	};
 }

@@ -4,8 +4,8 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "rendering/Pathtracer.h" // WIP: remove
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/scene/Scene.h"
 
 namespace ed {
 
@@ -75,11 +75,6 @@ void EditorCamera::Update(float deltaSeconds)
 		UpdatePiloting();
 	}
 
-	// WIP : remove
-	if (dirtyThisFrame) {
-		vl::Renderer->m_raytraceArealights.frame = 0;
-		vl::Pathtracer->m_frame = 0;
-	}
 
 	dirtyThisFrame = true;
 }
@@ -107,7 +102,7 @@ void EditorCamera::ResetRotation()
 
 void EditorCamera::InjectToScene(Scene* worldScene)
 {
-	// CHECK: Questionable usage of Enqueu cmd. If scene changes later to allow only one createdestroy per type this
+	// CHECK: Questionable usage of Enqueue cmd. If scene changes later to allow only one createdestroy per type this
 	// will be an error
 	worldScene->EnqueueCreateDestoryCmds<SceneCamera>({}, { &sceneUid });
 }

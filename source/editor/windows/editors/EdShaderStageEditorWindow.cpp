@@ -3,7 +3,6 @@
 #include "assets/PodEditor.h"
 #include "assets/pods/ShaderHeader.h"
 #include "assets/pods/ShaderStage.h"
-#include "assets/util/SpirvCompiler.h"
 #include "editor/imgui/ImEd.h"
 
 #include <imguicolortextedit/TextEditor.h>
@@ -79,24 +78,25 @@ void ed::ShaderStageEditorWindow::ImguiDraw()
 	editor->ImguiDraw();
 }
 
+// NEW::
 void ed::ShaderStageEditorWindow::UpdateForGpu()
 {
-	PodEditor pod(podHandle);
+	// PodEditor pod(podHandle);
 
-	pod.GetUpdateInfoRef().AddFlag("editor");
+	// pod.GetUpdateInfoRef().AddFlag("editor");
 
-	pod->code = editor->editor->GetText();
+	// pod->code = editor->editor->GetText();
 
 
-	TextCompilerErrors errors;
-	if (entry->metadata.originalImportLocation.empty()) {
-		pod->binary = ShaderCompiler::Compile(pod->code, pod->stage, entry->name, &errors);
-	}
-	else {
-		pod->binary = ShaderCompiler::Compile(pod->code, std::string(uri::GetFilename(filepathCache)), &errors);
-	}
+	// TextCompilerErrors errors;
+	// if (entry->metadata.originalImportLocation.empty()) {
+	//	pod->binary = ShaderCompiler::Compile(pod->code, pod->stage, entry->name, &errors);
+	//}
+	// else {
+	//	pod->binary = ShaderCompiler::Compile(pod->code, std::string(uri::GetFilename(filepathCache)), &errors);
+	//}
 
-	editor->editor->SetErrorMarkers(errors.errors);
+	// editor->editor->SetErrorMarkers(errors.errors);
 }
 
 void ed::ShaderStageEditorWindow::SaveInternal()
@@ -127,28 +127,30 @@ void ed::ShaderHeaderEditorWindow::ImguiDraw()
 	editor->ImguiDraw();
 }
 
+// NEW::
 void ed::ShaderHeaderEditorWindow::UpdateForGpu()
 {
-	PodEditor pod(podHandle);
-
-	pod.GetUpdateInfoRef().AddFlag("editor");
-
-	pod->code = editor->editor->GetText();
-
-
-	TextCompilerErrors errors;
-
-	// Dummy boilerplate to compile code
-	auto compileCode = R"(
-#extension GL_GOOGLE_include_directive : enable
-#line 1
-)" + pod->code + "\nvoid main() {}";
-
-	// Compile as fragment shader, this should give decent error results (otherwise update it below)
-	// Output from the compilation is discarded here. (we don't really need all the steps in the compilation here and
-	// its possible to save performance)
-	ShaderCompiler::Compile(compileCode, ShaderStageType::Fragment, entry->name, &errors);
-	editor->editor->SetErrorMarkers(errors.errors);
+	//	PodEditor pod(podHandle);
+	//
+	//	pod.GetUpdateInfoRef().AddFlag("editor");
+	//
+	//	pod->code = editor->editor->GetText();
+	//
+	//
+	//	TextCompilerErrors errors;
+	//
+	//	// Dummy boilerplate to compile code
+	//	auto compileCode = R"(
+	//#extension GL_GOOGLE_include_directive : enable
+	//#line 1
+	//)" + pod->code + "\nvoid main() {}";
+	//
+	//	// Compile as fragment shader, this should give decent error results (otherwise update it below)
+	//	// Output from the compilation is discarded here. (we don't really need all the steps in the compilation here
+	//and
+	//	// its possible to save performance)
+	//	ShaderCompiler::Compile(compileCode, ShaderStageType::Fragment, entry->name, &errors);
+	//	editor->editor->SetErrorMarkers(errors.errors);
 }
 
 void ed::ShaderHeaderEditorWindow::SaveInternal()

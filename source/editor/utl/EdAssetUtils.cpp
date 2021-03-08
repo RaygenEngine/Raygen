@@ -3,7 +3,6 @@
 #include "editor/EditorObject.h"
 #include "reflection/ReflectionTools.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuImage.h"
 
 
 namespace ed::asset {
@@ -72,7 +71,7 @@ void MaybeHoverTooltipForced(bool showTooltip, PodEntry* entry)
 			ImGui::BeginTooltip();
 			ImGui::SetWindowFontScale(1.0);
 			auto handle = vl::GpuAssetManager->GetGpuHandle<Image>(entry->GetHandleAs<Image>());
-			ImGui::Image(handle.Lock().image.GetDebugDescriptor(), ImVec2(256, 256));
+			// ImGui::Image(handle.Lock().image.GetDebugDescriptor(), ImVec2(256, 256));
 			ImGui::EndTooltip();
 		}
 		else if (entry->type == mti::GetTypeId<MaterialInstance>()) {
@@ -82,7 +81,7 @@ void MaybeHoverTooltipForced(bool showTooltip, PodEntry* entry)
 
 			if (inst->descriptorSet.samplers2d.size() > 0) {
 				auto&& previewImg = vl::GpuAssetManager->GetGpuHandle(inst->descriptorSet.samplers2d[0]);
-				ImGui::Image(previewImg.Lock().image.GetDebugDescriptor(), ImVec2(256, 256));
+				// ImGui::Image(previewImg.Lock().image.GetDebugDescriptor(), ImVec2(256, 256));
 			}
 
 			ImGui::EndTooltip();

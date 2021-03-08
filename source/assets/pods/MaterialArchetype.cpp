@@ -1,9 +1,10 @@
 #include "MaterialArchetype.h"
 
 #include "assets/PodEditor.h"
-#include "assets/util/SpirvCompiler.h"
 #include "assets/util/shadergen/ShaderGen.h"
 #include "reflection/ReflectionTools.h"
+
+// NEW::
 
 namespace {
 void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
@@ -36,11 +37,11 @@ void RerouteShaderErrors(shd::GeneratedShaderErrors& errors)
 
 void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 {
-	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-gltf.frag");
-	mat->depthFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/depthmap-gltf.frag");
+	// mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-gltf.frag");
+	// mat->depthFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/depthmap-gltf.frag");
 
-	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthFragBinary.size() == 0,
-		"Failed to compile gltf archetype shader code.");
+	// CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthFragBinary.size() == 0,
+	//	"Failed to compile gltf archetype shader code.");
 
 	mat->descriptorSetLayout.samplers2d
 		= { "baseColorSampler", "metallicRoughnessSampler", "occlusionSampler", "normalSampler", "emissiveSampler" };
@@ -62,10 +63,10 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 
 void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)
 {
-	mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-default.frag");
-	mat->depthFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/depthmap-default.frag");
-	CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthFragBinary.size() == 0,
-		"Failed to compile defualt shader code. (engine-data/spv/geometry/)");
+	// mat->gbufferFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/gbuffer-default.frag");
+	// mat->depthFragBinary = ShaderCompiler::Compile("engine-data/spv/geometry/depthmap-default.frag");
+	// CLOG_ABORT(mat->gbufferFragBinary.size() == 0 || mat->depthFragBinary.size() == 0,
+	//	"Failed to compile defualt shader code. (engine-data/spv/geometry/)");
 }
 
 void MaterialArchetype::ChangeLayout(DynamicDescriptorSetLayout&& newLayout)
@@ -81,57 +82,58 @@ void MaterialArchetype::ChangeLayout(DynamicDescriptorSetLayout&& newLayout)
 bool MaterialArchetype::CompileAll(
 	DynamicDescriptorSetLayout&& newLayout, shd::GeneratedShaderErrors& outErrors, bool outputToConsole)
 {
-	std::string descSetCode = shd::GenerateDescriptorSetCode(newLayout, newLayout.uboName);
-	outErrors.editorErrors.clear();
+	// std::string descSetCode = shd::GenerateDescriptorSetCode(newLayout, newLayout.uboName);
+	// outErrors.editorErrors.clear();
 
 
-	auto generateShader = [&](const std::string& mainCode, decltype(&shd::GenerateDepthFrag) generatorFunction,
-							  const std::string& editorName, ShaderStageType stage) {
-		std::string code = (*generatorFunction)(descSetCode, sharedFunctions, mainCode);
+	// auto generateShader = [&](const std::string& mainCode, decltype(&shd::GenerateDepthFrag) generatorFunction,
+	//						  const std::string& editorName, ShaderStageType stage) {
+	//	std::string code = (*generatorFunction)(descSetCode, sharedFunctions, mainCode);
 
-		if (outputToConsole) {
-			LOG_REPORT("{} SHADER: === \n{}", editorName, code);
-		}
+	//	if (outputToConsole) {
+	//		LOG_REPORT("{} SHADER: === \n{}", editorName, code);
+	//	}
 
-		auto errors = &outErrors.editorErrors.insert({ editorName, {} }).first->second;
-		auto shaderBinary = ShaderCompiler::Compile(code, stage, errors);
+	//	auto errors = &outErrors.editorErrors.insert({ editorName, {} }).first->second;
+	//	auto shaderBinary = ShaderCompiler::Compile(code, stage, errors);
 
-		if (!shaderBinary.size()) {
-			RerouteShaderErrors(outErrors);
-			return shaderBinary;
-		}
-		return shaderBinary;
-	};
-
-
-	auto depthFragBin = generateShader(depthShader, &shd::GenerateDepthFrag, "Depth", ShaderStageType::Fragment);
-	auto gbufferFragBin
-		= generateShader(gbufferFragMain, &shd::GenerateGbufferFrag, "Fragment", ShaderStageType::Fragment);
-
-	if (depthFragBin.size() == 0 || gbufferFragBin.size() == 0) {
-		return false;
-	}
+	//	if (!shaderBinary.size()) {
+	//		RerouteShaderErrors(outErrors);
+	//		return shaderBinary;
+	//	}
+	//	return shaderBinary;
+	//};
 
 
-	auto gbufferVertBin = generateShader(gbufferVertMain, &shd::GenerateGbufferVert, "Vertex", ShaderStageType::Vertex);
-	auto depthVertBin = generateShader(gbufferVertMain, &shd::GenerateDepthVert, "Vertex", ShaderStageType::Vertex);
+	// auto depthFragBin = generateShader(depthShader, &shd::GenerateDepthFrag, "Depth", ShaderStageType::Fragment);
+	// auto gbufferFragBin
+	//	= generateShader(gbufferFragMain, &shd::GenerateGbufferFrag, "Fragment", ShaderStageType::Fragment);
 
-	if (unlitFragMain.size() > 2) {
-		auto unlitFragBin = generateShader(unlitFragMain, &shd::GenerateUnlitFrag, "Unlit", ShaderStageType::Fragment);
-		unlitFragBinary.swap(unlitFragBin);
-	}
-
-
-	RerouteShaderErrors(outErrors);
+	// if (depthFragBin.size() == 0 || gbufferFragBin.size() == 0) {
+	//	return false;
+	//}
 
 
-	ChangeLayout(std::move(newLayout));
+	// auto gbufferVertBin = generateShader(gbufferVertMain, &shd::GenerateGbufferVert, "Vertex",
+	// ShaderStageType::Vertex); auto depthVertBin = generateShader(gbufferVertMain, &shd::GenerateDepthVert, "Vertex",
+	// ShaderStageType::Vertex);
 
-	gbufferFragBinary.swap(gbufferFragBin);
-	depthFragBinary.swap(depthFragBin);
+	// if (unlitFragMain.size() > 2) {
+	//	auto unlitFragBin = generateShader(unlitFragMain, &shd::GenerateUnlitFrag, "Unlit", ShaderStageType::Fragment);
+	//	unlitFragBinary.swap(unlitFragBin);
+	//}
 
-	gbufferVertBinary.swap(gbufferVertBin);
-	depthVertBinary.swap(depthVertBin);
+
+	// RerouteShaderErrors(outErrors);
+
+
+	// ChangeLayout(std::move(newLayout));
+
+	// gbufferFragBinary.swap(gbufferFragBin);
+	// depthFragBinary.swap(depthFragBin);
+
+	// gbufferVertBinary.swap(gbufferVertBin);
+	// depthVertBinary.swap(depthVertBin);
 
 
 	return true;

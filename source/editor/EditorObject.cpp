@@ -14,7 +14,6 @@
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "rendering/Layer.h"
-#include "rendering/Renderer.h"
 #include "universe/ComponentsDb.h"
 #include "universe/Universe.h"
 #include "universe/components/StaticMeshComponent.h"

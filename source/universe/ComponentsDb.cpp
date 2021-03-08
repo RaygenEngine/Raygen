@@ -53,7 +53,7 @@ void ComponentsDb::LoadComponentInto(Entity ent, const std::string& componentNam
 
 	LOG_ERROR(
 		"Component with type: {} was found but currently not registered to database. (Json written with different "
-		"engine version? Component wa renamed?)",
+		"engine version? Component was renamed?)",
 		componentName);
 }
 

@@ -30,8 +30,6 @@
 #include "engine/Logger.h"
 
 
-#include <vulkan/vulkan.hpp>
-
 #define MAGIC_ENUM_RANGE_MIN -1
 #define MAGIC_ENUM_RANGE_MAX 24
 #include <magic_enum.hpp>
@@ -47,34 +45,12 @@ namespace ch = std::chrono;
 
 #include "rendering/assets/GpuAssetHandle.h"
 
-constexpr size_t c_framesInFlight = 2;
-template<typename T>
-struct InFlightResources : std::array<T, c_framesInFlight> {
-	InFlightResources(std::vector<T>&& data) { std::move(data.begin(), data.begin() + c_framesInFlight, this->begin()); }
-	InFlightResources(T val)
-	{
-		for (auto& v : *this) {
-			v = val;
-		}
-	}
-	InFlightResources() = default;
-
-
-	void operator=(const std::vector<T>& data) { std::move(data.begin(), data.begin() + c_framesInFlight, this->begin()); }
-};
-
 // Should be in some header probably
 struct TextCompilerErrors {
 	std::map<int, std::string> errors;
 	bool wasSuccessful{ false };
 };
 
-
-#include "rendering/DebugName.h"
-#include "rendering/core/DrawShapes.h"
-#include "rendering/core/WriteDescriptorSets.h"
-#include "rendering/core/ImageUtl.h"
-#include "rendering/core/PipeUtl.h"
 
 class World;
 #include "universe/Entity.h"

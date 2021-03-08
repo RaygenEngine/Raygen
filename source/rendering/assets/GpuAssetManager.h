@@ -28,8 +28,8 @@ public:
 	template<typename T>
 	void Load(PodHandle<T> handle)
 	{
-		delete gpuAssets[handle.uid];
-		gpuAssets[handle.uid] = new GpuAsset<T>(handle);
+		// delete gpuAssets[handle.uid];
+		// gpuAssets[handle.uid] = new GpuAsset<T>(handle);
 	}
 
 	template<CAssetPod T>
@@ -47,11 +47,6 @@ public:
 		return GpuHandle<T>{ id };
 	}
 
-	// CHECK: Std gpu assets
-	vk::Sampler GetDefaultSampler();
-	vk::Sampler GetShadow2dSampler();
-	std::pair<GpuHandle<Image>, vk::Sampler> GetBrdfLutImageSampler();
-
 	void AllocForAll();
 	void UnloadAll()
 	{
@@ -61,11 +56,6 @@ public:
 		gpuAssets.clear();
 		gpuassetdetail::gpuAssetListData = nullptr;
 	}
-
-
-	// Now will also cache hit so its safe to call on a non static context (ie every recompile)
-	GpuAsset<Shader>& CompileShader(const char* path);
-
 
 	std::vector<size_t> GetUsersFor(size_t uid);
 

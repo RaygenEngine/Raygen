@@ -4,9 +4,6 @@
 
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
-	auto build = notifyBuild;
-	notifyBuild = false;
-
 	return [=, position = bc.world().position](SceneReflprobe& rp) {
 		rp.ubo.position = glm::vec4(position, 1.f);
 
@@ -23,10 +20,6 @@ DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 			rp.prefSamples = prefSamples;
 
 			rp.ubo.irradianceFactor = applyIrradiance;
-
-			if (build) {
-				rp.Allocate();
-			}
 		}
 	};
 }

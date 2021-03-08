@@ -2,7 +2,6 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/MaterialArchetype.h"
-#include "assets/util/SpirvCompiler.h"
 
 #include <fstream>
 
@@ -53,6 +52,7 @@ std::string_view trimLine(std::string_view s)
 }
 } // namespace
 
+// NEW::
 BasePodHandle MaterialArchetypeImporter::Import(const fs::path& path)
 {
 	auto&& [handle, pod] = AssetImporterManager->CreateEntry<MaterialArchetype>(
@@ -81,7 +81,7 @@ BasePodHandle MaterialArchetypeImporter::Import(const fs::path& path)
 	auto uboLines = str::split(segments[1], "\r\n");
 
 	TextCompilerErrors errors;
-	auto descSetLayout = ShaderCompiler::GenerateUboClass(uboLines, &errors);
+	// auto descSetLayout = ShaderCompiler::GenerateUboClass(uboLines, &errors);
 
 	if (!errors.wasSuccessful) {
 		LOG_ERROR("MaterialArchetypeImporter: Errors while importing ubo for {}", path.generic_string());
@@ -114,7 +114,7 @@ BasePodHandle MaterialArchetypeImporter::Import(const fs::path& path)
 
 	shd::GeneratedShaderErrors genErrors;
 
-	pod->CompileAll(std::move(descSetLayout), genErrors);
+	// pod->CompileAll(std::move(descSetLayout), genErrors);
 
 	{
 		if (genErrors.editorErrors.size() > 0) {

@@ -4,9 +4,6 @@
 
 DECLARE_DIRTY_FUNC(CIrragrid)(BasicComponent& bc)
 {
-	auto build = notifyBuild;
-	notifyBuild = false;
-
 	return [=, position = bc.world().position](SceneIrragrid& ig) {
 		ig.ubo.posAndDist = glm::vec4(position, distToAdjacent);
 
@@ -18,10 +15,6 @@ DECLARE_DIRTY_FUNC(CIrragrid)(BasicComponent& bc)
 
 			ig.ptSamples = ptSamples;
 			ig.ptBounces = ptBounces;
-			if (build) {
-				// PERF:
-				ig.Allocate();
-			}
 		}
 	};
 }
