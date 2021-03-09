@@ -12,7 +12,7 @@ Raygen is a game engine focused on exploring real-time applications of ray traci
 ## Getting started
 
 ```
-git clone --recursive https://github.com/Renoras/Raygen
+git clone --recursive https://github.com/RaygenEngine/Raygen
 cd Raygen
 mkdir build
 cd build
