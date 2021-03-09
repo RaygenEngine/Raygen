@@ -29,6 +29,11 @@ Device_::Device_()
 	else {
 		LOG_ABORT("DXGI adapter enumeration failed.");
 	}
+
+	for (size_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i) {
+		m_descriptorHandleIncrementSize[i]
+			= m_d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	}
 }
 
 WRL::ComPtr<ID3D12DescriptorHeap> Device_::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32 numDescriptors)

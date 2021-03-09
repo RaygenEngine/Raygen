@@ -75,7 +75,7 @@ void SwapChain::Resize(int32 width, int32 height)
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCurrentRenderTargetView() const
 {
-	auto rtvDescriptorSize = Device->GetHandle()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	auto rtvDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	return CD3DX12_CPU_DESCRIPTOR_HANDLE(
 		m_d3d12RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), GetCurrentBackBufferIndex(), rtvDescriptorSize);
@@ -124,7 +124,7 @@ WRL::ComPtr<IDXGISwapChain4> SwapChain::CreateSwapChain()
 
 	// Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen
 	// will be handled manually.
-	// AbortIfFailed(dxgiFactory4->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
+	AbortIfFailed(dxgiFactory4->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
 
 	AbortIfFailed(swapChain1.As(&dxgiSwapChain4));
 
@@ -138,8 +138,7 @@ void SwapChain::UpdateRTV()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_d3d12RTVDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	auto d3d12Device = Device->GetHandle();
-	auto rtvDescriptorSize
-		= d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV); // WIP: cache if costly
+	auto rtvDescriptorSize = Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	for (int i = 0; i < s_bufferCount; ++i) {
 		WRL::ComPtr<ID3D12Resource> d3d12Resource;

@@ -2,6 +2,7 @@
 
 #include "assets/PodEditor.h"
 #include "assets/pods/MaterialInstance.h"
+#include "assets/shared/ShaderStageShared.h"
 #include "editor/imgui/ImAssetSlot.h"
 #include "editor/misc/NativeFileBrowser.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"

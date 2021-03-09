@@ -79,13 +79,6 @@ namespace ch = std::chrono;
 #include "rendering/core/Helpers.h"
 #include "rendering/assets/GpuAssetHandle.h"
 
-// WIP: Should be in some header probably
-struct TextCompilerErrors {
-	std::map<int, std::string> errors;
-	bool wasSuccessful{ false };
-};
-
-
 class World;
 #include "universe/Entity.h"
 

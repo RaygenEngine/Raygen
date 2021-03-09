@@ -3,7 +3,7 @@
 
 struct Quadlight_Ubo {
 	glm::vec4 center{};
-	glm::vec4 normal{}; // WIP: pass quat
+	glm::vec4 normal{}; // TODO: pass quat
 	glm::vec4 right{};
 	glm::vec4 up{};
 

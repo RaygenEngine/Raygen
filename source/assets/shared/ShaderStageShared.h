@@ -61,3 +61,8 @@ struct SpirvReflection {
 	std::vector<shd::DescriptorVariable> uboVariables;
 	std::optional<shd::Variable> pushConstant;
 };
+
+struct TextCompilerErrors {
+	std::map<int, std::string> errors;
+	bool wasSuccessful{ false };
+};

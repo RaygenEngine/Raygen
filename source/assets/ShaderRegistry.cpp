@@ -96,8 +96,8 @@ void ShaderRegistry::OnEdited(BasePodHandle baseHandle)
 
 				std::string errString;
 				// TODO: should have a generic way to report these errors? maybe we already have?
-				// WIP: Decode headers
-				for (auto&& [line, error] : errors.errors) {
+				// TODO: Decode headers
+				for (auto& [line, error] : errors.errors) {
 					errString += fmt::format("{}: Line {:>3}: {}", name, line, error);
 				}
 

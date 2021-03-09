@@ -6,10 +6,16 @@
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
 #include "universe/ComponentsDb.h"
+#include "rendering/Layer.h"
+#include "rendering/core/Device.h"
+#include "rendering/core/SwapChain.h"
+#include "rendering/core/CommandQueue.h"
 
 #include <imgui/examples/imgui_impl_glfw.h>
-#include <imgui/examples/imgui_impl_vulkan.h>
+#include <imgui/examples/imgui_impl_dx12.h>
 
+
+static ID3D12DescriptorHeap* g_pd3dSrvDescHeap = NULL;
 
 namespace imguistyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)
@@ -279,8 +285,6 @@ void SetColors()
 
 void SetStyle()
 {
-
-
 	// Static this, needs to be valid for as long as imgui is used.
 	static const ImWchar ranges[] = { 0x0007, 0x00FF, 0 };
 
@@ -317,35 +321,6 @@ void SetStyle()
 } // namespace imguistyle
 
 
-void InitVulkan()
-{
-	// NEW::
-
-	// auto& physDev = Device->pd;
-	// auto& device = *Device;
-
-	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance;       // = *Instance;
-	init.PhysicalDevice; // = physDev;
-	init.Device;         // = device;
-	init.QueueFamily;    // = CmdPoolManager->graphicsQueue.family.index;
-	init.Queue;          // = CmdPoolManager->graphicsQueue;
-	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool; // = GpuResources::GetImguiPool();
-	init.ImageCount;     // = c_framesInFlight;
-	init.MinImageCount;  // = c_framesInFlight;
-	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	init.CheckVkResultFn = nullptr;
-	// ImGui_ImplVulkan_Init(&init, Layer->swapOutput->GetRenderPass());
-
-	//{
-	// ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
-	// ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
-	//}
-	ImGui_ImplVulkan_DestroyFontUploadObjects();
-}
-
-
 void ImguiImpl::InitContext()
 {
 	ImGui::CreateContext();
@@ -357,27 +332,44 @@ void ImguiImpl::InitContext()
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	// ImGui::GetIO().ConfigViewportsNoDecoration = false;
 
+	// @HACK: so that inputs are bound correctly - would be more correct if the was a "ImGui_ImplGlfw_InitForUknown" as
+	// there is a GlfwClientApi_Unknown
 	ImGui_ImplGlfw_InitForVulkan(Platform::GetMainHandle(), true);
 
 	if (!fs::exists("EditorImgui.ini")) {
 		ImGui::LoadIniSettingsFromDisk("engine-data/DefaultEditorImgui.ini");
 	}
 	ImGui::GetIO().IniFilename = "EditorImgui.ini";
-	InitVulkan();
+
+
+	auto d3d12Device = Device->GetHandle();
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC desc{};
+		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		desc.NumDescriptors = 1;
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		AbortIfFailed(d3d12Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&g_pd3dSrvDescHeap)));
+	}
+
+	ImGui_ImplDX12_Init(d3d12Device, c_inFlightFrames, DXGI_FORMAT_R8G8B8A8_UNORM, g_pd3dSrvDescHeap,
+		g_pd3dSrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
+		g_pd3dSrvDescHeap->GetGPUDescriptorHandleForHeapStart());
 }
 
 void ImguiImpl::NewFrame()
 {
-
 	ImGui_ImplGlfw_NewFrame();
-	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplDX12_NewFrame();
 	ImGui::NewFrame();
 }
 
 void ImguiImpl::CleanupContext()
 {
-	// vl::Device->waitIdle(); NEW::
-	ImGui_ImplVulkan_Shutdown();
+	Device->Flush();
+	if (g_pd3dSrvDescHeap) {
+		g_pd3dSrvDescHeap->Release();
+	}
+	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
@@ -396,11 +388,12 @@ void ImguiImpl::EndFrame()
 	ImGui::RenderPlatformWindowsDefault();
 }
 
-// void ImguiImpl::RenderVulkan(vk::CommandBuffer drawCommandBuffer)
-//{
-//	PROFILE_SCOPE(Editor);
-//	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), drawCommandBuffer);
-//}
+void ImguiImpl::RenderDX12(ID3D12GraphicsCommandList* d3d12CommandList)
+{
+	PROFILE_SCOPE(Editor);
+	d3d12CommandList->SetDescriptorHeaps(1, &g_pd3dSrvDescHeap);
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), d3d12CommandList);
+}
 
 namespace {
 unsigned int TextCharFromUtf8(const char* in_text, const char* in_text_end)
@@ -485,8 +478,3 @@ std::pair<glm::vec2, glm::vec2> ImguiImpl::GetIconUV(const char* icon)
 	}
 	return { { glyph->U0, glyph->V0 }, { glyph->U1, glyph->V1 } };
 }
-
-// vk::DescriptorSet ImguiImpl::GetIconFontDescriptorSet()
-//{
-//	return { static_cast<VkDescriptorSet>(ImGui::GetIO().Fonts->TexID) };
-//}

@@ -41,10 +41,16 @@ public:
 
 	void Flush() const { DeviceQueues.FlushAll(); }
 
+	UINT GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE index) const
+	{
+		return m_descriptorHandleIncrementSize[index];
+	}
+
 protected:
 	WRL::ComPtr<IDXGIAdapter4> GetAdapter(bool bUseWarp);
 	WRL::ComPtr<ID3D12Device2> CreateDevice(WRL::ComPtr<IDXGIAdapter4> adapter);
 
 private:
+	std::array<UINT, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_descriptorHandleIncrementSize;
 	WRL::ComPtr<ID3D12Device2> m_d3d12Device;
 } * Device{ nullptr };

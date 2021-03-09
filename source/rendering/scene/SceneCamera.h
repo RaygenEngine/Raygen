@@ -10,8 +10,6 @@ struct Camera_Ubo {
 	glm::mat4 viewInv;
 	glm::mat4 projInv;
 	glm::mat4 viewProjInv;
-
-	float filmArea;
 };
 
 struct SceneCamera : SceneStruct {

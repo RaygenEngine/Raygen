@@ -7,6 +7,8 @@
 #include "core/Device.h"
 #include "core/CommandQueue.h"
 #include "core/SwapChain.h"
+#include "editor/imgui/ImguiImpl.h"
+#include "engine/console/ConsoleVariable.h"
 
 Layer_::Layer_()
 {
@@ -28,6 +30,7 @@ Layer_::~Layer_()
 	delete Device;
 }
 
+
 void Layer_::DrawFrame()
 {
 	CommandQueue& dqueue = DeviceQueues[D3D12_COMMAND_LIST_TYPE_DIRECT];
@@ -42,10 +45,13 @@ void Layer_::DrawFrame()
 		TransitionResource(
 			d3d12CommandList, backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-		FLOAT clearColor[]{ 1.0f, 1.0f, 0.0f, 1.0f }; // WIP: window data
+		FLOAT clearColor[]{ 0.15f, 0.15f, 0.1f, 1.0f };
 		d3d12CommandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
 	}
 
+	d3d12CommandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
+
+	ImguiImpl::RenderDX12(d3d12CommandList.Get());
 
 	// Present
 	{

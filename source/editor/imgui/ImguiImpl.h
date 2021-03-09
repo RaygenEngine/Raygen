@@ -1,10 +1,5 @@
 #pragma once
 
-// NEW::
-namespace vk {
-class CommandBuffer;
-} // namespace vk
-
 struct ImFont;
 
 class ImguiImpl {
@@ -15,7 +10,7 @@ public:
 	static void NewFrame();
 	static void EndFrame();
 
-	// static void RenderVulkan(vk::CommandBuffer drawCommandBuffer);
+	static void RenderDX12(ID3D12GraphicsCommandList* d3d12CommandList);
 
 	inline static ImFont* s_EditorFont{ nullptr };
 	inline static ImFont* s_CodeFont{ nullptr };
@@ -25,5 +20,5 @@ public:
 
 	static std::pair<glm::vec2, glm::vec2> GetIconUV(const char* icon);
 
-	// vk::DescriptorSet GetIconFontDescriptorSet()
+	// vk::DescriptorSet GetIconFontDescriptorSet() NEW::
 };

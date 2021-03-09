@@ -2,6 +2,7 @@
 
 #include "assets/AssetImporterManager.h"
 #include "assets/pods/MaterialArchetype.h"
+#include "assets/shared/ShaderStageShared.h"
 
 #include <fstream>
 

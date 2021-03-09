@@ -139,10 +139,10 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	viewProj = proj * view;
 	viewProjInv = viewInv * projInv;
 
-	// WIP:
-	float filmWorldHeight = 2.0f * focalLength * tan(0.5f * vFov);
-	float filmWorldWidth = 2.0f * focalLength * tan(0.5f * hFov);
-	const auto filmArea = filmWorldHeight * filmWorldWidth;
+	// CHECK:
+	// float filmWorldHeight = 2.0f * focalLength * tan(0.5f * vFov);
+	// float filmWorldWidth = 2.0f * focalLength * tan(0.5f * hFov);
+	// const auto filmArea = filmWorldHeight * filmWorldWidth;
 
 	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, pos = transform.position](SceneCamera& cam) {
 		cam.prevViewProj = cam.ubo.viewProj;
@@ -153,7 +153,6 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		cam.ubo.projInv = projInv;
 		cam.ubo.viewProj = viewProj;
 		cam.ubo.viewProjInv = viewProjInv;
-		cam.ubo.filmArea = filmArea;
 	});
 
 	proj[1][1] *= -1.f;

@@ -16,7 +16,6 @@ Window::Window(WindowCreationParams params)
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_AUTOBORDERLESS, GLFW_TRUE);
-
 	m_window = glfwCreateWindow(params.size.x, params.size.y, params.title, nullptr, nullptr);
 
 	// Restore state for ImGui windows. (ImGui glfw cannot explicitly store & reset the state before making their

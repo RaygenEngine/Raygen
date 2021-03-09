@@ -83,7 +83,6 @@ target_link_libraries(Raygen-App
 	Raygen
 )
 
-# instruct glfw to globaly include vulkan headers
 add_compile_definitions(GLFW_INCLUDE_NONE)
 
 # dependencies (build order)

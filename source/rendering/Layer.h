@@ -22,5 +22,7 @@ private:
 
 	UniquePtr<SwapChain> swapChain;
 
+	friend class ImguiImpl;
+
 
 } * Layer{};
