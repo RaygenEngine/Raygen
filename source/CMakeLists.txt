@@ -72,6 +72,10 @@ target_link_libraries(Raygen
 	glfw
 	${GLFW_LIBRARIES}
 	ImGuiColorTextEdit
+	d3d12.lib 
+	dxgi.lib
+	dxguid.lib
+	d3dcompiler.lib
     Raygen-Dynlib
 )
 

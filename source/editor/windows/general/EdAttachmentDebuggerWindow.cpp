@@ -2,9 +2,6 @@
 
 #include "editor/EditorObject.h"
 #include "engine/Events.h"
-#include "rendering/Layer.h"
-#include "rendering/scene/SceneDirlight.h"
-#include "rendering/scene/SceneSpotlight.h"
 
 
 namespace ed {

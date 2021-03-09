@@ -4,6 +4,14 @@
 #include "universe/BasicComponent.h"
 struct Scene;
 
+#if defined(near)
+#	undef near
+#endif
+
+#if defined(far)
+#	undef far
+#endif
+
 namespace ed {
 struct EditorCamera : public Listener {
 

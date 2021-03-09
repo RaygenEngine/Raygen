@@ -5,6 +5,14 @@
 
 struct SceneCamera;
 
+#if defined(near)
+#	undef near
+#endif
+
+#if defined(far)
+#	undef far
+#endif
+
 struct CCamera : CSceneBase {
 	REFLECTED_SCENE_COMP(CCamera, SceneCamera)
 	{

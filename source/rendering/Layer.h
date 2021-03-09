@@ -1,10 +1,9 @@
 #pragma once
 #include "engine/Listener.h"
 
-struct Scene;
+class SwapChain;
 
-class SwapchainOutputPass;
-class RendererBase;
+constexpr size_t c_inFlightFrames{ 3 };
 
 inline class Layer_ : public Listener {
 
@@ -14,16 +13,14 @@ public:
 
 	void DrawFrame();
 
-	// TODO:
-	SwapchainOutputPass* swapOutput{ nullptr };
-	Scene* mainScene{ nullptr };
-	RendererBase* renderer{ nullptr };
+	uint32 GetCurrentFrame() const { return m_currFrame; }
 
-	void ResetMainScene();
-
-	BoolFlag swapRenderer;
 
 private:
-	uint32 m_currentFrame{ 0 };
+	uint32 m_currFrame{ 0 };
+	uint64 frameFenceValues[c_inFlightFrames]{};
+
+	UniquePtr<SwapChain> swapChain;
+
 
 } * Layer{};

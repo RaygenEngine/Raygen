@@ -20,6 +20,7 @@ public:
 
 
 	[[nodiscard]] GLFWwindow* GetHandle() const { return m_window; }
+	[[nodiscard]] HWND GetNativeHandle() const;
 
 private:
 	GLFWwindow* m_window;

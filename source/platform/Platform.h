@@ -11,11 +11,10 @@ class Platform {
 	static void Destroy();
 
 public:
-	static std::vector<const char*> GetVulkanExtensions();
-
 	[[nodiscard]] static Window* GetMainWindow();
 	[[nodiscard]] static GLFWwindow* GetMainHandle() { return GetMainWindow()->GetHandle(); }
 	[[nodiscard]] static glm::uvec2 GetMainSize() { return GetMainWindow()->GetSize(); }
+	[[nodiscard]] static HWND GetMainNativeHandle() { return GetMainWindow()->GetNativeHandle(); }
 
 	static void PollEvents();
 };

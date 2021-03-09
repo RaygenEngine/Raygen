@@ -1,8 +1,6 @@
 #include "Universe.h"
 
 #include "App.h"
-#include "rendering/Layer.h"
-#include "rendering/scene/Scene.h"
 
 namespace {
 std::optional<fs::path> worldToLoad{};
@@ -49,8 +47,8 @@ void Universe::LoadPendingWorlds()
 {
 	if (worldToLoad.has_value()) {
 		delete MainWorld;
-		delete Layer->mainScene;
-		Layer->mainScene = new Scene();
+		// delete Layer->mainScene; NEW::
+		// Layer->mainScene = new Scene();
 
 		MainWorld = new World(*worldToLoad);
 		worldToLoad.reset();

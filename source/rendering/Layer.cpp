@@ -1,31 +1,63 @@
+#include "pch.h"
+
 #include "Layer.h"
 
-#include "assets/GpuAssetManager.h"
-#include "editor/EditorObject.h"
-#include "engine/console/ConsoleVariable.h"
-#include "engine/Input.h"
-#include "engine/profiler/ProfileScope.h"
-#include "platform/Platform.h"
-#include "rendering/scene/Scene.h"
+#include "engine/Events.h"
+#include "engine/Engine.h"
+#include "core/Device.h"
+#include "core/CommandQueue.h"
+#include "core/SwapChain.h"
 
-ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { Layer->mainScene->BuildAll(); },
-	"Builds all build-able scene nodes" };
-// TODO: uncomment, change name
-// ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
-//	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
+Layer_::Layer_()
+{
+	Device = new Device_();
+	DeviceQueues.AddQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
+	swapChain = std::make_unique<SwapChain>(false);
 
-Layer_::Layer_() {} // namespace vl
+	Event::OnWindowResize.Bind(this, [&swapref = *swapChain](int32 width, int32 height) {
+		Device->Flush();
+		swapref.Resize(width, height);
+	});
+}
 
-Layer_::~Layer_() {}
+Layer_::~Layer_()
+{
+	Device->Flush();
+
+	delete Device;
+}
 
 void Layer_::DrawFrame()
 {
-	PROFILE_SCOPE(Renderer);
-}
+	CommandQueue& dqueue = DeviceQueues[D3D12_COMMAND_LIST_TYPE_DIRECT];
+	auto d3d12CommandList = dqueue.GetCommandList();
 
-void Layer_::ResetMainScene()
-{
-	delete mainScene;
-	mainScene = new Scene();
+	UINT currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	auto backBuffer = swapChain->GetCurrentBackBuffer();
+	auto rtv = swapChain->GetCurrentRenderTargetView();
+
+	// Clear the render targets.
+	{
+		TransitionResource(
+			d3d12CommandList, backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		FLOAT clearColor[]{ 1.0f, 1.0f, 0.0f, 1.0f }; // WIP: window data
+		d3d12CommandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
+	}
+
+
+	// Present
+	{
+		TransitionResource(
+			d3d12CommandList, backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+		frameFenceValues[currentBackBufferIndex] = dqueue.ExecuteCommandList(d3d12CommandList);
+
+		currentBackBufferIndex = swapChain->Present();
+
+		dqueue.WaitForFenceValue(frameFenceValues[currentBackBufferIndex]);
+	}
+
+	++m_currFrame;
 }

@@ -160,7 +160,7 @@ void EditorObject_::UpdateEditor()
 	m_deferredCommands.clear();
 
 	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f)); // TODO: fix 1 / fps
-	edCamera.EnqueueUpdateCmds(Layer->mainScene);
+	// edCamera.EnqueueUpdateCmds(Layer->mainScene); NEW::
 
 	HandleInput();
 
@@ -217,7 +217,7 @@ void EditorObject_::AfterStopWorld(World& world)
 	if (&world == m_currentWorld) {
 		world.ResetWorld();
 		ComponentsDb::JsonToRegistry(m_lastPlayedWorld, world);
-		Layer->ResetMainScene();
+		// Layer->ResetMainScene(); NEW::
 	}
 }
 

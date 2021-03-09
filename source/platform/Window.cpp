@@ -3,6 +3,8 @@
 #include "platform/GlfwUtl.h"
 
 #include <glfw/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <glfw/glfw3native.h>
 
 inline size_t g_currentWindows{ 0 };
 
@@ -47,4 +49,9 @@ glm::uvec2 Window::GetSize() const
 void Window::SetTitle(const char* title)
 {
 	glfwSetWindowTitle(m_window, title);
+}
+
+HWND Window::GetNativeHandle() const
+{
+	return glfwGetWin32Window(m_window);
 }

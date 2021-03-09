@@ -10,20 +10,6 @@
 Key ToEngineKey(int32 glfwKey, Key& outSpecialKey);
 Key MouseToEngineKey(int32 glfwMouse);
 
-std::vector<const char*> glfwutl::GetVulkanExtensions()
-{
-	std::vector<const char*> extensions;
-	uint32 size;
-	const char** c_ext = glfwGetRequiredInstanceExtensions(&size);
-
-	for (uint32 i = 0; i < size; ++i) {
-		extensions.push_back(c_ext[i]);
-	}
-
-	return extensions;
-}
-
-
 void Error(int32 errorCode, const char* description)
 {
 	LOG_ERROR("GLFW Error: {} | {}", errorCode, description);

@@ -5,7 +5,6 @@
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
-#include "rendering/Layer.h"
 #include "universe/ComponentsDb.h"
 
 #include <imgui/examples/imgui_impl_glfw.h>

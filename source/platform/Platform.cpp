@@ -16,11 +16,6 @@ void Platform::Destroy()
 	delete MainWindow;
 }
 
-std::vector<const char*> Platform::GetVulkanExtensions()
-{
-	return glfwutl::GetVulkanExtensions();
-}
-
 Window* Platform::GetMainWindow()
 {
 	return MainWindow;
