@@ -11,10 +11,17 @@ namespace ed {
 
 EditorCamera::EditorCamera()
 {
-	orbitalCenter = transform.position + transform.front() * orbitalLength;
+	pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
+
+
+	pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
 	Event::OnViewportUpdated.Bind(this, [&]() { ResizeViewport(g_ViewportCoordinates.size); });
 }
 
+EditorCamera::~EditorCamera()
+{
+	_aligned_free(pData);
+}
 
 void EditorCamera::Update(float deltaSeconds)
 {
@@ -41,7 +48,8 @@ void EditorCamera::Update(float deltaSeconds)
 		}
 
 		if (useOrbitalMode) {
-			orbitalCenter = transform.position + transform.front() * orbitalLength;
+			pData->orbitalCenter
+				= XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
 		}
 	}
 
@@ -93,9 +101,9 @@ void EditorCamera::ResizeViewport(glm::uvec2 newSize)
 
 void EditorCamera::ResetRotation()
 {
-	float oldYaw = transform.yaw();
-	transform.orientation = glm::angleAxis(glm::radians(oldYaw), engineSpaceUp);
-	transform.Compose();
+	// float oldYaw = transform.yaw(); NEW::
+	// transform.orientation = glm::angleAxis(glm::radians(oldYaw), engineSpaceUp);
+	// transform.Compose();
 
 	dirtyThisFrame = true;
 }
@@ -112,14 +120,9 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	if (!dirtyThisFrame) {
 		return;
 	}
-	auto lookAt = transform.position + transform.front() * focalLength;
-	view = glm::lookAt(transform.position, lookAt, transform.up());
 
-	auto viewInv = glm::inverse(view);
-
-	glm::mat4 projInv;
-	glm::mat4 viewProj;
-	glm::mat4 viewProjInv;
+	const XMVECTOR lookAt = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
+	pData->view = XMMatrixLookAtRH(transform.translation(), lookAt, transform.up());
 
 	const auto ar = static_cast<float>(viewportWidth) / static_cast<float>(viewportHeight);
 	hFov = 2 * atan(ar * tan(vFov * 0.5f));
@@ -130,32 +133,29 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	const auto right = tan(hFov / 2.f + hFovOffset) * near;
 	const auto left = tan(-hFov / 2.f - hFovOffset) * near;
 
-	proj = glm::frustum(left, right, bottom, top, near, far);
 
-	// Vulkan's inverted y
-	proj[1][1] *= -1.f;
+	pData->proj = XMMatrixPerspectiveOffCenterRH(left, right, bottom, top, near, far);
 
-	projInv = glm::inverse(proj);
-	viewProj = proj * view;
-	viewProjInv = viewInv * projInv;
+	const XMMATRIX _projInv = XMMatrixInverse(nullptr, pData->proj);
+	const XMMATRIX _viewInv = XMMatrixInverse(nullptr, pData->view);
 
 	// CHECK:
 	// float filmWorldHeight = 2.0f * focalLength * tan(0.5f * vFov);
 	// float filmWorldWidth = 2.0f * focalLength * tan(0.5f * hFov);
 	// const auto filmArea = filmWorldHeight * filmWorldWidth;
 
-	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, pos = transform.position](SceneCamera& cam) {
+	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, translation = transform.translation()](SceneCamera& cam) {
 		cam.prevViewProj = cam.ubo.viewProj;
-		cam.ubo.position = glm::vec4(pos, 1.f);
-		cam.ubo.view = view;
-		cam.ubo.viewInv = viewInv;
-		cam.ubo.proj = proj;
-		cam.ubo.projInv = projInv;
-		cam.ubo.viewProj = viewProj;
-		cam.ubo.viewProjInv = viewProjInv;
+		XMStoreFloat3A(&cam.ubo.position, translation);
+		XMStoreFloat4x4A(&cam.ubo.view, pData->view);
+		XMStoreFloat4x4A(&cam.ubo.proj, pData->proj);
+		XMStoreFloat4x4A(&cam.ubo.viewProj, XMMatrixMultiply(pData->view, pData->proj));
+
+		XMStoreFloat4x4A(&cam.ubo.viewInv, _viewInv);
+		XMStoreFloat4x4A(&cam.ubo.projInv, _projInv);
+		XMStoreFloat4x4A(&cam.ubo.viewProjInv, XMMatrixMultiply(_projInv, _viewInv));
 	});
 
-	proj[1][1] *= -1.f;
 	dirtyThisFrame = false;
 }
 
@@ -165,16 +165,16 @@ void EditorCamera::Focus(Entity entity)
 		return;
 	}
 
-	auto pos = entity->world().position;
+	// auto pos = entity->world().position; NEW::
 
-	if (useOrbitalMode) {
-		orbitalCenter = pos;
-		OrbitalCenterChanged();
-		return;
-	}
+	// if (useOrbitalMode) {
+	//	orbitalCenter = pos;
+	//	OrbitalCenterChanged();
+	//	return;
+	//}
 
-	transform.position = pos - (transform.front() * orbitalLength);
-	transform.Compose();
+	// transform.position = pos - (transform.front() * orbitalLength);
+	// transform.Compose();
 	dirtyThisFrame = true;
 }
 
@@ -184,8 +184,8 @@ void EditorCamera::TeleportToCamera(Entity entity)
 		return;
 	}
 
-	entity->SetNodeTransformWCS(
-		math::transformMat(entity.Basic().world().scale, transform.orientation, transform.position));
+	// entity->SetNodeTransformWCS( NEW::
+	//	math::transformMat(entity.Basic().world().scale, transform.orientation, transform.position));
 }
 
 void EditorCamera::Pilot(Entity entity)
@@ -195,24 +195,24 @@ void EditorCamera::Pilot(Entity entity)
 		return;
 	}
 
-	transform = entity->world();
-	if (useOrbitalMode) {
-		orbitalCenter = transform.position + transform.front() * orbitalLength;
-		OrbitalCenterChanged();
-	}
+	// transform = entity->world(); // NEW::
+	// if (useOrbitalMode) {
+	//	orbitalCenter = transform.position + transform.front() * orbitalLength;
+	//	OrbitalCenterChanged();
+	//}
 
-	dirtyThisFrame = true;
+	// dirtyThisFrame = true;
 
-	pilotEntity = entity;
+	// pilotEntity = entity;
 }
 
-void EditorCamera::MovePosition(glm::vec3 offsetPos)
+void EditorCamera::MovePosition(FXMVECTOR offsetPos)
 {
-	transform.position += offsetPos;
-	transform.Compose();
+	XMVectorAdd(transform.translation(), offsetPos);
+	transform.compose();
 
 	if (useOrbitalMode) {
-		orbitalCenter = transform.position + transform.front() * orbitalLength;
+		pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
 		OrbitalCenterChanged();
 	}
 	dirtyThisFrame = true;
@@ -220,15 +220,16 @@ void EditorCamera::MovePosition(glm::vec3 offsetPos)
 
 void EditorCamera::OrbitalCenterChanged()
 {
-	transform.position = orbitalCenter - (transform.front() * orbitalLength);
-	transform.Compose();
+	transform.set_translation(
+		XMVectorSubtract(transform.translation(), XMVectorScale(transform.front(), orbitalLength)));
+	transform.compose();
 	dirtyThisFrame = true;
 }
 
 void EditorCamera::UpdatePiloting()
 {
 	// BUG: filter scale
-	pilotEntity->SetNodeTransformWCS(transform.transform);
+	pilotEntity->SetNodeTransformWCS(transform.transform());
 }
 
 void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
@@ -240,74 +241,74 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 		OrbitalCenterChanged();
 	}
 
-	if (input.IsMouseDragging()) {
-		const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+	// if (input.IsMouseDragging()) { NEW::
+	//	const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
-		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
-		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
+	//	auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
+	//	auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
 
-		transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
+	//	transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
 
-		if (!input.IsDown(Key::Mouse_LeftClick)) {
-			orbitalCenter = transform.position + transform.front() * orbitalLength;
-			OrbitalCenterChanged();
-		}
-		else {
-			transform.Compose();
-			dirtyThisFrame = true;
-		}
-	}
+	//	if (!input.IsDown(Key::Mouse_LeftClick)) {
+	//		orbitalCenter = transform.position + transform.front() * orbitalLength;
+	//		OrbitalCenterChanged();
+	//	}
+	//	else {
+	//		transform.Compose();
+	//		dirtyThisFrame = true;
+	//	}
+	//}
 
-	if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
-		glm::vec3 front = transform.front();
-		glm::vec3 right = transform.right();
-		glm::vec3 up = transform.up();
+	// if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
+	//	glm::vec3 front = transform.front();
+	//	glm::vec3 right = transform.right();
+	//	glm::vec3 up = transform.up();
 
-		if (worldAlign) {
-			front.y = 0.f;
-			front = glm::normalize(front);
+	//	if (worldAlign) {
+	//		front.y = 0.f;
+	//		front = glm::normalize(front);
 
-			right.y = 0.f;
-			right = glm::normalize(right);
+	//		right.y = 0.f;
+	//		right = glm::normalize(right);
 
-			up = engineSpaceUp;
-		}
+	//		up = engineSpaceUp;
+	//	}
 
-		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-			orbitalCenter += front * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
+	//		orbitalCenter += front * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-			orbitalCenter -= front * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
+	//		orbitalCenter -= front * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
-			orbitalCenter += right * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
+	//		orbitalCenter += right * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
-			orbitalCenter -= right * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
+	//		orbitalCenter -= right * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
-			orbitalCenter += up * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
+	//		orbitalCenter += up * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
-			orbitalCenter -= up * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
+	//		orbitalCenter -= up * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
 
-		if (dirtyThisFrame) {
-			OrbitalCenterChanged();
-		}
-	}
+	//	if (dirtyThisFrame) {
+	//		OrbitalCenterChanged();
+	//	}
+	//}
 }
 
 
@@ -315,68 +316,68 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 {
 	auto& input = Input;
 
-	if (input.IsMouseDragging()) {
-		auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+	// if (input.IsMouseDragging()) { NEW::
+	//	auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
-		auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
-		auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
+	//	auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
+	//	auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
 
-		transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
-		transform.Compose();
-		dirtyThisFrame = true;
-	}
+	//	transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
+	//	transform.Compose();
+	//	dirtyThisFrame = true;
+	//}
 
 
-	if (input.IsDown(Key::Mouse_RightClick)) {
-		glm::vec3 front = transform.front();
-		glm::vec3 right = transform.right();
-		glm::vec3 up = transform.up();
+	// if (input.IsDown(Key::Mouse_RightClick)) {
+	//	glm::vec3 front = transform.front();
+	//	glm::vec3 right = transform.right();
+	//	glm::vec3 up = transform.up();
 
-		if (worldAlign) {
-			front.y = 0.f;
-			front = glm::normalize(front);
+	//	if (worldAlign) {
+	//		front.y = 0.f;
+	//		front = glm::normalize(front);
 
-			right.y = 0.f;
-			right = glm::normalize(right);
+	//		right.y = 0.f;
+	//		right = glm::normalize(right);
 
-			up = engineSpaceUp;
-		}
+	//		up = engineSpaceUp;
+	//	}
 
-		const auto oldPos = transform.position;
+	//	const auto oldPos = transform.position;
 
-		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-			transform.position += front * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
+	//		transform.position += front * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-			transform.position -= front * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
+	//		transform.position -= front * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
-			transform.position += right * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
+	//		transform.position += right * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
-			transform.position -= right * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
+	//		transform.position -= right * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
-			transform.position += up * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
+	//		transform.position += up * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
-			transform.position -= up * speed;
-			dirtyThisFrame = true;
-		}
+	//	if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
+	//		transform.position -= up * speed;
+	//		dirtyThisFrame = true;
+	//	}
 
-		if (dirtyThisFrame) {
-			transform.Compose();
-		}
-	}
+	//	if (dirtyThisFrame) {
+	//		transform.Compose();
+	//	}
+	//}
 }
 } // namespace ed

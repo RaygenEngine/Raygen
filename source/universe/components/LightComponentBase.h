@@ -1,18 +1,27 @@
 #pragma once
 
+#if defined(near)
+#	undef near
+#endif
+
+#if defined(far)
+#	undef far
+#endif
+
 #include "universe/SceneComponentBase.h"
 
 struct CLightBase : CSceneBase {
 	glm::vec3 color{ 1.f };
 	float intensity{ 30.f };
 
+
 	bool hasShadow{ true };
 
 	int32 shadowMapWidth{ 512 };
 	int32 shadowMapHeight{ 512 };
 
-	float _near{ 0.25f };
-	float _far{ 10.0f };
+	float near{ 0.25f };
+	float far{ 10.0f };
 
 	float maxShadowBias{ 0.005f };
 

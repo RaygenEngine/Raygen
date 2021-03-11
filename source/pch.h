@@ -35,6 +35,12 @@ using namespace Microsoft;
 #include "d3dx12.h"
 #include <dxgi1_6.h>
 #include <d3dcompiler.h>
+
+// Removing glm is impossible without having to rework most of the engine
+// Our primary goal here is to use DirectXMath SIMD and math to accelerate operations
+// glm types should mainly be used as storage types with minimal low-cost arithmetic operations
+// such as editor math, input math or window/widget sizes, etc...
+// World math and rendering math should exclusively use DirectXMath types
 #include <DirectXMath.h>
 
 using namespace DirectX;
@@ -49,6 +55,7 @@ using namespace DirectX;
 #include <vector>
 #include <xtree>
 #include <span>
+
 
 #include "core/BoolFlag.h"
 #include "core/Icons.h"

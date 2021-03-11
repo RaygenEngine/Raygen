@@ -15,8 +15,8 @@ struct CSpotlight : CLightBase {
 
 		REFLECT_VAR(color, PropertyFlags::Color).Clamp();
 		REFLECT_VAR(intensity).Clamp();
-		REFLECT_VAR(_near).Clamp(0.001f);
-		REFLECT_VAR(_far).Clamp(0.001f);
+		REFLECT_VAR(near).Clamp(0.001f);
+		REFLECT_VAR(far).Clamp(0.001f);
 		REFLECT_VAR(shadowMapWidth).Clamp(1.f);
 		REFLECT_VAR(shadowMapHeight).Clamp(1.f);
 		REFLECT_VAR(maxShadowBias).Clamp(0.001f);
@@ -33,6 +33,9 @@ struct CSpotlight : CLightBase {
 		REFLECT_VAR(hasShadow);
 	}
 
+	CSpotlight();
+	~CSpotlight();
+
 	float constantTerm{ 1.f };
 	float linearTerm{ 1.f };
 	float quadraticTerm{ 1.f };
@@ -42,6 +45,9 @@ struct CSpotlight : CLightBase {
 	// inner
 	float innerAperture{ glm::radians(22.5f) };
 
-	glm::mat4 view;
-	glm::mat4 proj;
+	__declspec(align(16)) struct AlignedData {
+		XMMATRIX view;
+		XMMATRIX proj;
+	};
+	AlignedData* pData;
 };

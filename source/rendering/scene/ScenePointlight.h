@@ -2,8 +2,8 @@
 #include "rendering/scene/SceneStructs.h"
 
 struct Pointlight_Ubo {
-	glm::vec4 position{};
-	glm::vec4 color{};
+	XMFLOAT3A position{};
+	XMFLOAT3A color{};
 
 	float intensity{};
 
@@ -21,5 +21,5 @@ struct ScenePointlight : SceneStruct {
 	SCENE_STRUCT(ScenePointlight);
 	Pointlight_Ubo ubo;
 
-	glm::mat4 volumeTransform;
+	XMFLOAT4X4 volumeTransform;
 };

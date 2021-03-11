@@ -33,11 +33,12 @@ struct EditorCamera : public Listener {
 
 	TransformCache transform;
 	EditorCamera();
+	~EditorCamera();
 
 	float focalLength{ 1.f };
 
-	float vFov{ glm::radians(72.f) };
-	float hFov{ glm::radians(106.f) };
+	float vFov{ XMConvertToRadians(72.f) };
+	float hFov{ XMConvertToRadians(106.f) };
 
 	float near{ 0.1f };
 	float far{ 1000.f };
@@ -50,7 +51,6 @@ struct EditorCamera : public Listener {
 
 	//
 	float orbitalLength{ 5.f };
-	glm::vec3 orbitalCenter{};
 	bool useOrbitalMode{ true };
 
 	bool worldAlign{ false };
@@ -63,8 +63,14 @@ struct EditorCamera : public Listener {
 	// movement)
 	float sensitivity{ 0.15f };
 
-	glm::mat4 view;
-	glm::mat4 proj;
+
+	__declspec(align(16)) struct AlignedData {
+		XMVECTOR orbitalCenter;
+		XMMATRIX view;
+		XMMATRIX proj;
+	};
+	AlignedData* pData;
+
 
 	//
 	void Update(float deltaSeconds);
@@ -84,7 +90,7 @@ public:
 	void Pilot(Entity entity);
 
 	// Move the camera the specific offset in world space
-	void MovePosition(glm::vec3 offsetPos);
+	void XM_CALLCONV MovePosition(FXMVECTOR offsetPos);
 
 private:
 	Entity pilotEntity{};

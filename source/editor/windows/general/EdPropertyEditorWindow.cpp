@@ -294,10 +294,10 @@ void PropertyEditorWindow::Run_BaseProperties(Entity ent)
 
 	if (ImEd::TransformRun(tr, true, &m_lockedScale, &m_localMode, &m_displayMatrix, &m_lookAtMode, &m_lookAtPos)) {
 		if (m_localMode) {
-			ent->SetNodeTransformLCS(tr.transform);
+			ent->SetNodeTransformLCS(tr.transform());
 		}
 		else {
-			ent->SetNodeTransformWCS(tr.transform);
+			ent->SetNodeTransformWCS(tr.transform());
 		}
 	}
 }
@@ -362,58 +362,58 @@ void PropertyEditorWindow::Run_Components(Entity entity)
 
 void PropertyEditorWindow::Run_ImGuizmo(Entity node)
 {
-	auto& camera = EditorObject->edCamera;
-	if (!EditorObject->m_currentWorld->IsStopped()) {
-		return;
-	}
+	// auto& camera = EditorObject->edCamera; NEW::
+	// if (!EditorObject->m_currentWorld->IsStopped()) {
+	//	return;
+	//}
 
 
-	auto nodeMatrix = node->world().transform;
-	auto originalPos = math::decomposePos(nodeMatrix);
-	// auto i = glm::identity<glm::mat4>();
-	// ImGuizmo::DrawGrid(glm::value_ptr(cameraView), glm::value_ptr(cameraProj), glm::value_ptr(i), 10.f);
+	// auto nodeMatrix = node->world().transform();
+	// auto originalPos = math::decomposePos(nodeMatrix);
+	//// auto i = glm::identity<glm::mat4>();
+	//// ImGuizmo::DrawGrid(glm::value_ptr(cameraView), glm::value_ptr(cameraProj), glm::value_ptr(i), 10.f);
 
-	// TODO: Crappy way to simulate free drag in imguizmo, should probably implement internally
-	static auto cameraView = camera.view;
-	static auto cameraProj = camera.proj;
-	if (!m_mouseLockedLastFrame) {
-		cameraView = camera.view;
-		cameraProj = camera.proj;
-	}
+	//// TODO: Crappy way to simulate free drag in imguizmo, should probably implement internally
+	// static auto cameraView = camera.view;
+	// static auto cameraProj = camera.proj;
+	// if (!m_mouseLockedLastFrame) {
+	//	cameraView = camera.view;
+	//	cameraProj = camera.proj;
+	//}
 
-	ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProj),
-		static_cast<ImGuizmo::OPERATION>(m_manipMode.op), static_cast<ImGuizmo::MODE>(m_manipMode.mode),
-		glm::value_ptr(nodeMatrix));
+	// ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProj),
+	//	static_cast<ImGuizmo::OPERATION>(m_manipMode.op), static_cast<ImGuizmo::MODE>(m_manipMode.mode),
+	//	glm::value_ptr(nodeMatrix));
 
-	bool shouldMouseLock = false;
-	if (ImGuizmo::IsUsing()) {
-		if (!m_gizmoWasUsingLastFrame) {
-			// ALT + DRAG duplicate
-			if (Input.IsDown(Key::Alt)
-				&& (m_manipMode.op == ManipOperationMode::Operation::Rotate
-					|| m_manipMode.op == ManipOperationMode::Operation::Translate)) {
-				ed::ClipboardOp::StoreEntity(node);
-				auto loaded = ed::ClipboardOp::LoadEntity(node.GetWorld());
-				OutlinerWindow::selected = loaded;
-			}
-		}
-		if (Input.IsDown(Key::Shift)) {
-			auto deltaPos = math::decomposePos(nodeMatrix) - originalPos;
-			camera.MovePosition(deltaPos);
-			shouldMouseLock = true;
-		}
-		node->SetNodeTransformWCS(nodeMatrix);
-	}
+	// bool shouldMouseLock = false;
+	// if (ImGuizmo::IsUsing()) {
+	//	if (!m_gizmoWasUsingLastFrame) {
+	//		// ALT + DRAG duplicate
+	//		if (Input.IsDown(Key::Alt)
+	//			&& (m_manipMode.op == ManipOperationMode::Operation::Rotate
+	//				|| m_manipMode.op == ManipOperationMode::Operation::Translate)) {
+	//			ed::ClipboardOp::StoreEntity(node);
+	//			auto loaded = ed::ClipboardOp::LoadEntity(node.GetWorld());
+	//			OutlinerWindow::selected = loaded;
+	//		}
+	//	}
+	//	if (Input.IsDown(Key::Shift)) {
+	//		auto deltaPos = math::decomposePos(nodeMatrix) - originalPos;
+	//		camera.MovePosition(deltaPos);
+	//		shouldMouseLock = true;
+	//	}
+	//	node->SetNodeTransformWCS(nodeMatrix);
+	//}
 
-	if (shouldMouseLock && !m_mouseLockedLastFrame) {
-		Input.LockMouse();
-	}
-	else if (!shouldMouseLock && m_mouseLockedLastFrame) {
-		Input.UnlockMouse();
-	}
-	m_mouseLockedLastFrame = shouldMouseLock;
+	// if (shouldMouseLock && !m_mouseLockedLastFrame) {
+	//	Input.LockMouse();
+	//}
+	// else if (!shouldMouseLock && m_mouseLockedLastFrame) {
+	//	Input.UnlockMouse();
+	//}
+	// m_mouseLockedLastFrame = shouldMouseLock;
 
-	m_gizmoWasUsingLastFrame = ImGuizmo::IsUsing();
+	// m_gizmoWasUsingLastFrame = ImGuizmo::IsUsing();
 }
 
 // HACK:

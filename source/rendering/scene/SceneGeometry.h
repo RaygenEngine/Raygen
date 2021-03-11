@@ -2,14 +2,14 @@
 #include "rendering/scene/SceneStructs.h"
 
 struct SceneGeometry {
-	glm::mat4 transform;
-	glm::mat4 prevTransform;
+	XMFLOAT4X4A transform;
+	XMFLOAT4X4A prevTransform;
 
 	GpuHandle<Mesh> mesh;
 };
 
 struct SceneAnimatedGeometry {
-	glm::mat4 transform{};
+	XMFLOAT4X4A transform{};
 	GpuHandle<SkinnedMesh> mesh;
 	PodHandle<SkinnedMesh> meshPod;
 

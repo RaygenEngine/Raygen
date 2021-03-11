@@ -5,8 +5,9 @@
 
 DECLARE_DIRTY_FUNC(CStaticMesh)(BasicComponent& bc)
 {
-	return [=, transform = bc.world().transform](SceneGeometry& geom) {
-		geom.transform = transform;
+	return [=, transform = bc.world().transform()](SceneGeometry& geom) {
+		XMStoreFloat4x4A(&geom.transform, transform);
+
 		if constexpr (FullDirty) {
 			geom.mesh = GpuAssetManager->GetGpuHandle(mesh);
 		}

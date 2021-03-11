@@ -6,7 +6,7 @@ struct Reflprobe_UBO {
 	float radius{ 1.5f };
 	float irradianceFactor{ 1.f };
 	float pad;
-	glm::vec4 position{};
+	XMFLOAT3A position{};
 };
 
 struct SceneReflprobe : public SceneStruct {

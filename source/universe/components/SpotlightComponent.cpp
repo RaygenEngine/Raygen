@@ -4,8 +4,8 @@
 
 DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 {
-	auto lookAt = bc.world().position + bc.world().front();
-	view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
+	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), bc.world().front());
+	pData->view = XMMatrixLookAtRH(bc.world().translation(), lookAt, bc.world().up());
 
 	[[maybe_unused]] float outerCutOff;
 	[[maybe_unused]] float innerCutOff;
@@ -14,25 +14,21 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 		outerCutOff = glm::cos(outerAperture / 2.f);
 		innerCutOff = glm::cos(innerAperture / 2.f);
 
-		const auto ar = static_cast<float>(shadowMapWidth) / static_cast<float>(shadowMapHeight);
-		proj = glm::perspective(outerAperture, ar, _near, _far);
-		// Vulkan's inverted y
-		proj[1][1] *= -1.f;
+		pData->proj = XMMatrixPerspectiveRH(shadowMapWidth, shadowMapHeight, near, far);
 	}
 
-	glm::mat4 viewProj = proj * view;
 
-	return [=](SceneSpotlight& sl) {
+	return [=, translation = bc.world().translation(), front = bc.world().front()](SceneSpotlight& sl) {
 		sl.name = "spot depth: " + bc.name;
-		sl.ubo.position = glm::vec4(bc.world().position, 1.f);
-		sl.ubo.front = glm::vec4(bc.world().front(), 0.f);
-		sl.ubo.viewProj = viewProj;
+		XMStoreFloat3A(&sl.ubo.position, translation);
+		XMStoreFloat3A(&sl.ubo.front, front);
+		XMStoreFloat4x4A(&sl.ubo.viewProj, XMMatrixMultiply(pData->view, pData->proj));
 
 		if constexpr (FullDirty) {
-			sl.ubo.color = glm::vec4(color, 1.f);
+			sl.ubo.color = { color.x, color.y, color.z };
 			sl.ubo.intensity = intensity;
-			sl.ubo._near = _near;
-			sl.ubo._far = _far;
+			sl.ubo.near = near;
+			sl.ubo.far = far;
 			sl.ubo.outerCutOff = outerCutOff;
 			sl.ubo.innerCutOff = innerCutOff;
 			sl.ubo.constantTerm = constantTerm;
@@ -44,4 +40,15 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 			sl.ubo.hasShadow = hasShadow;
 		}
 	};
+}
+
+
+CSpotlight::CSpotlight()
+{
+	pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
+}
+
+CSpotlight::~CSpotlight()
+{
+	_aligned_free(pData);
 }

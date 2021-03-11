@@ -8,32 +8,17 @@
 
 DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 {
-	if (!skyInstance.IsDefault()) {
-		PodEditor editor(skyInstance);
-		editor->SetUboParameter("sunDirection", glm::vec4(bc.world().front(), 0.f));
-		editor->SetUboParameter("sunColor", glm::vec4(color, 1.f));
-		editor->SetUboParameter("sunIntensity", intensity);
-	}
+	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), bc.world().front());
+	pData->view = XMMatrixLookAtRH(bc.world().translation(), lookAt, bc.world().up());
+	pData->proj = XMMatrixOrthographicOffCenterRH(left, right, bottom, top, near, far);
 
-	auto lookAt = bc.world().position + bc.world().front();
-	view = glm::lookAt(bc.world().position, lookAt, bc.world().up());
-
-	if constexpr (FullDirty) {
-		proj = glm::ortho(left, right, bottom, top, _near, _far);
-		// Vulkan's inverted y
-		proj[1][1] *= -1.f;
-	}
-
-
-	glm::mat4 viewProj = proj * view;
-
-	return [=](SceneDirlight& dl) {
+	return [=, front = bc.world().front()](SceneDirlight& dl) {
 		dl.name = "direct depth: " + bc.name;
-		dl.ubo.front = glm::vec4(bc.world().front(), 0.f);
-		dl.ubo.viewProj = viewProj;
+		XMStoreFloat3A(&dl.ubo.front, front);
+		XMStoreFloat4x4A(&dl.ubo.viewProj, XMMatrixMultiply(pData->view, pData->proj));
 
 		if constexpr (FullDirty) {
-			dl.ubo.color = glm::vec4(color, 1.f);
+			dl.ubo.color = { color.x, color.y, color.z };
 			dl.ubo.intensity = intensity;
 
 			dl.ubo.maxShadowBias = maxShadowBias;
@@ -42,4 +27,14 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 			dl.ubo.hasShadow = hasShadow;
 		}
 	};
+}
+
+CDirlight::CDirlight()
+{
+	pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
+}
+
+CDirlight::~CDirlight()
+{
+	_aligned_free(pData);
 }

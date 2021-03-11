@@ -14,8 +14,16 @@ void ComponentsDb::EntityHierarchyToJson(Entity ent, nlohmann::json& json)
 	{
 		auto& jbasic = json["+"];
 		jbasic["name"] = bs.name;
-		jbasic["trs"]
-			= { { "pos", bs.local().position }, { "euler_rot", bs.local().pyr() }, { "scl", bs.local().scale } };
+
+		XMFLOAT3 pos;
+		XMStoreFloat3(&pos, bs.local().translation());
+		XMFLOAT3 pyr;
+		XMStoreFloat3(&pyr, bs.local().translation()); // NEW:: pyr
+		XMFLOAT3 scl;
+		XMStoreFloat3(&scl, bs.local().scale());
+
+		jbasic["trs"] = { { "pos", { pos.x, pos.y, pos.z } }, { "euler_rot", { pyr.x, pyr.y, pyr.z } },
+			{ "scl", { scl.x, scl.y, scl.z } } };
 	}
 
 	// Children
@@ -82,12 +90,17 @@ Entity ComponentsDb::JsonToEntityHierarchy(World& world, const nlohmann::json& j
 	{
 		if (auto trsIt = jbasic.find("trs"); trsIt != jbasic.end()) {
 			auto& j = *trsIt;
-			basic.local_.position = j.value<glm::vec3>("pos", {});
-			basic.local_.scale = j.value<glm::vec3>("scl", { 1.f, 1.f, 1.f });
+
+			auto pos = j.value<glm::vec3>("pos", {});
+			basic.local_.set_translation(pos.x, pos.y, pos.z);
+
+			auto scl = j.value<glm::vec3>("scl", { 1.f, 1.f, 1.f });
+			basic.local_.set_scale(scl.x, scl.y, scl.z);
 
 			auto eulerPyr = j.value<glm::vec3>("euler_rot", {});
-			basic.local_.orientation = glm::quat(glm::radians(eulerPyr));
-			basic.local_.Compose();
+			auto orie = glm::quat(glm::radians(eulerPyr));
+			basic.local_.set_orientation(orie.x, orie.y, orie.z, orie.w);
+			basic.local_.compose();
 			basic.UpdateWorldTransforms();
 		}
 	}

@@ -2,12 +2,12 @@
 #include "rendering/scene/SceneStructs.h"
 
 struct Quadlight_Ubo {
-	glm::vec4 center{};
-	glm::vec4 normal{}; // TODO: pass quat
-	glm::vec4 right{};
-	glm::vec4 up{};
+	XMFLOAT3A center{};
+	XMFLOAT3A normal{}; // TODO: pass quat
+	XMFLOAT3A right{};
+	XMFLOAT3A up{};
 
-	glm::vec4 color{};
+	XMFLOAT3A color{};
 
 	float intensity{};
 	float constantTerm{};
@@ -26,5 +26,5 @@ struct SceneQuadlight : SceneStruct {
 	SCENE_STRUCT(SceneQuadlight);
 	Quadlight_Ubo ubo;
 
-	glm::mat4 transform;
+	XMFLOAT4X4A transform;
 };

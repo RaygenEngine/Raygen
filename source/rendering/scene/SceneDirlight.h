@@ -8,11 +8,11 @@ struct Frustum;
 
 
 struct Dirlight_Ubo {
-	glm::vec4 front{};
+	XMFLOAT3A front{};
 
 	// Lightmap
-	glm::mat4 viewProj{};
-	glm::vec4 color{};
+	XMFLOAT4X4A viewProj{};
+	XMFLOAT3A color{};
 
 	float intensity{};
 

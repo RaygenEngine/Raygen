@@ -11,12 +11,13 @@ using RayCastEntityHit = PhysicsIntersection::RayCastEntityHit;
 namespace {
 std::pair<glm::vec3, glm::vec3> RayToEntityMeshSpace(Entity ent, glm::vec3 start, glm::vec3 end)
 {
-	const Mesh& mesh = *ent.Get<CStaticMesh>().mesh.Lock();
-	glm::mat4 invTransform = glm::inverse(ent->world().transform);
+	// const Mesh& mesh = *ent.Get<CStaticMesh>().mesh.Lock(); NEW::
+	// glm::mat4 invTransform = glm::inverse(ent->world().transform);
 
-	glm::vec4 trStart = invTransform * glm::vec4(start, 1.f);
-	glm::vec4 trEnd = invTransform * glm::vec4(end, 1.f);
-	return { glm::vec3(trStart), glm::normalize(glm::vec3(trEnd - trStart)) };
+	// glm::vec4 trStart = invTransform * glm::vec4(start, 1.f);
+	// glm::vec4 trEnd = invTransform * glm::vec4(end, 1.f);
+	// return { glm::vec3(trStart), glm::normalize(glm::vec3(trEnd - trStart)) };
+	return {};
 }
 } // namespace
 
@@ -166,7 +167,7 @@ void PhysicsIntersection::Create(World& world)
 			}
 		}
 
-		box = box.Transform(bc.world().transform);
+		// box = box.Transform(bc.world().transform()); NEW::
 		tree->InsertLeaf(bc.self, box);
 	}
 }

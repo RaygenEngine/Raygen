@@ -218,144 +218,144 @@ bool TransformRun(TransformCache& tr, bool showScale, bool* lockedScale, bool* l
 
 	bool changed = false;
 
-	const auto UpdateLookAtReference = [&]() {
-		if (lookAtPos) {
-			(*lookAtPos) = tr.position + tr.front();
-		}
-	};
+	// const auto UpdateLookAtReference = [&]() { NEW::
+	//	if (lookAtPos) {
+	//		(*lookAtPos) = tr.position + tr.front();
+	//	}
+	//};
 
-	if (ImGui::DragFloat3("Position", glm::value_ptr(tr.position), 0.02f)) {
-		changed = true;
-	}
-	if (ImGui::BeginPopupContextItem("PositionPopup")) {
-		if (ImGui::MenuItem("Reset##1")) {
-			tr.position = {};
-			changed = true;
-		}
-		if (ImGui::MenuItem("Identity##1")) {
-			tr.transform = glm::identity<glm::mat4>();
-			tr.position = {};
-			tr.orientation = glm::identity<glm::quat>();
-			tr.scale = glm::vec3(1.f);
-			changed = true;
-		}
-		ImGui::EndPopup();
-	}
+	// if (ImGui::DragFloat3("Position", glm::value_ptr(tr.position), 0.02f)) {
+	//	changed = true;
+	//}
+	// if (ImGui::BeginPopupContextItem("PositionPopup")) {
+	//	if (ImGui::MenuItem("Reset##1")) {
+	//		tr.position = {};
+	//		changed = true;
+	//	}
+	//	if (ImGui::MenuItem("Identity##1")) {
+	//		tr.transform = glm::identity<glm::mat4>();
+	//		tr.position = {};
+	//		tr.orientation = glm::identity<glm::quat>();
+	//		tr.scale = glm::vec3(1.f);
+	//		changed = true;
+	//	}
+	//	ImGui::EndPopup();
+	//}
 
-	if (!lookAt || !lookAtPos || *lookAt == false) {
-		glm::vec3 eulerPyr = tr.pyr();
-		if (ImGui::DragFloat3("Rotation", glm::value_ptr(eulerPyr), 0.2f)) {
-			if (ImGui::IsAnyMouseDown()) {
-				// On user drag use quat diff, prevents gimbal locks while dragging
-				auto deltaAxis = eulerPyr - tr.pyr();
-				tr.orientation = glm::quat(glm::radians(deltaAxis)) * tr.orientation;
-				changed = true;
-			}
-			else {
-				// On user type set pyr directly, prevents the axis from flickering
-				tr.orientation = glm::quat(glm::radians(eulerPyr));
-				changed = true;
-			}
-		}
-	}
-	else {
-		ImGui::DragFloat3("Look At", glm::value_ptr(*lookAtPos), 0.1f);
-		ImEd::HelpTooltipInline(
-			"Look At will lock lookat position of the transform for as long as it is active. This way you can "
-			"adjust the position while updating the orientation to look at a fixed point.");
-		tr.orientation = math::findLookAt(tr.position, *lookAtPos);
-		changed = true;
-	}
+	// if (!lookAt || !lookAtPos || *lookAt == false) {
+	//	glm::vec3 eulerPyr = tr.pyr();
+	//	if (ImGui::DragFloat3("Rotation", glm::value_ptr(eulerPyr), 0.2f)) {
+	//		if (ImGui::IsAnyMouseDown()) {
+	//			// On user drag use quat diff, prevents gimbal locks while dragging
+	//			auto deltaAxis = eulerPyr - tr.pyr();
+	//			tr.orientation = glm::quat(glm::radians(deltaAxis)) * tr.orientation;
+	//			changed = true;
+	//		}
+	//		else {
+	//			// On user type set pyr directly, prevents the axis from flickering
+	//			tr.orientation = glm::quat(glm::radians(eulerPyr));
+	//			changed = true;
+	//		}
+	//	}
+	//}
+	// else {
+	//	ImGui::DragFloat3("Look At", glm::value_ptr(*lookAtPos), 0.1f);
+	//	ImEd::HelpTooltipInline(
+	//		"Look At will lock lookat position of the transform for as long as it is active. This way you can "
+	//		"adjust the position while updating the orientation to look at a fixed point.");
+	//	tr.orientation = math::findLookAt(tr.position, *lookAtPos);
+	//	changed = true;
+	//}
 
-	if (ImGui::BeginPopupContextItem("RotatePopup")) {
-		if (ImGui::MenuItem("Reset##2")) {
-			tr.orientation = glm::identity<glm::quat>();
-			changed = true;
-		}
-		if (lookAt && ImGui::MenuItem("Look At", nullptr, *lookAt)) {
-			*lookAt = !*lookAt;
-			if (*lookAt) {
-				UpdateLookAtReference();
-			}
-		}
-		ImGui::EndPopup();
-	}
+	// if (ImGui::BeginPopupContextItem("RotatePopup")) {
+	//	if (ImGui::MenuItem("Reset##2")) {
+	//		tr.orientation = glm::identity<glm::quat>();
+	//		changed = true;
+	//	}
+	//	if (lookAt && ImGui::MenuItem("Look At", nullptr, *lookAt)) {
+	//		*lookAt = !*lookAt;
+	//		if (*lookAt) {
+	//			UpdateLookAtReference();
+	//		}
+	//	}
+	//	ImGui::EndPopup();
+	//}
 
-	if (showScale) {
-		if (!*lockedScale) {
-			if (ImGui::DragFloat3("Scale", glm::value_ptr(tr.scale), 0.02f)) {
-				changed = true;
-			}
-		}
-		else {
-			glm::vec3 newScale = tr.scale;
-			if (ImGui::DragFloat3("Locked Scale", glm::value_ptr(newScale), 0.02f)) {
-				changed = true;
+	// if (showScale) {
+	//	if (!*lockedScale) {
+	//		if (ImGui::DragFloat3("Scale", glm::value_ptr(tr.scale), 0.02f)) {
+	//			changed = true;
+	//		}
+	//	}
+	//	else {
+	//		glm::vec3 newScale = tr.scale;
+	//		if (ImGui::DragFloat3("Locked Scale", glm::value_ptr(newScale), 0.02f)) {
+	//			changed = true;
 
-				glm::vec3 initialScale = tr.scale;
+	//			glm::vec3 initialScale = tr.scale;
 
-				float ratio = 1.f;
-				if (!math::equals(newScale.x, initialScale.x)) {
-					ratio = newScale.x / initialScale.x;
-				}
-				else if (!math::equals(newScale.y, initialScale.y)) {
-					ratio = newScale.y / initialScale.y;
-				}
-				else if (!math::equals(newScale.z, initialScale.z)) {
-					ratio = newScale.z / initialScale.z;
-				}
+	//			float ratio = 1.f;
+	//			if (!math::equals(newScale.x, initialScale.x)) {
+	//				ratio = newScale.x / initialScale.x;
+	//			}
+	//			else if (!math::equals(newScale.y, initialScale.y)) {
+	//				ratio = newScale.y / initialScale.y;
+	//			}
+	//			else if (!math::equals(newScale.z, initialScale.z)) {
+	//				ratio = newScale.z / initialScale.z;
+	//			}
 
-				ratio += 0.00001f;
-				tr.scale = initialScale * ratio;
-			}
-		}
+	//			ratio += 0.00001f;
+	//			tr.scale = initialScale * ratio;
+	//		}
+	//	}
 
-		if (ImGui::BeginPopupContextItem("ScalePopup")) {
-			if (ImGui::MenuItem("Reset##3")) {
-				changed = true;
-				tr.scale = glm::vec3(1.f);
-			}
-			if (lockedScale && ImGui::MenuItem("Lock", nullptr, lockedScale)) {
-				*lockedScale = !*lockedScale;
-			}
-			ImGui::EndPopup();
-		}
-	}
-
-
-	if (changed) {
-		tr.Compose();
-	}
-
-	if (localMode) {
-		ImGui::Checkbox("Local Mode", localMode);
-		ImEd::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
-		ImGui::SameLine(0.f, 16.f);
-	}
+	//	if (ImGui::BeginPopupContextItem("ScalePopup")) {
+	//		if (ImGui::MenuItem("Reset##3")) {
+	//			changed = true;
+	//			tr.scale = glm::vec3(1.f);
+	//		}
+	//		if (lockedScale && ImGui::MenuItem("Lock", nullptr, lockedScale)) {
+	//			*lockedScale = !*lockedScale;
+	//		}
+	//		ImGui::EndPopup();
+	//	}
+	//}
 
 
-	if (displayMatrix) {
-		ImGui::Checkbox("Display Matrix", displayMatrix);
-		ImEd::HelpTooltipInline("Toggles visiblity and editing of matricies as a row major table.");
-		if (*displayMatrix) {
-			glm::mat4 matrix = tr.transform;
+	// if (changed) {
+	//	tr.Compose();
+	//}
 
-			// to row major
-			auto rowMajor = glm::transpose(matrix);
+	// if (localMode) {
+	//	ImGui::Checkbox("Local Mode", localMode);
+	//	ImEd::HelpTooltipInline("Toggles local/global space for TRS and transform matrix editing.");
+	//	ImGui::SameLine(0.f, 16.f);
+	//}
 
-			bool edited = false;
 
-			edited |= ImGui::DragFloat4("mat.row[0]", glm::value_ptr(rowMajor[0]), 0.01f);
-			edited |= ImGui::DragFloat4("mat.row[1]", glm::value_ptr(rowMajor[1]), 0.01f);
-			edited |= ImGui::DragFloat4("mat.row[2]", glm::value_ptr(rowMajor[2]), 0.01f);
-			edited |= ImGui::DragFloat4("mat.row[3]", glm::value_ptr(rowMajor[3]), 0.01f);
-			if (edited) {
-				tr.transform = glm::transpose(rowMajor);
-				tr.Decompose();
-				changed = true;
-			}
-		}
-	}
+	// if (displayMatrix) {
+	//	ImGui::Checkbox("Display Matrix", displayMatrix);
+	//	ImEd::HelpTooltipInline("Toggles visiblity and editing of matricies as a row major table.");
+	//	if (*displayMatrix) {
+	//		glm::mat4 matrix = tr.transform;
+
+	//		// to row major
+	//		auto rowMajor = glm::transpose(matrix);
+
+	//		bool edited = false;
+
+	//		edited |= ImGui::DragFloat4("mat.row[0]", glm::value_ptr(rowMajor[0]), 0.01f);
+	//		edited |= ImGui::DragFloat4("mat.row[1]", glm::value_ptr(rowMajor[1]), 0.01f);
+	//		edited |= ImGui::DragFloat4("mat.row[2]", glm::value_ptr(rowMajor[2]), 0.01f);
+	//		edited |= ImGui::DragFloat4("mat.row[3]", glm::value_ptr(rowMajor[3]), 0.01f);
+	//		if (edited) {
+	//			tr.transform = glm::transpose(rowMajor);
+	//			tr.Decompose();
+	//			changed = true;
+	//		}
+	//	}
+	//}
 	return changed;
 }
 

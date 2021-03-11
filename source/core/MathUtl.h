@@ -7,7 +7,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_XYZW_ONLY
 
-
+// WIP: Remove glm math
 #include <glm/glm.hpp>
 #include <glm/glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -127,32 +127,66 @@ int32 roundToUInt(T number)
 }
 } // namespace math
 
+// XMGLOBALCONST XMVECTORF32 g_XMIdentityR0 = { { { 1.0f, 0.0f, 0.0f, 0.0f } } }; // engine right
+// XMGLOBALCONST XMVECTORF32 g_XMIdentityR1 = { { { 0.0f, 1.0f, 0.0f, 0.0f } } }; // engine up
+// XMGLOBALCONST XMVECTORF32 g_XMNegIdentityR2 = { { { 0.0f, 0.0f, -1.0f, 0.0f } } }; // engine front
+
 struct TransformCache {
-	glm::vec3 position{};
-	glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
-	glm::quat orientation{ glm::identity<glm::quat>() };
 
-	glm::mat4 transform{ glm::identity<glm::mat4>() };
+	TransformCache()
+	{
+		pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
+		pData->translation = XMVectorZero();
+		pData->scale = XMVectorZero();
+		pData->transform = XMMatrixIdentity();
+		pData->orientation = XMQuaternionIdentity();
+	}
+	~TransformCache() { _aligned_free(pData); }
 
-	[[nodiscard]] glm::vec3 up() const { return orientation * engineSpaceUp; }
-	[[nodiscard]] glm::vec3 front() const { return orientation * engineSpaceFront; };
-	[[nodiscard]] glm::vec3 right() const { return orientation * engineSpaceRight; };
+	// This data must be aligned otherwise the SSE intrinsics fail
+	// and throw exceptions.
+	__declspec(align(16)) struct AlignedData {
+		XMVECTOR translation;
+		XMVECTOR orientation;
+		XMVECTOR scale;
 
+		XMMATRIX transform;
+	};
+	AlignedData* pData;
+
+	[[nodiscard]] XMVECTOR up() const { return XMVector3Rotate(g_XMIdentityR1, pData->orientation); }
+	[[nodiscard]] XMVECTOR front() const { return XMVector3Rotate(g_XMNegIdentityR2, pData->orientation); }
+	[[nodiscard]] XMVECTOR right() const { return XMVector3Rotate(g_XMIdentityR0, pData->orientation); }
+	[[nodiscard]] XMVECTOR translation() const { return pData->translation; }
+	[[nodiscard]] XMVECTOR orientation() const { return pData->orientation; }
+	[[nodiscard]] XMVECTOR scale() const { return pData->scale; }
+	[[nodiscard]] XMMATRIX transform() const { return pData->transform; }
+
+
+	void XM_CALLCONV set_translation(FXMVECTOR translation) { pData->translation = translation; }
+	void XM_CALLCONV set_orientation(FXMVECTOR orientation) { pData->orientation = orientation; }
+	void XM_CALLCONV set_scale(FXMVECTOR scale) { pData->scale = scale; }
+	void XM_CALLCONV set_transform(FXMMATRIX transform) { pData->transform = transform; }
+
+	// don't use glm types here - should not get things too tangled
+	void set_translation(float x, float y, float z) { pData->translation = XMVectorSet(x, y, z, 1.0); }
+	void set_orientation(float x, float y, float z, float w) { pData->orientation = XMVectorSet(x, y, z, w); }
+	void set_scale(float x, float y, float z) { pData->scale = XMVectorSet(x, y, z, 0.0); }
+
+	//  NEW::
 	// pitch, yaw, roll, in degrees
-	[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }
-	[[nodiscard]] float pitch() const { return glm::degrees(glm::pitch(orientation)); }
-	[[nodiscard]] float yaw() const { return glm::degrees(glm::yaw(orientation)); }
-	[[nodiscard]] float roll() const { return glm::degrees(glm::roll(orientation)); }
+	//[[nodiscard]] glm::vec3 pyr() const { return glm::degrees(glm::eulerAngles(orientation)); }
+	//[[nodiscard]] float pitch() const { return glm::degrees(glm::pitch(orientation)); }
+	// [[nodiscard]] float yaw() const { return glm::degrees(glm::yaw(orientation)); }
+	//[[nodiscard]] float roll() const { return glm::degrees(glm::roll(orientation)); }
 
 	// TODO: Move compose/decompose from BasicComponent.cpp
 	// Updates transform from TRS
-	void Compose() { transform = math::transformMat(scale, orientation, position); }
-	// Updates TRS from transform
-	void Decompose()
+	// WIP: 2nd param of mat func
+	void compose()
 	{
-		glm::vec4 persp{};
-		glm::vec3 skew{};
-
-		glm::decompose(transform, scale, orientation, position, skew, persp);
+		pData->transform = XMMatrixAffineTransformation(pData->scale, {}, pData->orientation, pData->translation);
 	}
+	// Updates TRS from transform
+	void decompose() { XMMatrixDecompose(&pData->scale, &pData->orientation, &pData->translation, pData->transform); }
 };

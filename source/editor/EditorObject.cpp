@@ -94,33 +94,33 @@ void EditorObject_::Dockspace()
 void EditorObject_::HandleClickSelection(bool wasCtrl)
 {
 	m_currentWorld->physics.Create(*m_currentWorld);
-	glm::vec3 cameraFwd = edCamera.transform.front();
-	auto mouseUv = Input.GetMouseViewportUV();
+	// glm::vec3 cameraFwd = edCamera.transform.front(); NEW::
+	// auto mouseUv = Input.GetMouseViewportUV();
 
-	auto remappedMouse = mouseUv * 2.f - 1.f;
+	// auto remappedMouse = mouseUv * 2.f - 1.f;
 
 
-	auto dir = glm::normalize(glm::vec3(
-		glm::inverse(edCamera.proj * edCamera.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
+	// auto dir = glm::normalize(glm::vec3(
+	//	glm::inverse(edCamera.proj * edCamera.view) * glm::vec4(remappedMouse.x, -remappedMouse.y, 1.0f, 1.0f)));
 
-	if (wasCtrl) {
-		auto result = Universe::MainWorld->physics.RayCastChitGeom(edCamera.transform.position, dir * (edCamera.far));
+	// if (wasCtrl) {
+	//	auto result = Universe::MainWorld->physics.RayCastChitGeom(edCamera.transform.position, dir * (edCamera.far));
 
-		ed::OutlinerWindow::selected = result.entity;
+	//	ed::OutlinerWindow::selected = result.entity;
 
-		m_windowsComponent.CloseAsset(lastClickAssetSelected);
-		if (result.entity && result.geomGroupIndex >= 0) {
-			// Detect and open material in this geometry group for editing
-			auto matHandle = result.entity.Get<CStaticMesh>().mesh.Lock()->materials[result.geomGroupIndex];
-			m_windowsComponent.OpenAsset(matHandle);
-			lastClickAssetSelected = matHandle;
-		}
-	}
-	else {
-		auto result
-			= Universe::MainWorld->physics.RayCastChitSelection(edCamera.transform.position, dir * (edCamera.far));
-		ed::OutlinerWindow::selected = result.entity;
-	}
+	//	m_windowsComponent.CloseAsset(lastClickAssetSelected);
+	//	if (result.entity && result.geomGroupIndex >= 0) {
+	//		// Detect and open material in this geometry group for editing
+	//		auto matHandle = result.entity.Get<CStaticMesh>().mesh.Lock()->materials[result.geomGroupIndex];
+	//		m_windowsComponent.OpenAsset(matHandle);
+	//		lastClickAssetSelected = matHandle;
+	//	}
+	//}
+	// else {
+	//	auto result
+	//		= Universe::MainWorld->physics.RayCastChitSelection(edCamera.transform.position, dir * (edCamera.far));
+	//	ed::OutlinerWindow::selected = result.entity;
+	//}
 }
 
 void EditorObject_::UpdateViewportCoordsFromDockspace()

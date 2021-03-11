@@ -3,8 +3,6 @@
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
 
-struct SceneCamera;
-
 #if defined(near)
 #	undef near
 #endif
@@ -12,6 +10,9 @@ struct SceneCamera;
 #if defined(far)
 #	undef far
 #endif
+
+
+struct SceneCamera;
 
 struct CCamera : CSceneBase {
 	REFLECTED_SCENE_COMP(CCamera, SceneCamera)
@@ -22,21 +23,24 @@ struct CCamera : CSceneBase {
 		REFLECT_VAR(near).Clamp(0.001f);
 		REFLECT_VAR(far).Clamp(0.001f);
 		REFLECT_VAR(focalLength).Clamp(0.001f);
-		REFLECT_VAR(vFov, PropertyFlags::Rads).Clamp(0.001f, glm::pi<float>());
-		REFLECT_VAR(hFov, PropertyFlags::Rads).Clamp(0.001f, glm::pi<float>());
+		REFLECT_VAR(vFov, PropertyFlags::Rads).Clamp(0.001f, XM_PI);
+		REFLECT_VAR(hFov, PropertyFlags::Rads).Clamp(0.001f, XM_PI);
 		REFLECT_VAR(vFovOffset, PropertyFlags::Rads);
 		REFLECT_VAR(hFovOffset, PropertyFlags::Rads);
 		REFLECT_VAR(viewportWidth, PropertyFlags::Transient).Clamp(1.f);
 		REFLECT_VAR(viewportHeight, PropertyFlags::Transient).Clamp(1.f);
 	}
 
+	CCamera();
+	~CCamera();
+
 	// distance to film plane
 	float focalLength{ 1.f };
 
 	// vertical fov (angle)
-	float vFov{ glm::radians(72.f) };
+	float vFov{ XMConvertToRadians(72.f) };
 	// horizontal fov depends on the vertical and the aspect ratio
-	float hFov{ glm::radians(106.f) };
+	float hFov{ XMConvertToRadians(106.f) };
 
 	float near{ 0.1f };
 	float far{ 1000.f };
@@ -47,6 +51,9 @@ struct CCamera : CSceneBase {
 	int32 viewportWidth{ 1280 };
 	int32 viewportHeight{ 720 };
 
-	glm::mat4 view;
-	glm::mat4 proj;
+	__declspec(align(16)) struct AlignedData {
+		XMMATRIX view;
+		XMMATRIX proj;
+	};
+	AlignedData* pData;
 };

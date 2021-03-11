@@ -4,8 +4,8 @@
 
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
-	return [=, position = bc.world().position](SceneReflprobe& rp) {
-		rp.ubo.position = glm::vec4(position, 1.f);
+	return [=, translation = bc.world().translation()](SceneReflprobe& rp) {
+		XMStoreFloat3A(&rp.ubo.position, translation);
 
 		if (FullDirty) {
 

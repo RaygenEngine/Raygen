@@ -3,19 +3,19 @@
 #include "rendering/scene/SceneStructs.h"
 
 struct Camera_Ubo {
-	glm::vec4 position;
-	glm::mat4 view;
-	glm::mat4 proj;
-	glm::mat4 viewProj;
-	glm::mat4 viewInv;
-	glm::mat4 projInv;
-	glm::mat4 viewProjInv;
+	XMFLOAT3A position;
+	XMFLOAT4X4A view;
+	XMFLOAT4X4A proj;
+	XMFLOAT4X4A viewProj;
+	XMFLOAT4X4A viewInv;
+	XMFLOAT4X4A projInv;
+	XMFLOAT4X4A viewProjInv;
 };
 
 struct SceneCamera : SceneStruct {
 	SCENE_STRUCT(SceneCamera);
 	Camera_Ubo ubo;
 
-	glm::mat4 prevViewProj{};
+	XMFLOAT4X4A prevViewProj{};
 	math::Frustum frustum;
 };

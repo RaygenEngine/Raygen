@@ -60,7 +60,7 @@ private:
 	bool IsDistantChild(Entity possibleChild);
 
 public:
-	void SetNodeTransformWCS(const glm::mat4& newWorldMatrix);
+	void XM_CALLCONV SetNodeTransformWCS(FXMMATRIX newWorldMatrix);
 
 
 	// void SetNodePositionLCS(glm::vec3 lt);
@@ -69,7 +69,7 @@ public:
 	// void SetNodeEulerAnglesLCS(glm::vec3 pyr);
 	// void SetNodeScaleLCS(glm::vec3 ls);
 
-	void SetNodeTransformLCS(const glm::mat4& lm);
+	void XM_CALLCONV SetNodeTransformLCS(FXMMATRIX lm);
 	// void SetNodeLookAtLCS(glm::vec3 lookAt);
 
 	// void RotateNodeAroundAxisLCS(glm::vec3 localAxis, float degrees);

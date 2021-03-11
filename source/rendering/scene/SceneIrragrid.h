@@ -7,7 +7,7 @@ struct Irragrid_UBO {
 	int32 depth{ 3 };
 	int32 builtCount{ 0 };
 
-	glm::vec4 posAndDist;
+	XMFLOAT4A posAndDist;
 };
 
 

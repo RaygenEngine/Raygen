@@ -6,13 +6,14 @@ DECLARE_DIRTY_FUNC(CPointlight)(BasicComponent& bc)
 {
 	float effectiveRadius = CalculateEffectiveRadius();
 
-	return [=, position = bc.world().position, orientation = bc.world().orientation](ScenePointlight& pl) {
-		pl.ubo.position = glm::vec4(position, 1.f);
-		pl.volumeTransform
-			= math::transformMat(glm::vec3{ effectiveRadius }, bc.world().orientation, bc.world().position);
+	return [=, translation = bc.world().translation(), orientation = bc.world().orientation()](ScenePointlight& pl) {
+		XMStoreFloat3A(&pl.ubo.position, translation);
+		//= math::transformMat(glm::vec3{ effectiveRadius }, bc.world().orientation, bc.world().position); NEW::
+
+		// XMStoreFloat4x4A(&pl.volumeTransform, XMM);
 
 		if constexpr (FullDirty) {
-			pl.ubo.color = glm::vec4(color, 1.f);
+			pl.ubo.color = { color.x, color.y, color.z };
 			pl.ubo.intensity = intensity;
 			pl.ubo.constantTerm = constantTerm;
 			pl.ubo.linearTerm = linearTerm;

@@ -3,7 +3,7 @@
 
 void BasicComponent::SetParent(Entity newParent, bool preserveWorldTransform, int32 index)
 {
-	auto maybePreserveWT = [&, originalWt = world_.transform]() {
+	auto maybePreserveWT = [&, originalWt = world_.transform()]() {
 		if (preserveWorldTransform) {
 			SetNodeTransformWCS(originalWt);
 		}
@@ -160,18 +160,18 @@ bool BasicComponent::IsDistantChild(Entity possibleChild)
 }
 
 
-void BasicComponent::SetNodeTransformWCS(const glm::mat4& newWorldMatrix)
+void XM_CALLCONV BasicComponent::SetNodeTransformWCS(FXMMATRIX newWorldMatrix)
 {
-	auto parentMatrix = parent ? parent->world().transform : glm::identity<glm::mat4>();
-	world_.transform = newWorldMatrix;
+	auto parentMatrix = parent ? parent->world().transform() : XMMatrixIdentity();
+	world_.set_transform(newWorldMatrix);
 
-	SetNodeTransformLCS(glm::inverse(parentMatrix) * newWorldMatrix);
+	SetNodeTransformLCS(XMMatrixMultiply(newWorldMatrix, XMMatrixInverse(nullptr, parentMatrix)));
 }
 
-void BasicComponent::SetNodeTransformLCS(const glm::mat4& lm)
+void BasicComponent::SetNodeTransformLCS(FXMMATRIX lm)
 {
-	local_.transform = lm;
-	local_.Decompose();
+	local_.set_transform(lm);
+	local_.decompose();
 
 	MarkDirtyMoved();
 	UpdateWorldTransforms();
@@ -181,11 +181,10 @@ void BasicComponent::SetNodeTransformLCS(const glm::mat4& lm)
 void BasicComponent::UpdateWorldTransforms()
 {
 	MarkDirtySrt();
-	local_.Compose();
+	local_.compose();
 
-	world_.transform = parent ? parent->world_.transform * local_.transform : local_.transform;
-
-	world_.Decompose();
+	world_.set_transform(parent ? parent->world_.transform() * local_.transform() : local_.transform());
+	world_.decompose();
 
 	auto current = firstChild;
 	while (current) {

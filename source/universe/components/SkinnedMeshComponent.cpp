@@ -11,8 +11,9 @@ DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 	// The same will also happen with the "animator" update.
 	// Here we will just handle the rest of the updates (mesh changes etc)
 
-	return [=, jointsLen = skinnedMesh.Lock()->joints.size()](SceneAnimatedGeometry& geom) {
-		geom.transform = bc.world().transform;
+	return [=, transform = bc.world().transform(), jointsLen = skinnedMesh.Lock()->joints.size()](
+			   SceneAnimatedGeometry& geom) {
+		XMStoreFloat4x4A(&geom.transform, transform);
 		if constexpr (FullDirty) {
 			geom.meshPod = skinnedMesh;
 			geom.mesh = GpuAssetManager->GetGpuHandle(skinnedMesh);

@@ -1,18 +1,26 @@
 #pragma once
 #include "rendering/scene/SceneStructs.h"
 
+#if defined(near)
+#	undef near
+#endif
+
+#if defined(far)
+#	undef far
+#endif
+
 struct Spotlight_Ubo {
-	glm::vec4 position{};
-	glm::vec4 front{};
+	XMFLOAT3A position{};
+	XMFLOAT3A front{};
 
 	// Lightmap
-	glm::mat4 viewProj{};
-	glm::vec4 color{};
+	XMFLOAT4X4A viewProj{};
+	XMFLOAT3A color{};
 
 	float intensity{};
 
-	float _near{};
-	float _far{};
+	float near{};
+	float far{};
 
 	float outerCutOff{};
 	float innerCutOff{};

@@ -4,9 +4,9 @@
 
 DECLARE_DIRTY_FUNC(CIrragrid)(BasicComponent& bc)
 {
-	return [=, position = bc.world().position](SceneIrragrid& ig) {
-		ig.ubo.posAndDist = glm::vec4(position, distToAdjacent);
-
+	return [=, translation = bc.world().translation()](SceneIrragrid& ig) {
+		XMStoreFloat4A(&ig.ubo.posAndDist, translation);
+		ig.ubo.posAndDist.w = distToAdjacent;
 		if (FullDirty) {
 			ig.ubo.width = width;
 			ig.ubo.height = height;
