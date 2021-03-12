@@ -3,8 +3,6 @@
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
 
-struct SceneIrragrid;
-
 struct CIrragrid : CSceneBase {
 	REFLECTED_SCENE_COMP(CIrragrid, SceneIrragrid)
 	{

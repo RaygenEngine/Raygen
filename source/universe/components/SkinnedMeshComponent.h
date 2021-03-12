@@ -3,9 +3,6 @@
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
 
-
-struct SceneAnimatedGeometry;
-
 // TODO:
 struct CSkinnedMesh : CSceneBase {
 

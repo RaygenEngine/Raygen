@@ -1,7 +1,5 @@
 #include "IrragridComponent.h"
 
-#include "rendering/scene/SceneIrragrid.h"
-
 DECLARE_DIRTY_FUNC(CIrragrid)(BasicComponent& bc)
 {
 	return [=, translation = bc.world().translation()](SceneIrragrid& ig) {

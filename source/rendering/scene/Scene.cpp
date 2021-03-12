@@ -1,14 +1,7 @@
 #include "Scene.h"
 
 #include "engine/console/ConsoleVariable.h"
-#include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/SceneDirlight.h"
-#include "rendering/scene/SceneGeometry.h"
-#include "rendering/scene/SceneIrragrid.h"
-#include "rendering/scene/ScenePointlight.h"
-#include "rendering/scene/SceneQuadlight.h"
-#include "rendering/scene/SceneReflprobe.h"
-#include "rendering/scene/SceneSpotlight.h"
+#include "rendering/scene/SceneStructs.h"
 
 void Scene::EnqueueEndFrame()
 {
@@ -18,14 +11,12 @@ void Scene::EnqueueEndFrame()
 
 void Scene::EnqueueActiveCameraCmd(size_t uid)
 {
-	// currentCmdBuffer->emplace_back([&, uid]() { activeCamera = uid; });
+	currentCmdBuffer->emplace_back([&, uid]() { activeCamera = uid; });
 }
 
 void Scene::BuildAll()
 {
-	// for (auto reflProb : Get<SceneReflprobe>()) {
-	// reflProb->Build();
-	//}
+	// TODO: build stuff that are buildable
 }
 
 void Scene::ConsumeCmdQueue()
@@ -134,6 +125,11 @@ ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
 // NEW::
 void Scene::UploadDirty(uint32 frameIndex)
 {
+	auto col = Get<SceneCamera>();
+	for (auto gm : Get<SceneCamera>()) {
+		gm->isDirty = false;
+	}
+
 	// bool requireUpdateAccel = false || forceUpdateAccel;
 	// for (auto gm : Get<SceneGeometry>()) {
 	//	gm->prevTransform = gm->transform;

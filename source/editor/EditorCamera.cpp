@@ -4,8 +4,8 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneStructs.h"
 
 namespace ed {
 
@@ -241,74 +241,79 @@ void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 		OrbitalCenterChanged();
 	}
 
-	// if (input.IsMouseDragging()) { NEW::
-	//	const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+	if (input.IsMouseDragging()) {
+		const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
-	//	auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
-	//	auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
+		// yaw and pitch quats
+		XMVECTOR yawRot = XMQuaternionRotationAxis(g_XMIdentityR1, yawPitch.x);
+		XMVECTOR pitchRot = XMQuaternionRotationAxis(transform.right(), yawPitch.y);
 
-	//	transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
-
-	//	if (!input.IsDown(Key::Mouse_LeftClick)) {
-	//		orbitalCenter = transform.position + transform.front() * orbitalLength;
-	//		OrbitalCenterChanged();
-	//	}
-	//	else {
-	//		transform.Compose();
-	//		dirtyThisFrame = true;
-	//	}
-	//}
-
-	// if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
-	//	glm::vec3 front = transform.front();
-	//	glm::vec3 right = transform.right();
-	//	glm::vec3 up = transform.up();
-
-	//	if (worldAlign) {
-	//		front.y = 0.f;
-	//		front = glm::normalize(front);
-
-	//		right.y = 0.f;
-	//		right = glm::normalize(right);
-
-	//		up = engineSpaceUp;
-	//	}
-
-	//	if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-	//		orbitalCenter += front * speed;
-	//		dirtyThisFrame = true;
-	//	}
-
-	//	if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-	//		orbitalCenter -= front * speed;
-	//		dirtyThisFrame = true;
-	//	}
-
-	//	if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
-	//		orbitalCenter += right * speed;
-	//		dirtyThisFrame = true;
-	//	}
-
-	//	if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
-	//		orbitalCenter -= right * speed;
-	//		dirtyThisFrame = true;
-	//	}
-
-	//	if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
-	//		orbitalCenter += up * speed;
-	//		dirtyThisFrame = true;
-	//	}
-
-	//	if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
-	//		orbitalCenter -= up * speed;
-	//		dirtyThisFrame = true;
-	//	}
+		// newOrient = normalize(yawRot * (pitchRot * oldOrient))
+		transform.set_orientation(XMQuaternionNormalize(
+			XMQuaternionMultiply(yawRot, XMQuaternionMultiply(pitchRot, transform.orientation()))));
 
 
-	//	if (dirtyThisFrame) {
-	//		OrbitalCenterChanged();
-	//	}
-	//}
+		if (!input.IsDown(Key::Mouse_LeftClick)) {
+			pData->orbitalCenter
+				= XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
+			OrbitalCenterChanged();
+		}
+		else {
+			transform.compose();
+			dirtyThisFrame = true;
+		}
+	}
+
+	if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
+		// glm::vec3 front = transform.front(); NEW::
+		// glm::vec3 right = transform.right();
+		// glm::vec3 up = transform.up();
+
+		// if (worldAlign) {
+		//	front.y = 0.f;
+		//	front = glm::normalize(front);
+
+		//	right.y = 0.f;
+		//	right = glm::normalize(right);
+
+		//	up = engineSpaceUp;
+		//}
+
+		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
+			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), speed));
+			dirtyThisFrame = true;
+		}
+
+		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
+			pData->orbitalCenter = XMVectorSubtract(transform.translation(), XMVectorScale(transform.front(), speed));
+			dirtyThisFrame = true;
+		}
+
+		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
+			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed));
+			dirtyThisFrame = true;
+		}
+
+		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
+			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed));
+			dirtyThisFrame = true;
+		}
+
+		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
+			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.up(), speed));
+			dirtyThisFrame = true;
+		}
+
+		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
+			pData->orbitalCenter = XMVectorSubtract(transform.translation(), XMVectorScale(transform.up(), speed));
+			dirtyThisFrame = true;
+		}
+
+
+		if (dirtyThisFrame) {
+			OrbitalCenterChanged();
+		}
+	}
 }
 
 
@@ -316,68 +321,71 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 {
 	auto& input = Input;
 
-	// if (input.IsMouseDragging()) { NEW::
-	//	auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+	if (input.IsMouseDragging()) {
+		auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
-	//	auto yawRot = glm::angleAxis(yawPitch.x, engineSpaceUp);
-	//	auto pitchRot = glm::angleAxis(yawPitch.y, transform.right());
+		// yaw and pitch quats
+		XMVECTOR yawRot = XMQuaternionRotationAxis(g_XMIdentityR1, yawPitch.x);
+		XMVECTOR pitchRot = XMQuaternionRotationAxis(transform.right(), yawPitch.y);
 
-	//	transform.orientation = glm::normalize(yawRot * (pitchRot * transform.orientation));
-	//	transform.Compose();
-	//	dirtyThisFrame = true;
-	//}
+		// newOrient = normalize(yawRot * (pitchRot * oldOrient))
+		transform.set_orientation(XMQuaternionNormalize(
+			XMQuaternionMultiply(yawRot, XMQuaternionMultiply(pitchRot, transform.orientation()))));
+		transform.compose();
+		dirtyThisFrame = true;
+	}
 
 
-	// if (input.IsDown(Key::Mouse_RightClick)) {
-	//	glm::vec3 front = transform.front();
-	//	glm::vec3 right = transform.right();
-	//	glm::vec3 up = transform.up();
+	if (input.IsDown(Key::Mouse_RightClick)) {
+		/*glm::vec3 front = transform.front(); NEW::
+		glm::vec3 right = transform.right();
+		glm::vec3 up = transform.up();
 
-	//	if (worldAlign) {
-	//		front.y = 0.f;
-	//		front = glm::normalize(front);
+		if (worldAlign) {
+			front.y = 0.f;
+			front = glm::normalize(front);
 
-	//		right.y = 0.f;
-	//		right = glm::normalize(right);
+			right.y = 0.f;
+			right = glm::normalize(right);
 
-	//		up = engineSpaceUp;
-	//	}
+			up = engineSpaceUp;
+		}*/
 
-	//	const auto oldPos = transform.position;
+		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
+			transform.set_translation(XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), speed)));
+			dirtyThisFrame = true;
+		}
 
-	//	if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-	//		transform.position += front * speed;
-	//		dirtyThisFrame = true;
-	//	}
+		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
+			transform.set_translation(
+				XMVectorSubtract(transform.translation(), XMVectorScale(transform.front(), speed)));
+			dirtyThisFrame = true;
+		}
 
-	//	if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-	//		transform.position -= front * speed;
-	//		dirtyThisFrame = true;
-	//	}
+		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
+			transform.set_translation(XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed)));
+			dirtyThisFrame = true;
+		}
 
-	//	if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
-	//		transform.position += right * speed;
-	//		dirtyThisFrame = true;
-	//	}
+		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
+			transform.set_translation(
+				XMVectorSubtract(transform.translation(), XMVectorScale(transform.right(), speed)));
+			dirtyThisFrame = true;
+		}
 
-	//	if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
-	//		transform.position -= right * speed;
-	//		dirtyThisFrame = true;
-	//	}
+		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
+			transform.set_translation(XMVectorAdd(transform.translation(), XMVectorScale(transform.up(), speed)));
+			dirtyThisFrame = true;
+		}
 
-	//	if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
-	//		transform.position += up * speed;
-	//		dirtyThisFrame = true;
-	//	}
+		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
+			transform.set_translation(XMVectorSubtract(transform.translation(), XMVectorScale(transform.up(), speed)));
+			dirtyThisFrame = true;
+		}
 
-	//	if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
-	//		transform.position -= up * speed;
-	//		dirtyThisFrame = true;
-	//	}
-
-	//	if (dirtyThisFrame) {
-	//		transform.Compose();
-	//	}
-	//}
+		if (dirtyThisFrame) {
+			transform.compose();
+		}
+	}
 }
 } // namespace ed

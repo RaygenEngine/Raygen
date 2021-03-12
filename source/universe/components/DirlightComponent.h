@@ -4,8 +4,6 @@
 #include "universe/components/LightComponentBase.h"
 
 
-struct SceneDirlight;
-
 // TODO:
 struct CDirlight : CLightBase {
 

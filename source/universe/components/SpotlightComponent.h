@@ -1,10 +1,7 @@
 #pragma once
 #include "universe/BasicComponent.h"
 #include "universe/ComponentsDb.h"
-#include "universe/SceneComponentBase.h"
 #include "universe/components/LightComponentBase.h"
-
-struct SceneSpotlight;
 
 // TODO:
 struct CSpotlight : CLightBase {

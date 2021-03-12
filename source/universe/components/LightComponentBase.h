@@ -1,13 +1,5 @@
 #pragma once
 
-#if defined(near)
-#	undef near
-#endif
-
-#if defined(far)
-#	undef far
-#endif
-
 #include "universe/SceneComponentBase.h"
 
 struct CLightBase : CSceneBase {

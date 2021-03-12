@@ -2,6 +2,7 @@
 #include "engine/Listener.h"
 
 class SwapChain;
+struct Scene;
 
 constexpr size_t c_inFlightFrames{ 3 };
 
@@ -16,11 +17,14 @@ public:
 	uint32 GetCurrentFrame() const { return m_currFrame; }
 
 
+	Scene* GetScene() const { return m_scene.get(); }
+
 private:
 	uint32 m_currFrame{ 0 };
-	uint64 frameFenceValues[c_inFlightFrames]{};
+	uint64 m_frameFenceValues[c_inFlightFrames]{};
 
-	UniquePtr<SwapChain> swapChain;
+	UniquePtr<SwapChain> m_swapChain;
+	UniquePtr<Scene> m_scene;
 
 	friend class ImguiImpl;
 

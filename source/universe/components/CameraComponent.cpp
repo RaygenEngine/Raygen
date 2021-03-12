@@ -1,7 +1,5 @@
 #include "universe/components/CameraComponent.h"
 
-#include "rendering/scene/SceneCamera.h"
-
 DECLARE_DIRTY_FUNC(CCamera)(BasicComponent& bc)
 {
 	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), XMVectorScale(bc.world().front(), focalLength));

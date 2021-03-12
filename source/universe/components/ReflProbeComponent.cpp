@@ -1,7 +1,5 @@
 #include "ReflProbeComponent.h"
 
-#include "rendering/scene/SceneReflprobe.h"
-
 DECLARE_DIRTY_FUNC(CReflprobe)(BasicComponent& bc)
 {
 	return [=, translation = bc.world().translation()](SceneReflprobe& rp) {

@@ -2,7 +2,6 @@
 
 #include "assets/pods/SkinnedMesh.h"
 #include "rendering/assets/GpuAssetManager.h"
-#include "rendering/scene/SceneGeometry.h"
 
 DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 {
@@ -13,7 +12,7 @@ DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 
 	return [=, transform = bc.world().transform(), jointsLen = skinnedMesh.Lock()->joints.size()](
 			   SceneAnimatedGeometry& geom) {
-		XMStoreFloat4x4A(&geom.transform, transform);
+		XMStoreFloat4x4A(&geom.ubo.transform, transform);
 		if constexpr (FullDirty) {
 			geom.meshPod = skinnedMesh;
 			geom.mesh = GpuAssetManager->GetGpuHandle(skinnedMesh);

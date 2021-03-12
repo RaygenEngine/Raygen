@@ -1,7 +1,5 @@
 #include "SpotlightComponent.h"
 
-#include "rendering/scene/SceneSpotlight.h"
-
 DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 {
 	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), bc.world().front());

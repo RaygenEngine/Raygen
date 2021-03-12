@@ -5,6 +5,8 @@
 
 struct Scene {
 
+	size_t activeCamera{ 0 };
+
 	// Get a collection of the specific Scene Class type. Iterating [begin(), end()] will only return valid subobjects
 	template<CSceneElem T>
 	SceneCollection<T>& Get();

@@ -1,11 +1,5 @@
 #include "DirlightComponent.h"
 
-#include "assets/PodEditor.h"
-#include "assets/pods/MaterialArchetype.h"
-#include "assets/pods/MaterialInstance.h"
-#include "rendering/scene/SceneDirlight.h"
-
-
 DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 {
 	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), bc.world().front());

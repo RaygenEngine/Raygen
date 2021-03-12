@@ -1,7 +1,5 @@
 #include "PointlightComponent.h"
 
-#include "rendering/scene/ScenePointlight.h"
-
 DECLARE_DIRTY_FUNC(CPointlight)(BasicComponent& bc)
 {
 	float effectiveRadius = CalculateEffectiveRadius();

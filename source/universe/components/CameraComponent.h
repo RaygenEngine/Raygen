@@ -3,17 +3,6 @@
 #include "universe/ComponentsDb.h"
 #include "universe/SceneComponentBase.h"
 
-#if defined(near)
-#	undef near
-#endif
-
-#if defined(far)
-#	undef far
-#endif
-
-
-struct SceneCamera;
-
 struct CCamera : CSceneBase {
 	REFLECTED_SCENE_COMP(CCamera, SceneCamera)
 	{

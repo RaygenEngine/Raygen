@@ -51,7 +51,7 @@ struct EditorCamera : public Listener {
 
 	//
 	float orbitalLength{ 5.f };
-	bool useOrbitalMode{ true };
+	bool useOrbitalMode{ false };
 
 	bool worldAlign{ false };
 

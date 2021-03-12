@@ -9,15 +9,17 @@
 #include "core/SwapChain.h"
 #include "editor/imgui/ImguiImpl.h"
 #include "engine/console/ConsoleVariable.h"
+#include "rendering/scene/Scene.h"
 
 Layer_::Layer_()
 {
 	Device = new Device_();
 	DeviceQueues.AddQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-	swapChain = std::make_unique<SwapChain>(false);
+	m_swapChain = std::make_unique<SwapChain>(false);
+	m_scene = std::make_unique<Scene>();
 
-	Event::OnWindowResize.Bind(this, [&swapref = *swapChain](int32 width, int32 height) {
+	Event::OnWindowResize.Bind(this, [&swapref = *m_swapChain](int32 width, int32 height) {
 		Device->Flush();
 		swapref.Resize(width, height);
 	});
@@ -33,12 +35,16 @@ Layer_::~Layer_()
 
 void Layer_::DrawFrame()
 {
+	m_scene->ConsumeCmdQueue();
+
+	m_scene->UploadDirty(m_currFrame); // NEW:: param
+
 	CommandQueue& dqueue = DeviceQueues[D3D12_COMMAND_LIST_TYPE_DIRECT];
 	auto d3d12CommandList = dqueue.GetCommandList();
 
-	UINT currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
-	auto backBuffer = swapChain->GetCurrentBackBuffer();
-	auto rtv = swapChain->GetCurrentRenderTargetView();
+	UINT currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	auto backBuffer = m_swapChain->GetCurrentBackBuffer();
+	auto rtv = m_swapChain->GetCurrentRenderTargetView();
 
 	// Clear the render targets.
 	{
@@ -58,11 +64,11 @@ void Layer_::DrawFrame()
 		TransitionResource(
 			d3d12CommandList, backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
-		frameFenceValues[currentBackBufferIndex] = dqueue.ExecuteCommandList(d3d12CommandList);
+		m_frameFenceValues[currentBackBufferIndex] = dqueue.ExecuteCommandList(d3d12CommandList);
 
-		currentBackBufferIndex = swapChain->Present();
+		currentBackBufferIndex = m_swapChain->Present();
 
-		dqueue.WaitForFenceValue(frameFenceValues[currentBackBufferIndex]);
+		dqueue.WaitForFenceValue(m_frameFenceValues[currentBackBufferIndex]);
 	}
 
 	++m_currFrame;

@@ -1,10 +1,7 @@
 #pragma once
 #include "universe/BasicComponent.h"
 #include "universe/ComponentsDb.h"
-#include "universe/SceneComponentBase.h"
 #include "universe/components/LightComponentBase.h"
-
-struct SceneQuadlight;
 
 struct CQuadlight : CLightBase {
 	REFLECTED_SCENE_COMP(CQuadlight, SceneQuadlight)
