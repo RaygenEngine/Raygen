@@ -80,6 +80,12 @@ uint64 CommandQueue::ExecuteCommandList(WRL::ComPtr<ID3D12GraphicsCommandList2> 
 	return fenceValue;
 }
 
+void CommandQueue::ExecuteCommandListBlocking(WRL::ComPtr<ID3D12GraphicsCommandList2> d3d12CommandList)
+{
+	auto fenceValue = ExecuteCommandList(d3d12CommandList);
+	WaitForFenceValue(fenceValue);
+}
+
 uint64 CommandQueue::Signal()
 {
 	AbortIfFailed(m_d3d12CommandQueue->Signal(m_d3d12Fence.Get(), ++m_fenceValue));

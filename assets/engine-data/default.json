@@ -1,4 +1,29 @@
 [
   {
+    "+": {
+      "name": "Sponza",
+      "trs": {
+        "euler_rot": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "pos": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scl": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      }
+    },
+    "CStaticMesh": {
+      "mesh": "",
+      "mesh_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf"
+    },
+    "~": []
   }
 ]

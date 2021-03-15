@@ -23,6 +23,8 @@ struct SceneStruct {
 	{                                                                                                                  \
 	}
 
+// NEXT: should those values be in XMM/V format instead?
+
 struct SceneGeometry : SceneStruct {
 	SCENE_STRUCT(SceneGeometry);
 
@@ -113,7 +115,7 @@ struct SceneSpotlight : SceneStruct {
 		int32 samples;
 		float sampleInvSpread;
 		int32 hasShadow;
-	} ubo{}; // NEXT: CHECK INITIALITZATION
+	} ubo{};
 
 	std::string name;
 };

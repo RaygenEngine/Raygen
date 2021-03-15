@@ -19,6 +19,10 @@ public:
 
 	Scene* GetScene() const { return m_scene.get(); }
 
+protected:
+	void DrawStaticGeometry(WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList);
+	void PreparePipelineStuff();
+
 private:
 	uint32 m_currFrame{ 0 };
 	uint64 m_frameFenceValues[c_inFlightFrames]{};
@@ -27,6 +31,28 @@ private:
 	UniquePtr<Scene> m_scene;
 
 	friend class ImguiImpl;
+
+
+	// WIP: render targets
+	D3D12_VIEWPORT m_viewport;
+	D3D12_RECT m_scissorRect;
+
+	// Vertex buffer for the cube.
+	WRL::ComPtr<ID3D12Resource> vertexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+	// Index buffer for the cube.
+	WRL::ComPtr<ID3D12Resource> indexBuffer;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+	WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+	WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+
+	// Depth buffer.
+	WRL::ComPtr<ID3D12Resource> depthBuffer;
+	// Descriptor heap for depth buffer.
+	WRL::ComPtr<ID3D12DescriptorHeap> DSVDescriptorHeap;
+
+	void UpdateDSV(int32_t width, int32_t height);
 
 
 } * Layer{};

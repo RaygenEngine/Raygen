@@ -3,6 +3,7 @@
 #include "assets/Assets.h"
 #include "assets/StdAssets.h"
 #include "core/iterable/IterableSafeVector.h"
+#include "rendering/assets/GpuMesh.h"
 
 
 GpuAssetManager_::~GpuAssetManager_()

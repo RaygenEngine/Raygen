@@ -21,6 +21,8 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetView() const;
 	WRL::ComPtr<ID3D12Resource> GetCurrentBackBuffer() const;
 
+	glm::ivec2 GetSize() const { return { m_width, m_height }; }
+
 protected:
 	// Create the swap chain.
 	WRL::ComPtr<IDXGISwapChain4> CreateSwapChain();

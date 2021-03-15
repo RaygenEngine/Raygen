@@ -37,9 +37,9 @@ set ( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS OFF )
 
 # Include shaders to a separate project
 project (Raygen-Shaders)
-set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../assets/engine-data/spv/")
+set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../assets/engine-data/shaders/")
 file(GLOB_RECURSE SHADER_SOURCES CONFIGURE_DEPENDS "${SHADER_DIR}/*.*")
-list(FILTER SHADER_SOURCES EXCLUDE REGEX ".spv$")
+list(FILTER SHADER_SOURCES EXCLUDE REGEX ".cso")
 source_group(TREE ${SHADER_DIR} PREFIX "Shaders" FILES ${SHADER_SOURCES})
 set (DUMMY_CPP "${CMAKE_CURRENT_SOURCE_DIR}/empty.cpp")
 add_library(Raygen-Shaders ${SHADER_SOURCES} ${DUMMY_CPP})
@@ -105,7 +105,6 @@ if (MSVC)
 	endforeach()
 endif()
 
-#target_include_directories(Raygen PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY})
 target_include_directories(Raygen PUBLIC ${INCLUDE_DEPENDENCIES_DIRECTORY}/nlohmann)
 							  

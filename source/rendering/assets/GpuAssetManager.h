@@ -27,8 +27,8 @@ public:
 	template<typename T>
 	void Load(PodHandle<T> handle)
 	{
-		// delete gpuAssets[handle.uid];
-		// gpuAssets[handle.uid] = new GpuAsset<T>(handle);
+		delete gpuAssets[handle.uid];
+		gpuAssets[handle.uid] = new GpuAsset<T>(handle);
 	}
 
 	template<CAssetPod T>

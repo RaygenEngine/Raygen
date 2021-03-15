@@ -15,7 +15,7 @@ DECLARE_DIRTY_FUNC(CSkinnedMesh)(BasicComponent& bc)
 		XMStoreFloat4x4A(&geom.ubo.transform, transform);
 		if constexpr (FullDirty) {
 			geom.meshPod = skinnedMesh;
-			geom.mesh = GpuAssetManager->GetGpuHandle(skinnedMesh);
+			// geom.mesh = GpuAssetManager->GetGpuHandle(skinnedMesh); NEW::
 
 			// Dirty-ness of joints length is checked on scene object side
 			// geom.MaybeResizeJoints(jointsLen);
