@@ -20,9 +20,6 @@ struct CCamera : CSceneBase {
 		REFLECT_VAR(viewportHeight, PropertyFlags::Transient).Clamp(1.f);
 	}
 
-	CCamera();
-	~CCamera();
-
 	// distance to film plane
 	float focalLength{ 1.f };
 
@@ -39,10 +36,4 @@ struct CCamera : CSceneBase {
 
 	int32 viewportWidth{ 1280 };
 	int32 viewportHeight{ 720 };
-
-	__declspec(align(16)) struct AlignedData {
-		XMMATRIX view;
-		XMMATRIX proj;
-	};
-	AlignedData* pData;
 };

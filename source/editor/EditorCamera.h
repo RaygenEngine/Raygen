@@ -33,7 +33,6 @@ struct EditorCamera : public Listener {
 
 	TransformCache transform;
 	EditorCamera();
-	~EditorCamera();
 
 	float focalLength{ 1.f };
 
@@ -63,14 +62,7 @@ struct EditorCamera : public Listener {
 	// movement)
 	float sensitivity{ 0.15f };
 
-
-	__declspec(align(16)) struct AlignedData {
-		XMVECTOR orbitalCenter;
-		XMMATRIX view;
-		XMMATRIX proj;
-	};
-	AlignedData* pData;
-
+	// XMFLOAT3 orbitalCenter; NEW::
 
 	//
 	void Update(float deltaSeconds);

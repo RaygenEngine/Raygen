@@ -11,16 +11,9 @@ namespace ed {
 
 EditorCamera::EditorCamera()
 {
-	pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
+	// XMStoreFloat3(&orbitalCenter, transform.translation() + orbitalLength * transform.front());
 
-
-	pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
 	Event::OnViewportUpdated.Bind(this, [&]() { ResizeViewport(g_ViewportCoordinates.size); });
-}
-
-EditorCamera::~EditorCamera()
-{
-	_aligned_free(pData);
 }
 
 void EditorCamera::Update(float deltaSeconds)
@@ -48,8 +41,7 @@ void EditorCamera::Update(float deltaSeconds)
 		}
 
 		if (useOrbitalMode) {
-			pData->orbitalCenter
-				= XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
+			// XMStoreFloat3(&orbitalCenter, transform.translation() + orbitalLength * transform.front());
 		}
 	}
 
@@ -122,7 +114,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	}
 
 	const XMVECTOR lookAt = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
-	pData->view = XMMatrixLookAtRH(transform.translation(), lookAt, transform.up());
+	XMMATRIX view = XMMatrixLookAtRH(transform.translation(), lookAt, transform.up());
 
 	const auto ar = static_cast<float>(viewportWidth) / static_cast<float>(viewportHeight);
 	hFov = 2 * atan(ar * tan(vFov * 0.5f));
@@ -134,10 +126,10 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	const auto left = tan(-hFov / 2.f - hFovOffset) * near;
 
 
-	pData->proj = XMMatrixPerspectiveOffCenterRH(left, right, bottom, top, near, far);
+	XMMATRIX proj = XMMatrixPerspectiveOffCenterRH(left, right, bottom, top, near, far);
 
-	const XMMATRIX _projInv = XMMatrixInverse(nullptr, pData->proj);
-	const XMMATRIX _viewInv = XMMatrixInverse(nullptr, pData->view);
+	const XMMATRIX _projInv = XMMatrixInverse(nullptr, proj);
+	const XMMATRIX _viewInv = XMMatrixInverse(nullptr, view);
 
 	// CHECK:
 	// float filmWorldHeight = 2.0f * focalLength * tan(0.5f * vFov);
@@ -147,9 +139,9 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	worldScene->EnqueueCmd<SceneCamera>(sceneUid, [=, translation = transform.translation()](SceneCamera& cam) {
 		cam.prevViewProj = cam.ubo.viewProj;
 		XMStoreFloat3A(&cam.ubo.position, translation);
-		XMStoreFloat4x4A(&cam.ubo.view, pData->view);
-		XMStoreFloat4x4A(&cam.ubo.proj, pData->proj);
-		XMStoreFloat4x4A(&cam.ubo.viewProj, XMMatrixMultiply(pData->view, pData->proj));
+		XMStoreFloat4x4A(&cam.ubo.view, view);
+		XMStoreFloat4x4A(&cam.ubo.proj, proj);
+		XMStoreFloat4x4A(&cam.ubo.viewProj, XMMatrixMultiply(view, proj));
 
 		XMStoreFloat4x4A(&cam.ubo.viewInv, _viewInv);
 		XMStoreFloat4x4A(&cam.ubo.projInv, _projInv);
@@ -212,7 +204,7 @@ void EditorCamera::MovePosition(FXMVECTOR offsetPos)
 	transform.compose();
 
 	if (useOrbitalMode) {
-		pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
+		// XMStoreFloat3(&orbitalCenter, transform.translation() + orbitalLength * transform.front());
 		OrbitalCenterChanged();
 	}
 	dirtyThisFrame = true;
@@ -234,86 +226,86 @@ void EditorCamera::UpdatePiloting()
 
 void EditorCamera::UpdateOrbital(float speed, float deltaSeconds)
 {
-	auto& input = Input;
+	// auto& input = Input;
 
-	if (input.GetScrollDelta() != 0) {
-		orbitalLength = std::max(orbitalLength - static_cast<float>(input.GetScrollDelta()), 1.0f);
-		OrbitalCenterChanged();
-	}
+	// if (input.GetScrollDelta() != 0) {
+	//	orbitalLength = std::max(orbitalLength - static_cast<float>(input.GetScrollDelta()), 1.0f);
+	//	OrbitalCenterChanged();
+	//}
 
-	if (input.IsMouseDragging()) {
-		const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
+	// if (input.IsMouseDragging()) {
+	//	const auto yawPitch = glm::radians(-input.GetMouseDelta() * sensitivity);
 
-		// yaw and pitch quats
-		XMVECTOR yawRot = XMQuaternionRotationAxis(g_XMIdentityR1, yawPitch.x);
-		XMVECTOR pitchRot = XMQuaternionRotationAxis(transform.right(), yawPitch.y);
+	//	// yaw and pitch quats
+	//	XMVECTOR yawRot = XMQuaternionRotationAxis(g_XMIdentityR1, yawPitch.x);
+	//	XMVECTOR pitchRot = XMQuaternionRotationAxis(transform.right(), yawPitch.y);
 
-		// newOrient = normalize(yawRot * (pitchRot * oldOrient))
-		transform.set_orientation(XMQuaternionNormalize(
-			XMQuaternionMultiply(yawRot, XMQuaternionMultiply(pitchRot, transform.orientation()))));
-
-
-		if (!input.IsDown(Key::Mouse_LeftClick)) {
-			pData->orbitalCenter
-				= XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), orbitalLength));
-			OrbitalCenterChanged();
-		}
-		else {
-			transform.compose();
-			dirtyThisFrame = true;
-		}
-	}
-
-	if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
-		// glm::vec3 front = transform.front(); NEW::
-		// glm::vec3 right = transform.right();
-		// glm::vec3 up = transform.up();
-
-		// if (worldAlign) {
-		//	front.y = 0.f;
-		//	front = glm::normalize(front);
-
-		//	right.y = 0.f;
-		//	right = glm::normalize(right);
-
-		//	up = engineSpaceUp;
-		//}
-
-		if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
-			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), speed));
-			dirtyThisFrame = true;
-		}
-
-		if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
-			pData->orbitalCenter = XMVectorSubtract(transform.translation(), XMVectorScale(transform.front(), speed));
-			dirtyThisFrame = true;
-		}
-
-		if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
-			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed));
-			dirtyThisFrame = true;
-		}
-
-		if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
-			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed));
-			dirtyThisFrame = true;
-		}
-
-		if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
-			pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.up(), speed));
-			dirtyThisFrame = true;
-		}
-
-		if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
-			pData->orbitalCenter = XMVectorSubtract(transform.translation(), XMVectorScale(transform.up(), speed));
-			dirtyThisFrame = true;
-		}
+	//	// newOrient = normalize(yawRot * (pitchRot * oldOrient))
+	//	transform.set_orientation(XMQuaternionNormalize(
+	//		XMQuaternionMultiply(yawRot, XMQuaternionMultiply(pitchRot, transform.orientation()))));
 
 
-		if (dirtyThisFrame) {
-			OrbitalCenterChanged();
-		}
-	}
+	//	if (!input.IsDown(Key::Mouse_LeftClick)) {
+	//		// XMStoreFloat3(&orbitalCenter, transform.translation() + orbitalLength * transform.front());
+	//		OrbitalCenterChanged();
+	//	}
+	//	else {
+	//		transform.compose();
+	//		dirtyThisFrame = true;
+	//	}
+	//}
+
+	// if (input.IsDown(Key::Mouse_RightClick) || input.IsDown(Key::Mouse_LeftClick)) {
+	//	// glm::vec3 front = transform.front(); NEW::
+	//	// glm::vec3 right = transform.right();
+	//	// glm::vec3 up = transform.up();
+
+	//	// if (worldAlign) {
+	//	//	front.y = 0.f;
+	//	//	front = glm::normalize(front);
+
+	//	//	right.y = 0.f;
+	//	//	right = glm::normalize(right);
+
+	//	//	up = engineSpaceUp;
+	//	//}
+
+	//	//if (input.AreKeysDown(Key::W /*, Key::GAMEPAD_DPAD_UP*/)) {
+	//	//	XMStoreFloat3(&orbitalCenter, transform.translation() + orbitalLength * transform.front());
+	//	//	pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.front(), speed));
+	//	//	dirtyThisFrame = true;
+	//	//}
+
+	//	//if (input.AreKeysDown(Key::S /*, Key::GAMEPAD_DPAD_DOWN*/)) {
+	//	//	pData->orbitalCenter = XMVectorSubtract(transform.translation(), XMVectorScale(transform.front(), speed));
+	//	//	dirtyThisFrame = true;
+	//	//}
+
+	//	//if (input.AreKeysDown(Key::D /*, Key::GAMEPAD_DPAD_RIGHT*/)) {
+	//	//	pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed));
+	//	//	dirtyThisFrame = true;
+	//	//}
+
+	//	//if (input.AreKeysDown(Key::A /*, Key::GAMEPAD_DPAD_LEFT*/)) {
+	//	//	pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.right(), speed));
+	//	//	dirtyThisFrame = true;
+	//	//}
+
+	//	//if (input.AreKeysDown(Key::E /*, Key::GAMEPAD_RIGHT_SHOULDER*/)) {
+	//	//	pData->orbitalCenter = XMVectorAdd(transform.translation(), XMVectorScale(transform.up(), speed));
+	//	//	dirtyThisFrame = true;
+	//	//}
+
+	//	//if (input.AreKeysDown(Key::Q /*, Key::GAMEPAD_LEFT_SHOULDER*/)) {
+	//	//	pData->orbitalCenter = XMVectorSubtract(transform.translation(), XMVectorScale(transform.up(), speed));
+	//	//	dirtyThisFrame = true;
+	//	//}
+
+
+	//	if (dirtyThisFrame) {
+	//		OrbitalCenterChanged();
+	//	}
+	//}
 }
 
 
@@ -330,7 +322,7 @@ void EditorCamera::UpdateFly(float speed, float deltaSeconds)
 
 		// newOrient = normalize(yawRot * (pitchRot * oldOrient))
 		transform.set_orientation(XMQuaternionNormalize(
-			XMQuaternionMultiply(yawRot, XMQuaternionMultiply(pitchRot, transform.orientation()))));
+			XMQuaternionMultiply(XMQuaternionMultiply(transform.orientation(), pitchRot), yawRot)));
 		transform.compose();
 		dirtyThisFrame = true;
 	}

@@ -143,6 +143,11 @@ struct TransformCache {
 	}
 	~TransformCache() { _aligned_free(pData); }
 
+	TransformCache(TransformCache&) = delete;
+	TransformCache& operator=(TransformCache&) = delete;
+	TransformCache(TransformCache&&) = default;
+	TransformCache& operator=(TransformCache&&) = default;
+
 	// This data must be aligned otherwise the SSE intrinsics fail
 	// and throw exceptions.
 	__declspec(align(16)) struct AlignedData {

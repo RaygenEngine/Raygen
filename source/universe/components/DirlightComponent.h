@@ -30,18 +30,9 @@ struct CDirlight : CLightBase {
 		REFLECT_VAR(bottom);
 	}
 
-	CDirlight();
-	~CDirlight();
-
 	float left{ -20.f };
 	float right{ 20.f };
 
 	float bottom{ -20.f };
 	float top{ 20.f };
-
-	__declspec(align(16)) struct AlignedData {
-		XMMATRIX view;
-		XMMATRIX proj;
-	};
-	AlignedData* pData;
 };

@@ -3,13 +3,13 @@
 DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 {
 	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), bc.world().front());
-	pData->view = XMMatrixLookAtRH(bc.world().translation(), lookAt, bc.world().up());
-	pData->proj = XMMatrixOrthographicOffCenterRH(left, right, bottom, top, near, far);
+	const XMMATRIX view = XMMatrixLookAtRH(bc.world().translation(), lookAt, bc.world().up());
+	const XMMATRIX proj = XMMatrixOrthographicOffCenterRH(left, right, bottom, top, near, far);
 
-	return [=, front = bc.world().front()](SceneDirlight& dl) {
-		dl.name = "direct depth: " + bc.name;
+	return [=, name = bc.name, front = bc.world().front()](SceneDirlight& dl) {
+		dl.name = "direct depth: " + name;
 		XMStoreFloat3A(&dl.ubo.front, front);
-		XMStoreFloat4x4A(&dl.ubo.viewProj, XMMatrixMultiply(pData->view, pData->proj));
+		XMStoreFloat4x4A(&dl.ubo.viewProj, view * proj);
 
 		if constexpr (FullDirty) {
 			dl.ubo.color = { color.x, color.y, color.z };
@@ -21,14 +21,4 @@ DECLARE_DIRTY_FUNC(CDirlight)(BasicComponent& bc)
 			dl.ubo.hasShadow = hasShadow;
 		}
 	};
-}
-
-CDirlight::CDirlight()
-{
-	pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
-}
-
-CDirlight::~CDirlight()
-{
-	_aligned_free(pData);
 }

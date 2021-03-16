@@ -3,24 +3,18 @@
 DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 {
 	const XMVECTOR lookAt = XMVectorAdd(bc.world().translation(), bc.world().front());
-	pData->view = XMMatrixLookAtRH(bc.world().translation(), lookAt, bc.world().up());
+	const XMMATRIX view = XMMatrixLookAtRH(bc.world().translation(), lookAt, bc.world().up());
 
-	[[maybe_unused]] float outerCutOff;
-	[[maybe_unused]] float innerCutOff;
+	float outerCutOff = glm::cos(outerAperture / 2.f);
+	float innerCutOff = glm::cos(innerAperture / 2.f);
 
-	if constexpr (FullDirty) {
-		outerCutOff = glm::cos(outerAperture / 2.f);
-		innerCutOff = glm::cos(innerAperture / 2.f);
+	const XMMATRIX proj = XMMatrixPerspectiveRH(shadowMapWidth, shadowMapHeight, near, far);
 
-		pData->proj = XMMatrixPerspectiveRH(shadowMapWidth, shadowMapHeight, near, far);
-	}
-
-
-	return [=, translation = bc.world().translation(), front = bc.world().front()](SceneSpotlight& sl) {
-		sl.name = "spot depth: " + bc.name;
+	return [=, name = bc.name, translation = bc.world().translation(), front = bc.world().front()](SceneSpotlight& sl) {
+		sl.name = "spot depth: " + name;
 		XMStoreFloat3A(&sl.ubo.position, translation);
 		XMStoreFloat3A(&sl.ubo.front, front);
-		XMStoreFloat4x4A(&sl.ubo.viewProj, XMMatrixMultiply(pData->view, pData->proj));
+		XMStoreFloat4x4A(&sl.ubo.viewProj, view * proj);
 
 		if constexpr (FullDirty) {
 			sl.ubo.color = { color.x, color.y, color.z };
@@ -38,15 +32,4 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 			sl.ubo.hasShadow = hasShadow;
 		}
 	};
-}
-
-
-CSpotlight::CSpotlight()
-{
-	pData = (AlignedData*)_aligned_malloc(sizeof(AlignedData), 16);
-}
-
-CSpotlight::~CSpotlight()
-{
-	_aligned_free(pData);
 }

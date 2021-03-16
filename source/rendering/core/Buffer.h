@@ -3,7 +3,6 @@
 struct Buffer {
 
 	Buffer(size_t numElements, size_t elementSize);
-	~Buffer() { LOG_REPORT("dfasfsa"); }
 
 	void UploadData(const void* data, size_t size, size_t offset = 0);
 	void FillData(const void* data);

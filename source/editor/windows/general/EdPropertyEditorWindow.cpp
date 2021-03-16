@@ -290,16 +290,16 @@ void PropertyEditorWindow::Run_BaseProperties(Entity ent)
 	}
 
 	bool changed = false;
-	auto tr = m_localMode ? ent->local() : ent->world();
+	// auto tr = m_localMode ? ent->local() : ent->world(); NEW:: this requires rework
 
-	if (ImEd::TransformRun(tr, true, &m_lockedScale, &m_localMode, &m_displayMatrix, &m_lookAtMode, &m_lookAtPos)) {
-		if (m_localMode) {
-			ent->SetNodeTransformLCS(tr.transform());
-		}
-		else {
-			ent->SetNodeTransformWCS(tr.transform());
-		}
-	}
+	// if (ImEd::TransformRun(tr, true, &m_lockedScale, &m_localMode, &m_displayMatrix, &m_lookAtMode, &m_lookAtPos)) {
+	//	if (m_localMode) {
+	//		ent->SetNodeTransformLCS(tr.transform());
+	//	}
+	//	else {
+	//		ent->SetNodeTransformWCS(tr.transform());
+	//	}
+	//}
 }
 
 void PropertyEditorWindow::Run_Components(Entity entity)

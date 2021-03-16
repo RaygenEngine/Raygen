@@ -30,9 +30,6 @@ struct CSpotlight : CLightBase {
 		REFLECT_VAR(hasShadow);
 	}
 
-	CSpotlight();
-	~CSpotlight();
-
 	float constantTerm{ 1.f };
 	float linearTerm{ 1.f };
 	float quadraticTerm{ 1.f };
@@ -41,10 +38,4 @@ struct CSpotlight : CLightBase {
 	float outerAperture{ glm::radians(45.f) };
 	// inner
 	float innerAperture{ glm::radians(22.5f) };
-
-	__declspec(align(16)) struct AlignedData {
-		XMMATRIX view;
-		XMMATRIX proj;
-	};
-	AlignedData* pData;
 };
