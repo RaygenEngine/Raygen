@@ -46,36 +46,6 @@ public:
 		return m_descriptorHandleIncrementSize[index];
 	}
 
-	// NEXT: remove
-	void UpdateBufferResource(WRL::ComPtr<ID3D12GraphicsCommandList2> cmdList, ID3D12Resource** pDestinationResource,
-		ID3D12Resource** pIntermediateResource, size_t numElements, size_t elementSize, const void* bufferData,
-		D3D12_RESOURCE_FLAGS flags = {})
-	{
-		size_t bufferSize = numElements * elementSize;
-
-		auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-		auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, flags);
-
-		// Create a committed resource for the GPU resource in a default heap.
-		AbortIfFailed(m_d3d12Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(pDestinationResource)));
-
-		// Create a committed resource for the upload.
-		if (bufferData) {
-			auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-			auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-
-			AbortIfFailed(m_d3d12Device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(pIntermediateResource)));
-
-			D3D12_SUBRESOURCE_DATA subresourceData = {};
-			subresourceData.pData = bufferData;
-			subresourceData.RowPitch = bufferSize;
-			subresourceData.SlicePitch = subresourceData.RowPitch;
-
-			UpdateSubresources(cmdList.Get(), *pDestinationResource, *pIntermediateResource, 0, 0, 1, &subresourceData);
-		}
-	}
 
 protected:
 	WRL::ComPtr<IDXGIAdapter4> GetAdapter(bool bUseWarp);

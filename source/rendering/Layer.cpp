@@ -113,7 +113,6 @@ void Layer_::DrawFrame()
 	commandList->RSSetViewports(1, &m_viewport);
 	commandList->RSSetScissorRects(1, &m_scissorRect);
 
-
 	commandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
 	DrawStaticGeometry(commandList);
@@ -135,8 +134,6 @@ void Layer_::DrawFrame()
 
 	++m_currFrame;
 }
-// NEXT: add example box and camera from the tutorial, and check carefully whats wrong... first with camera and then
-// geometry
 
 #include "rendering/scene/SceneStructs.h"
 #include "rendering/assets/GpuMesh.h"
@@ -148,14 +145,7 @@ void Layer_::DrawStaticGeometry(WRL::ComPtr<ID3D12GraphicsCommandList2>& command
 
 	commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &viewProj, 0);
 
-
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-	commandList->IASetIndexBuffer(&indexBufferView);
-
-
-	commandList->DrawIndexedInstanced(_countof(g_Indicies), 1, 0, 0, 0);
 
 	for (auto geom : m_scene->Get<SceneGeometry>()) {
 		auto& gpuMesh = geom->mesh.Lock();
@@ -176,29 +166,7 @@ void Layer_::DrawStaticGeometry(WRL::ComPtr<ID3D12GraphicsCommandList2>& command
 void Layer_::PreparePipelineStuff()
 {
 	auto device = Device->GetHandle();
-	CommandQueue& dqueue = DeviceQueues[D3D12_COMMAND_LIST_TYPE_DIRECT];
-	auto commandList = dqueue.GetCommandList();
 
-
-	// Upload vertex buffer data.
-	WRL::ComPtr<ID3D12Resource> intermediateVertexBuffer; // TODO: put in function
-	Device->UpdateBufferResource(commandList, &vertexBuffer, &intermediateVertexBuffer, _countof(g_Vertices),
-		sizeof(VertexPosColor), g_Vertices);
-
-	// Create the vertex buffer view.
-	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = sizeof(g_Vertices);
-	vertexBufferView.StrideInBytes = sizeof(VertexPosColor);
-
-	// Upload index buffer data.
-	WRL::ComPtr<ID3D12Resource> intermediateIndexBuffer;
-	Device->UpdateBufferResource(
-		commandList, &indexBuffer, &intermediateIndexBuffer, _countof(g_Indicies), sizeof(WORD), g_Indicies);
-
-	// Create index buffer view.
-	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-	indexBufferView.Format = DXGI_FORMAT_R16_UINT;
-	indexBufferView.SizeInBytes = sizeof(g_Indicies);
 
 	// Load the vertex shader.
 	WRL::ComPtr<ID3DBlob> vertexShaderBlob;
@@ -284,10 +252,7 @@ void Layer_::PreparePipelineStuff()
 
 	D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = { sizeof(PipelineStateStream), &pipelineStateStream };
 
-
 	AbortIfFailed(device->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&m_pipelineState)));
-
-	dqueue.ExecuteCommandListBlocking(commandList);
 }
 
 void Layer_::UpdateDSV(int32_t width, int32_t height)

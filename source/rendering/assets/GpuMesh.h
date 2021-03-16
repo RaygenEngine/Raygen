@@ -19,7 +19,6 @@ struct GpuGeometryGroup {
 struct GpuMesh : public GpuAssetTemplate<Mesh> {
 	std::vector<GpuGeometryGroup> geometryGroups;
 
-
 	GpuMesh(PodHandle<Mesh> podHandle);
 
 	void Update(const AssetUpdateInfo& info) override final;

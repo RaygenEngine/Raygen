@@ -37,13 +37,6 @@ private:
 	D3D12_VIEWPORT m_viewport;
 	D3D12_RECT m_scissorRect;
 
-	// Vertex buffer for the cube.
-	WRL::ComPtr<ID3D12Resource> vertexBuffer;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	// Index buffer for the cube.
-	WRL::ComPtr<ID3D12Resource> indexBuffer;
-	D3D12_INDEX_BUFFER_VIEW indexBufferView;
-
 	WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 	WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 

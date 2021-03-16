@@ -23,8 +23,6 @@ struct SceneStruct {
 	{                                                                                                                  \
 	}
 
-// NEXT: should those values be in XMM/V format instead?
-
 struct SceneGeometry : SceneStruct {
 	SCENE_STRUCT(SceneGeometry);
 
