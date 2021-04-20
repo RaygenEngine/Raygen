@@ -89,10 +89,12 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 	auto mainQueueFamily = CmdPoolManager->graphicsQueue.family.index;
 	auto presentQueueFamily = CmdPoolManager->presentQueue.family.index;
 
+	auto qfamilies = std::array{ mainQueueFamily, presentQueueFamily };
+
 	if (mainQueueFamily != presentQueueFamily) {
 		createInfo
 			.setImageSharingMode(vk::SharingMode::eConcurrent) //
-			.setQueueFamilyIndices(std::array{ mainQueueFamily, presentQueueFamily });
+			.setQueueFamilyIndices(qfamilies);
 	}
 	else {
 		createInfo.setImageSharingMode(vk::SharingMode::eExclusive);

@@ -71,7 +71,7 @@ vk::UniquePipeline StochasticPathtracePipe::MakePipeline()
 	vk::RayTracingPipelineCreateInfoKHR rayPipelineInfo{};
 	rayPipelineInfo
 		.setLayout(layout()) //
-		.setMaxPipelineRayRecursionDepth(1);
+		.setMaxPipelineRayRecursionDepth(2);
 
 	// Assemble the shader stages and construct the SBT
 	return MakeRtPipeline(rayPipelineInfo);
