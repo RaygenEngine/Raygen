@@ -55,7 +55,7 @@ public:
 private:
 	vk::Extent2D m_extent{};
 
-	InFlightResources<size_t> m_viewerId{ ~0llu };
+	void* m_viewerPtr{ nullptr };
 	InFlightResources<vk::DescriptorSet> m_globalDesc;
 
 	void UpdateGlobalDescSet(SceneRenderDesc& sceneDesc);
