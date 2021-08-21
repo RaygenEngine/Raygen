@@ -57,6 +57,8 @@ void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRen
 
 	auto extent = progressive.extent;
 
+	// CHECK: if there is no geometry this is validation error here
+
 	switch (const_pathtraceMode) {
 		case PtMode::Naive:
 			StaticPipes::Get<NaivePathtracePipe>().Draw(cmdBuffer, sceneDesc, progressiveDescSet, viewerDescSet, extent,

@@ -4,17 +4,18 @@
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
+#include "rendering/DebugName.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/pipes/AmbientPipe.h"
 #include "rendering/pipes/BillboardPipe.h"
 #include "rendering/pipes/DirlightPipe.h"
+#include "rendering/pipes/geometry/GBufferPipe.h"
+#include "rendering/pipes/geometry/UnlitPipe.h"
 #include "rendering/pipes/IrragridPipe.h"
 #include "rendering/pipes/PointlightPipe.h"
 #include "rendering/pipes/ReflprobePipe.h"
 #include "rendering/pipes/SpotlightPipe.h"
 #include "rendering/pipes/StaticPipes.h"
-#include "rendering/pipes/geometry/GBufferPipe.h"
-#include "rendering/pipes/geometry/UnlitPipe.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/techniques/BakeProbes.h"
 #include "rendering/techniques/CalculateShadowmaps.h"
@@ -148,23 +149,46 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 
 	UpdateGlobalDescSet(sceneDesc);
 
+	CMDSCOPE_BEGIN(cmdBuffer, "Calculate shadow maps");
+
 	// calculates: shadowmaps, gi maps
 	// requires: -
 	CalculateShadowmaps::RecordCmd(cmdBuffer, sceneDesc);
+
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Bake probes");
+
 	// TODO: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
 	BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
+
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Draw geometry and lights");
 
 	// calculates: gbuffer, direct lights, gi, ambient
 	// requires: shadowmaps, gi maps
 	DrawGeometryAndLights(cmdBuffer, sceneDesc);
 
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Raytrace area lights");
+
 	// calculates: total of arealights - wip: denoise
 	// requires: -
 	m_raytraceArealights.RecordCmd(cmdBuffer, sceneDesc);
 
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Raytrace mirror reflections");
+
 	// calculates: specular reflections (mirror)
 	// requires: gbuffer, shadowmaps, gi maps
 	m_raytraceMirrorReflections.RecordCmd(cmdBuffer, sceneDesc);
+
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Post process commands");
 
 	// TODO: post process
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
@@ -174,11 +198,17 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
 	});
 
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Unlit pass");
+
 	m_unlitPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
 		UnlitPipe::RecordCmd(cmdBuffer, sceneDesc);
 		DrawSelectedEntityDebugVolume::RecordCmd(cmdBuffer, sceneDesc);
 		StaticPipes::Get<BillboardPipe>().Draw(cmdBuffer, sceneDesc);
 	});
+
+	CMDSCOPE_END(cmdBuffer);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

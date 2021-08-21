@@ -24,9 +24,9 @@ RaytraceArealights::RaytraceArealights()
 
 void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
-	auto extent = progressive.extent;
+	// CHECK: this should not run if there are no area lights in the scene
 
-	StaticPipes::Get<ArealightsPipe>().Draw(cmdBuffer, sceneDesc, imagesDescSet, extent, frame++);
+	StaticPipes::Get<ArealightsPipe>().Draw(cmdBuffer, sceneDesc, imagesDescSet, progressive.extent, frame++);
 
 	svgfPass.SvgfDraw(cmdBuffer, sceneDesc, svgfRenderPassInstance);
 }
