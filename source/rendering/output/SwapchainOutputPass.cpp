@@ -8,6 +8,7 @@
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/DebugName.h"
 
 namespace vl {
 
@@ -68,6 +69,7 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 		.setClearValueCount(1u) //
 		.setPClearValues(&clearValue);
 
+	CMDSCOPE_BEGIN(cmdBuffer, "Out render pass");
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
 		auto& scissor = m_viewportRect;
@@ -90,17 +92,27 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 
 		// Copy hdr texture
 		{
+			CMDSCOPE_BEGIN(cmdBuffer, "Copy hdr texture");
+
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 			cmdBuffer.bindDescriptorSets(
 				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, { m_descSet[frameIndex] }, nullptr);
 
 			// big triangle
 			cmdBuffer.draw(3u, 1u, 0u, 0u);
+
+			CMDSCOPE_END(cmdBuffer);
 		}
 
+		CMDSCOPE_BEGIN(cmdBuffer, "Imgui Editor commands");
+
 		ImguiImpl::RenderVulkan(cmdBuffer);
+
+		CMDSCOPE_END(cmdBuffer);
 	}
 	cmdBuffer.endRenderPass();
+
+	CMDSCOPE_END(cmdBuffer);
 }
 
 void SwapchainOutputPass::OnPreRender()

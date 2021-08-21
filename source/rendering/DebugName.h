@@ -1,6 +1,9 @@
 #pragma once
 
-#define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name);
+#define CMDSCOPE_BEGIN(cmdBuffer, name) cmdBuffer.beginDebugUtilsLabelEXT({ name, { 1.f, 1.f, 1.f, 1.f } })
+#define CMDSCOPE_END(cmdBuffer)         cmdBuffer.endDebugUtilsLabelEXT()
+
+#define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name)
 #define DEBUG_NAME_AUTO(handle)  DEBUG_NAME(handle, #handle)
 
 void SetDebugUtilsObjectName(vk::DebugUtilsObjectNameInfoEXT&&);

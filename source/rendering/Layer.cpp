@@ -13,6 +13,7 @@
 #include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/DebugName.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };
@@ -137,9 +138,12 @@ void Layer_::DrawFrame()
 
 	currentCmdBuffer.begin();
 	{
+		CMDSCOPE_BEGIN(currentCmdBuffer, "Render frame");
 		renderer->DrawFrame(currentCmdBuffer, mainScene->GetRenderDesc(m_currentFrame), *swapOutput);
+		CMDSCOPE_END(currentCmdBuffer);
 	}
 	currentCmdBuffer.end();
+
 
 	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 	std::array waitSems = { *m_imageAvailSem[m_currentFrame] };

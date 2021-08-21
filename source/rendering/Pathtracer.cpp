@@ -2,6 +2,7 @@
 
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/DebugName.h"
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
@@ -38,7 +39,11 @@ void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scene
 	// PERF: only if camera is dirty
 	m_progressivePathtrace.UpdateViewer(sceneDesc.viewer.ubo.viewInv, sceneDesc.viewer.ubo.projInv, 0.0);
 
+	CMDSCOPE_BEGIN(cmdBuffer, "Pathtracer commands");
+
 	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, m_frame++);
+
+	CMDSCOPE_END(cmdBuffer);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }
