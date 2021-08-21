@@ -57,8 +57,14 @@ namespace {
 		auto world = editor.m_currentWorld;
 		const char* icon = world->IsStopped() ? U8(FA_PLAY) : U8(FA_STOP);
 
+#ifndef __cpp_lib_format
 		fmt::basic_memory_buffer<char, 100> s;
 		fmt::format_to(s, " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->windowTitle, Engine.GetFPS());
+#else
+		std::vector<char> s;
+		std::format_to(std::back_inserter(s), " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->windowTitle,
+			Engine.GetFPS());
+#endif
 
 		bool hasPushedStyle = false;
 		if (world->IsPlaying()) {
