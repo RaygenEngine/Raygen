@@ -50,12 +50,14 @@ void vl::GpuSkinnedMesh::UpdateGeometry(const AssetUpdateInfo& info)
 
 	combinedVertexBuffer = { totalVertexBufferSize,
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
-			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress
+			| vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	combinedIndexBuffer = { totalIndexBufferSize,
 		vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
-			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			| vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress
+			| vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 
