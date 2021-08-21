@@ -101,7 +101,7 @@ struct ShapeBuffer {
 	uint32 vertexCount;
 
 	ShapeBuffer() = default;
-	ShapeBuffer(const std::string& name, std::vector<float>& data, vk::BufferUsageFlagBits flags = {})
+	ShapeBuffer(const std::string& name, std::vector<float>& data, vk::BufferUsageFlags flags = {})
 	{
 		vertexBuffer = vl::RBuffer::CreateTransfer(name.c_str(), data, vk::BufferUsageFlagBits::eVertexBuffer | flags);
 		vertexCount = static_cast<uint32>(data.size() / 3);
@@ -209,13 +209,23 @@ struct ShapesData {
 
 	ShapesData()
 	{
-		cube_triangleStrip = ShapeBuffer("BoxShape triangleStrip", cube_triangleStripData);
-		unitRectangle_triangleStrip = ShapeBuffer("UnitRectangleShape triangleStrip", unitRectangle_triangleStripData);
+		auto stdFlags
+			= vk::BufferUsageFlagBits::eShaderDeviceAddress // the buffer can be used to retrieve a buffer device
+															// address via vkGetBufferDeviceAddress and use that address
+															// to access the buffer’s memory from a shader.
+			  | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR; // the buffer is suitable for use
+																					  // as a read-only input to an
+																					  // acceleration structure build.
 
-		cube_lineList = IndexedShapeBuffer("CubeShape lineList", cube_verticesData, cube_lineList_indicesData);
+		cube_triangleStrip = ShapeBuffer("BoxShape triangleStrip", cube_triangleStripData, stdFlags);
+		unitRectangle_triangleStrip
+			= ShapeBuffer("UnitRectangleShape triangleStrip", unitRectangle_triangleStripData, stdFlags);
 
-		unitRectangle_triangleList = IndexedShapeBuffer("UnitRectangleShape triangleList",
-			unitRectangle_triangleStripData, unitRectangle_indices, vk::BufferUsageFlagBits::eShaderDeviceAddress);
+		cube_lineList
+			= IndexedShapeBuffer("CubeShape lineList", cube_verticesData, cube_lineList_indicesData, stdFlags);
+
+		unitRectangle_triangleList = IndexedShapeBuffer(
+			"UnitRectangleShape triangleList", unitRectangle_triangleStripData, unitRectangle_indices, stdFlags);
 
 		MakeSphere(18, 9, 1.f, sphere18x9);
 		MakeSphere(36, 18, 1.f, sphere36x18);
