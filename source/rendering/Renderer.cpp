@@ -105,11 +105,13 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 
 void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 {
-	// WIP: call this only when viewer changes
-	rvk::writeDescriptorBuffer(m_globalDesc[sceneDesc.frameIndex], 16u,
-		sceneDesc.viewer.buffer[sceneDesc.frameIndex].handle(), sceneDesc.viewer.uboSize); // WIP: binding index
-
-	m_viewerId[sceneDesc.frameIndex] = sceneDesc.scene->activeCamera;
+	if (m_viewerPtr != &sceneDesc.viewer) [[unlikely]] {
+		for (size_t i = 0; i < c_framesInFlight; ++i) {
+			rvk::writeDescriptorBuffer(m_globalDesc[i], 16u, sceneDesc.viewer.buffer[i].handle(),
+				sceneDesc.viewer.uboSize); // WIP: binding index
+		}
+		m_viewerPtr = &sceneDesc.viewer;
+	}
 
 	sceneDesc.globalDesc = m_globalDesc[sceneDesc.frameIndex];
 }
