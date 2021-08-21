@@ -1,224 +1,17 @@
 [
   {
     "+": {
-      "name": "Irragrid Entity",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
-        },
-        "pos": {
-          "x": -9.756031036376953,
-          "y": 0.551558256149292,
-          "z": -3.7615935802459717
-        },
-        "scl": {
-          "x": 1.0,
-          "y": 1.0,
-          "z": 1.0
-        }
-      }
-    },
-    "CIrragrid": {
-      "depth": 5,
-      "distToAdjacent": 2.0999999046325684,
-      "height": 4,
-      "irrResolution": 32,
-      "ptBounces": 2,
-      "ptSamples": 2,
-      "width": 6
-    },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "Quadlight Entity",
-      "trs": {
-        "euler_rot": {
-          "x": -12.120162963867188,
-          "y": 9.263888359069824,
-          "z": 10.119861602783203
-        },
-        "pos": {
-          "x": 1.160750389099121,
-          "y": 2.7596006393432617,
-          "z": 1.7424635887145996
-        },
-        "scl": {
-          "x": 0.9999998807907104,
-          "y": 1.0,
-          "z": 1.0000001192092896
-        }
-      }
-    },
-    "CQuadlight": {
-      "aperture": 1.5707963705062866,
-      "color": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
-      },
-      "height": 2.0,
-      "intensity": 30.0,
-      "width": 2.0
-    },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "Scifi-Helmet",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
-        },
-        "pos": {
-          "x": -8.806634902954102,
-          "y": 1.402605414390564,
-          "z": 2.9927241802215576
-        },
-        "scl": {
-          "x": 0.10000000149011612,
-          "y": 0.10000000149011612,
-          "z": 0.10000000149011612
-        }
-      }
-    },
-    "CStaticMesh": {
-      "mesh": "gen-data/SciFiHelmet",
-      "mesh_importHint_": "gltf-samples/2.0/SciFiHelmet/glTF/SciFiHelmet.gltf"
-    },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "Damaged-Helmet",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
-        },
-        "pos": {
-          "x": -8.973184585571289,
-          "y": 0.8747581839561462,
-          "z": -3.0821585655212402
-        },
-        "scl": {
-          "x": 0.20000000298023224,
-          "y": 0.20000000298023224,
-          "z": 0.20000001788139343
-        }
-      }
-    },
-    "CStaticMesh": {
-      "mesh": "gen-data/DamagedHelmet",
-      "mesh_importHint_": "gltf-samples/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"
-    },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "Helmet",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
-        },
-        "pos": {
-          "x": -3.1767349243164063,
-          "y": 0.5843032598495483,
-          "z": 1.0769859552383423
-        },
-        "scl": {
-          "x": 0.9999883770942688,
-          "y": 0.9999995827674866,
-          "z": 0.9999988079071045
-        }
-      }
-    },
-    "CStaticMesh": {
-      "mesh": "gen-data/FlightHelmet",
-      "mesh_importHint_": "gltf-samples/2.0/FlightHelmet/glTF/FlightHelmet.gltf"
-    },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "MatSpheres",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
-        },
-        "pos": {
-          "x": 0.0,
-          "y": 1.736594319343567,
-          "z": 0.0
-        },
-        "scl": {
-          "x": 0.20000000298023224,
-          "y": 0.20000000298023224,
-          "z": 0.20000000298023224
-        }
-      }
-    },
-    "CStaticMesh": {
-      "mesh": "gen-data/MetalRoughSpheres",
-      "mesh_importHint_": "gltf-samples/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf"
-    },
-    "~": [
-      {
-        "+": {
-          "name": "Reflprobe Entity",
-          "trs": {
-            "euler_rot": {
-              "x": 0.0,
-              "y": -0.0,
-              "z": 0.0
-            },
-            "pos": {
-              "x": 0.0,
-              "y": 3.814697265625e-06,
-              "z": -1.7075064182281494
-            },
-            "scl": {
-              "x": 5.0,
-              "y": 5.0,
-              "z": 5.0
-            }
-          }
-        },
-        "CReflprobe": {
-          "applyIrradiance": false,
-          "irrResolution": 512,
-          "prefLodCount": 3,
-          "prefSamples": 1024,
-          "ptBounces": 1,
-          "ptSamples": 512,
-          "radius": 1.2000000476837158
-        },
-        "~": []
-      }
-    ]
-  },
-  {
-    "+": {
       "name": "Sponza",
       "trs": {
         "euler_rot": {
-          "x": 180.0,
+          "x": -180.0,
           "y": -0.0,
-          "z": 180.0
+          "z": -180.0
         },
         "pos": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
+          "x": -1.25,
+          "y": 0.15,
+          "z": -1.25
         },
         "scl": {
           "x": 1.0,
@@ -231,72 +24,136 @@
       "mesh": "gen-data/Sponza",
       "mesh_importHint_": "gltf-samples/2.0/Sponza/glTF/Sponza.gltf"
     },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "Camera Entity",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
+    "~": [
+      {
+        "+": {
+          "name": "Helmet",
+          "trs": {
+            "euler_rot": {
+              "x": -180.0,
+              "y": -4.4,
+              "z": -180.0
+            },
+            "pos": {
+              "x": 3.17,
+              "y": 0.5,
+              "z": -0.0
+            },
+            "scl": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
         },
-        "pos": {
-          "x": -0.004202842712402344,
-          "y": 1.2366887331008911,
-          "z": -0.3803822100162506
+        "CStaticMesh": {
+          "mesh": "gen-data/FlightHelmet",
+          "mesh_importHint_": "gltf-samples/2.0/FlightHelmet/glTF/FlightHelmet.gltf"
         },
-        "scl": {
-          "x": 0.9999765753746033,
-          "y": 1.0,
-          "z": 0.9999765753746033
-        }
-      }
-    },
-    "CCamera": {
-      "far": 1000.0,
-      "focalLength": 1.0,
-      "hFov": 1.8239539861679077,
-      "hFovOffset": 0.0,
-      "near": 0.10000000149011612,
-      "vFov": 1.2566370964050293,
-      "vFovOffset": 0.0
-    },
-    "~": []
-  },
-  {
-    "+": {
-      "name": "Quadlight Entity",
-      "trs": {
-        "euler_rot": {
-          "x": 0.0,
-          "y": -0.0,
-          "z": 0.0
-        },
-        "pos": {
-          "x": 0.16601383686065674,
-          "y": 5.030667304992676,
-          "z": 3.5823795795440674
-        },
-        "scl": {
-          "x": 1.0,
-          "y": 1.0,
-          "z": 1.0
-        }
-      }
-    },
-    "CQuadlight": {
-      "aperture": 1.5707963705062866,
-      "color": {
-        "x": 1.0,
-        "y": 0.22775799036026,
-        "z": 0.22775799036026
+        "~": [
+          {
+            "+": {
+              "name": "Camera Entity",
+              "trs": {
+                "euler_rot": {
+                  "x": -3.75,
+                  "y": -2.55,
+                  "z": -1.4
+                },
+                "pos": {
+                  "x": 0.05,
+                  "y": 0.16,
+                  "z": 1.0
+                },
+                "scl": {
+                  "x": 1.0,
+                  "y": 1.0,
+                  "z": 1.0
+                }
+              }
+            },
+            "CCamera": {
+              "far": 1000.0,
+              "focalLength": 1.0,
+              "hFov": 1.8,
+              "hFovOffset": 0.0,
+              "near": 0.1,
+              "vFov": 1.25,
+              "vFovOffset": 0.0
+            },
+            "~": []
+          }
+        ]
       },
-      "height": 0.5,
-      "intensity": 242.3000030517578,
-      "width": 0.5
-    },
-    "~": []
+      {
+        "+": {
+          "name": "Pointlight Entity",
+          "trs": {
+            "euler_rot": {
+              "x": 145.8,
+              "y": -88.95,
+              "z": 180.0
+            },
+            "pos": {
+              "x": -6.51,
+              "y": 11.25,
+              "z": -0.2
+            },
+            "scl": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        "CPointlight": {
+          "color": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          },
+          "constantTerm": 6.31,
+          "hasShadow": true,
+          "intensity": 143.5,
+          "linearTerm": 0.03,
+          "quadraticTerm": 0.11,
+          "radius": 0.002,
+          "samples": 1
+        },
+        "~": []
+      },
+      {
+        "+": {
+          "name": "Irragrid Entity",
+          "trs": {
+            "euler_rot": {
+              "x": -180.0,
+              "y": -4.37,
+              "z": -180.0
+            },
+            "pos": {
+              "x": 9.75,
+              "y": 0.45,
+              "z": 3.76
+            },
+            "scl": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 1.0
+            }
+          }
+        },
+        "CIrragrid": {
+          "depth": 5,
+          "distToAdjacent": 2.1,
+          "height": 4,
+          "irrResolution": 32,
+          "ptBounces": 2,
+          "ptSamples": 2,
+          "width": 6
+        },
+        "~": []
+      }
+    ]
   }
 ]
