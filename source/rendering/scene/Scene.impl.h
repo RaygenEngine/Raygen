@@ -1,6 +1,9 @@
 #include "Scene.h"
 #pragma once
 
+// TODO: remove - see TODOs below
+#include "rendering/Device.h"
+
 template<CSceneElem T>
 inline T* Scene::GetElement(size_t uid)
 {

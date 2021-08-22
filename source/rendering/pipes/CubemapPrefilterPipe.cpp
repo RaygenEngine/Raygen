@@ -6,6 +6,7 @@
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneReflProbe.h"
+#include "rendering/Device.h"
 
 namespace {
 struct PushConstant {

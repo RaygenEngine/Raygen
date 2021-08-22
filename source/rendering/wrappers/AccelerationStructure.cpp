@@ -4,7 +4,7 @@
 namespace vl {
 void RAccelerationStructure::AllocateMemory()
 {
-	// WIP:
+	// TODO:
 	// vk::AccelerationStructureMemoryRequirementsInfoKHR memInfo{};
 	// memInfo
 	//	.setAccelerationStructure(uHandle.get()) //

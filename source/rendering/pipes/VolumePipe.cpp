@@ -4,16 +4,17 @@
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/Device.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "universe/Universe.h"
 #include "universe/components/CameraComponent.h"
 #include "universe/components/DirlightComponent.h"
 #include "universe/components/IrragridComponent.h"
 #include "universe/components/PointlightComponent.h"
 #include "universe/components/QuadlightComponent.h"
-#include "universe/components/ReflprobeComponent.h"
+#include "universe/components/ReflProbeComponent.h"
 #include "universe/components/SpotlightComponent.h"
+#include "universe/Universe.h"
 
 namespace {
 struct PushConstant {

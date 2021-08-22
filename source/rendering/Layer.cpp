@@ -2,18 +2,20 @@
 
 #include "assets/GpuAssetManager.h"
 #include "editor/EditorObject.h"
-#include "engine/Input.h"
 #include "engine/console/ConsoleVariable.h"
+#include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
+#include "rendering/DebugName.h"
+#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
-#include "rendering/Pathtracer.h"
-#include "rendering/VulkanLoader.h"
 #include "rendering/output/SwapchainOutputPass.h"
+#include "rendering/Pathtracer.h"
 #include "rendering/pipes/StaticPipes.h"
+#include "rendering/Renderer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/DebugName.h"
+#include "rendering/VulkanLoader.h"
 
 ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
 	"Builds all build-able scene nodes" };

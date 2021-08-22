@@ -1,6 +1,7 @@
 #include "SceneIrragrid.h"
 
 #include "rendering/scene/Scene.h"
+#include "rendering/Device.h"
 
 
 using namespace vl;

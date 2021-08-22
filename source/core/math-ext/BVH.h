@@ -64,8 +64,8 @@ struct BVH {
 
 			if (node.isLeaf) {
 				// Overlapping leaf, add to results
-				// WIP: should implement DataT intersect for exact geometry casting)
-				// WIP: proper calculation of distance (detect hit point / ... )
+				// TODO: should implement DataT intersect for exact geometry casting)
+				// TODO: proper calculation of distance (detect hit point / ... )
 				results.distanceSqToHitObject.emplace(glm::distance2(start, hitPoint), node.data);
 			}
 			else {
@@ -99,8 +99,8 @@ struct BVH {
 
 			if (node.isLeaf) {
 				// Overlapping leaf, add to results
-				// WIP: should implement DataT intersect for exact geometry casting)
-				// WIP: proper calculation of distance (detect hit point / ... )
+				// TODO: should implement DataT intersect for exact geometry casting)
+				// TODO: proper calculation of distance (detect hit point / ... )
 				results.distanceSqToHitObject.emplace(glm::distance2(start, hitPoint), node.data);
 			}
 			else {

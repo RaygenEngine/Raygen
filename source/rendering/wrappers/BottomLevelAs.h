@@ -6,7 +6,7 @@ struct GpuGeometryGroup;
 
 struct BottomLevelAs : public RAccelerationStructure {
 
-	// WIP:
+	// TODO:
 	bool isMask{ false };
 
 	BottomLevelAs() = default;

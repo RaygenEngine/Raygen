@@ -30,7 +30,7 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 		.setVertexStride(vertexStride)
 		.setIndexType(vk::IndexType::eUint32)
 		.setIndexData(indexAddress)
-		.setMaxVertex(gg.vertexCount - 1) // WIP:
+		.setMaxVertex(gg.vertexCount - 1) // TODO:
 		.setTransformData({});
 
 	// Setting up the build info of the acceleration
@@ -41,7 +41,7 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 		.geometry.setTriangles(triangles);
 
 	{
-		// WIP: temp hack - this is part of every archetype
+		// TODO: hack - this is part of every archetype
 		auto& arch = gg.material.Lock().archetype.Lock();
 		PodHandle<MaterialArchetype> pod{ arch.podUid };
 		auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
@@ -93,7 +93,7 @@ BottomLevelAs::BottomLevelAs(const RBuffer& combinedVertexBuffer, uint32 vertexC
 		.setVertexStride(sizeof(glm::vec3))
 		.setIndexType(vk::IndexType::eUint32)
 		.setIndexData(indexAddress)
-		.setMaxVertex(vertexCount - 1) // WIP:
+		.setMaxVertex(vertexCount - 1) // TODO:
 		.setTransformData({});
 
 	// Setting up the build info of the acceleration

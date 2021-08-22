@@ -1,27 +1,13 @@
 #pragma once
 
-#include "engine/Listener.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
+#include "rendering/RendererBase.h"
 #include "rendering/techniques/RaytraceArealights.h"
 #include "rendering/techniques/RaytraceMirrorReflections.h"
 #include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 namespace vl {
-class OutputPassBase;
-}
-struct SceneRenderDesc;
-
-namespace vl {
-// WIP:
-class RendererBase : public Listener {
-public:
-	virtual void ResizeBuffers(uint32 width, uint32 height) = 0;
-	virtual void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) = 0;
-	virtual InFlightResources<vk::ImageView> GetOutputViews() const = 0;
-
-	virtual ~RendererBase() = default;
-};
 
 inline class Renderer_ : public RendererBase {
 

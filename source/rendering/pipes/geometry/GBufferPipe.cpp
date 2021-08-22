@@ -7,6 +7,7 @@
 #include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneGeometry.h"
+#include "rendering/Device.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -42,7 +43,7 @@ namespace {
 		std::array dynamicStates{
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor,
-			// WIP: temp hack, this should be created from the archetype
+			// TODO: hack, this should be created from the archetype
 			vk::DynamicState::eCullModeEXT,
 		};
 		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
@@ -246,7 +247,7 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			auto& arch = mat.archetype.Lock();
 
 			{
-				// WIP: temp hack - this is part of every archetype
+				// TODO: hack - this is part of every archetype
 				PodHandle<MaterialArchetype> pod{ arch.podUid };
 				auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
 				auto prp = cl.GetPropertyByName(std::string("mask"));

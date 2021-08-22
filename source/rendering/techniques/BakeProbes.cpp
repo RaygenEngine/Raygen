@@ -105,7 +105,7 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 
 						vk::DescriptorSet environmentCubemapSamplerDescSet;
 						environmentCubemapSamplerDescSet
-							= Layouts->singleSamplerDescLayout.AllocDescriptorSet(); // WIP: doesn't release
+							= Layouts->singleSamplerDescLayout.AllocDescriptorSet(); // TODO: doesn't release
 
 						auto cubemapView = ig->environmentCubemaps.GetCubemapView(i);
 
@@ -159,11 +159,11 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 	auto finalIterationSamples = samplesPerIteration + ptSamples % iterations;
 
 	for (auto i = 0; i < 6; ++i) {
-		faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // WIP: doesn't release
+		faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(
 			faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-		viewerDescSet[i] = Layouts->singleUboDescLayout.AllocDescriptorSet(); // WIP: doesn't release
+		viewerDescSet[i] = Layouts->singleUboDescLayout.AllocDescriptorSet(); // TODO: doesn't release
 
 		auto uboSize = sizeof(UBO_viewer);
 
@@ -213,7 +213,7 @@ void BakeProbes::BakeIrradiance(const std::vector<vk::UniqueImageView>& faceView
 
 	for (auto i = 0; i < 6; ++i) {
 
-		faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // WIP: doesn't release
+		faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(
 			faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
@@ -252,7 +252,7 @@ void BakeProbes::BakePrefiltered(const SceneReflprobe& rp)
 		projInv[3][3] = float(mip) / float(rp.ubo.lodCount - 1);
 
 		for (auto i = 0; i < 6; ++i) {
-			faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // WIP: doesn't release
+			faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
 			rvk::writeDescriptorImages(
 				faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 

@@ -4,7 +4,8 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "rendering/Pathtracer.h" // WIP: remove
+#include "rendering/Pathtracer.h" // TODO: remove
+#include "rendering/Renderer.h"   // TODO: remove -- see below TODO
 #include "rendering/scene/SceneCamera.h"
 
 namespace ed {
@@ -75,7 +76,7 @@ void EditorCamera::Update(float deltaSeconds)
 		UpdatePiloting();
 	}
 
-	// WIP : remove
+	// TODO: remove
 	if (dirtyThisFrame) {
 		vl::Renderer->m_raytraceArealights.frame = 0;
 		vl::Pathtracer->m_frame = 0;
@@ -144,7 +145,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	viewProj = proj * view;
 	viewProjInv = viewInv * projInv;
 
-	// WIP:
+	// TODO:
 	float filmWorldHeight = 2.0f * focalLength * tan(0.5f * vFov);
 	float filmWorldWidth = 2.0f * focalLength * tan(0.5f * hFov);
 	const auto filmArea = filmWorldHeight * filmWorldWidth;
