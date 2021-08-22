@@ -12,11 +12,11 @@ std::shared_ptr<spdlog::logger> g_logger;
 
 void ConsoleLogLevel();
 
-ConsoleVarFunc<LogLevel> g_logLevel("loglevel", ConsoleLogLevel, LogLevel::Info, "Change logging level.");
+ConsoleVarFunc<LogLevel> cons_logLevel("e.console.logLevel", ConsoleLogLevel, LogLevel::Info, "Change logging level.");
 
 void ConsoleLogLevel()
 {
-	Log.Init(g_logLevel);
+	Log.Init(cons_logLevel);
 }
 
 void Log_::Init(LogLevel level)

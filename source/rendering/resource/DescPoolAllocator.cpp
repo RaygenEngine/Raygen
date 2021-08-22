@@ -4,7 +4,7 @@
 #include "rendering/Device.h"
 #include "rendering/resource/GpuResources.h"
 
-ConsoleFunction<> g_showPoolAllocations{ "r.mem.showDescriptorPools",
+ConsoleFunction<> cons_showPoolAllocations{ "vk.memory.showDescriptorPools",
 	[]() { LOG_REPORT("Pools: {}", vl::GpuResources::GetAllocations()); },
 	"Shows number of allocated descriptor pools." };
 

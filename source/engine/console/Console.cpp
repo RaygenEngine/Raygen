@@ -2,8 +2,8 @@
 
 #include "engine/console/ConsoleVariable.h"
 
-ConsoleFunctionGeneric commandAll(
-	"all",
+ConsoleFunctionGeneric cons_commandAll(
+	"e.console.manual",
 	[](std::string_view view) {
 		auto parts = str::split(view);
 
@@ -22,9 +22,7 @@ ConsoleFunctionGeneric commandAll(
 			}
 		}
 	},
-	"Lists all available commands [starting with the text passed as param]");
-
-ConsoleFunction<int32, bool> g("test", [](auto, bool) {});
+	"Lists all available commands [starting with the text passed as param].");
 
 void Console::Execute(const std::string& command)
 {

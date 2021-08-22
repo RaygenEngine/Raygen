@@ -8,10 +8,10 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-ConsoleVariable<float> console_aoBias{ "ao.bias", 0.001f, "Set ao bias" };
-ConsoleVariable<float> console_aoStrength{ "ao.strength", 1.0f, "Set ao strength" };
-ConsoleVariable<float> console_aoRadius{ "ao.radius", .2f, "Set ao radius" };
-ConsoleVariable<int32> console_aoSamples{ "ao.samples", 4, "Set ao samples" };
+ConsoleVariable<float> cons_aoBias{ "r.ao.bias", 0.001f, "Set the ambient occlusion bias." };
+ConsoleVariable<float> cons_aoStrength{ "r.ao.strength", 1.0f, "Set the ambient occlusion strength." };
+ConsoleVariable<float> cons_aoRadius{ "r.ao.radius", .2f, "Set the ambient occlusion radius." };
+ConsoleVariable<int32> cons_aoSamples{ "r.ao.samples", 4, "Set the ambient occlusion samples." };
 
 namespace {
 struct PushConstant {
@@ -168,10 +168,10 @@ void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 		nullptr);
 
 	PushConstant pc{
-		console_aoBias,
-		console_aoStrength,
-		console_aoRadius,
-		console_aoSamples,
+		cons_aoBias,
+		cons_aoStrength,
+		cons_aoRadius,
+		cons_aoSamples,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);

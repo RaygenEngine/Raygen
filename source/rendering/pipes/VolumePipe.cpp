@@ -282,7 +282,7 @@ void VolumeLinesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 	}
 
 	// TODO:
-	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.Children", false };
+	static ConsoleVariable<bool> cons_drawLeaves{ "s.bvh.children", false };
 	if (!cons_drawLeaves) {
 		return;
 	}
@@ -308,7 +308,7 @@ void VolumeLinesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 				}
 			}
 
-			static ConsoleVariable<bool> cons_draw{ "s.bvh.Debug", false };
+			static ConsoleVariable<bool> cons_draw{ "s.bvh.debug", false };
 
 			if (cons_draw || node.isLeaf) {
 				cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);

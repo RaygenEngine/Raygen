@@ -22,8 +22,8 @@
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
 
 
-ConsoleFunction<> cons_arealightsReset{ "r.arealights.reset", []() { vl::Renderer->m_raytraceArealights.frame = 0; },
-	"Reset arealights prog" };
+ConsoleFunction<> cons_arealightsReset{ "r.arealights.resetProgressive",
+	[]() { vl::Renderer->m_raytraceArealights.frame = 0; }, "Reset the progressive raytracing of the arealights." };
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)

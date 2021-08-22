@@ -23,11 +23,13 @@ struct UBO_viewer {
 };
 }; // namespace
 
-ConsoleVariable<float> cons_pathtraceScale{ "r.pathtrace.scale", 1.f, "Set pathtrace scale" };
-ConsoleVariable<int32> cons_pathtraceBounces{ "r.pathtrace.bounces", 1, "Set pathtrace bounces" };
-ConsoleVariable<int32> cons_pathtraceSamples{ "r.pathtrace.samples", 1, "Set pathtrace sampler" };
-ConsoleVariable<PtMode> const_pathtraceMode{ "r.pathtrace.mode", PtMode::Stochastic,
-	"Set pathtrace mode. Naive: unidirectional, not entirely naive, it just lacks direct light sampling,"
+ConsoleVariable<float> cons_pathtraceScale{ "r.pathtracing.scale", 1.f, "Set scale of the pathtraced image." };
+ConsoleVariable<int32> cons_pathtraceBounces{ "r.pathtracing.bounces", 1,
+	"Set the number of bounces of the pathtracer." };
+ConsoleVariable<int32> cons_pathtraceSamples{ "r.pathtracing.samples", 1,
+	"Set the number of samples of the pathtracer." };
+ConsoleVariable<PtMode> const_pathtraceMode{ "r.pathtracing.mode", PtMode::Stochastic,
+	"Set the pathtracing mode. Naive: unidirectional, not entirely naive, it just lacks direct light sampling,"
 	"Stochastic: similar to naive but uses direct light and light MIS,"
 	"Bpdt: Bidirectional:... Work in progress" };
 

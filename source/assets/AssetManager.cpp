@@ -15,10 +15,10 @@
 #include <set>
 #include <thread>
 
-ConsoleFunction<> console_SaveAll{ "a.saveAll", []() { AssetRegistry::SaveAll(); },
-	"Saves all currently unsaved assets" };
+ConsoleFunction<> cons_saveAll{ "a.saveAll", []() { AssetRegistry::SaveAll(); },
+	"Saves all currently unsaved assets." };
 
-ConsoleFunction<> console_ReimportAllShaders{ "a.allShadersReimport",
+ConsoleFunction<> cons_reimportAllShaders{ "a.shaders.reload",
 	[]() {
 		for (auto& entry : AssetRegistry::Z_GetPods()) {
 			if (entry->IsA<ShaderStage>()) {
@@ -29,7 +29,7 @@ ConsoleFunction<> console_ReimportAllShaders{ "a.allShadersReimport",
 	},
 	"Reimports and recompiles all currently loaded ShaderStages." };
 
-ConsoleFunction<> console_ReimportRtShaders{ "z.reimportRtShaders",
+ConsoleFunction<> cons_reimportRtShaders{ "a.shaders.reloadRaytracingShaders",
 	[]() {
 		for (auto& entry : AssetRegistry::Z_GetPods()) {
 			if (entry->IsA<ShaderStage>()) {

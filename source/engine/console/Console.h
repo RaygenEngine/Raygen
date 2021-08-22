@@ -24,6 +24,7 @@ protected:
 		return *instance;                         // ConsoleVars auto unregister on destruction and may be global
 	}
 
+	// TODO: use map for ordering
 	std::unordered_map<std::string, ConsoleEntry*, str::HashInsensitive, str::EqualInsensitive> m_entries;
 
 public:

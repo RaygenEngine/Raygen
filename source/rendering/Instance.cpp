@@ -22,16 +22,17 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
 
-ConsoleVariable<bool> showValidationErrors{ "r.validation.show", true, "Enables vulkan validation layer errors" };
-ConsoleVariable<bool> validationBreakOnError{ "r.validation.breakOnError", false,
-	"Breaks to allow the debugger to get a call stack." };
+ConsoleVariable<bool> cons_showValidationErrors{ "vk.validation.show", true,
+	"Enable printing of vulkan validation layer errors." };
+ConsoleVariable<bool> cons_validationBreakOnError{ "vk.validation.breakOnError", false,
+	"Break after vulkan validation layer error to allow the debugger to get a call stack." };
 
 namespace {
 VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageTypes, VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
 	void* /*pUserData*/)
 {
-	if (!showValidationErrors) {
+	if (!cons_showValidationErrors) {
 		return false;
 	}
 
@@ -73,7 +74,7 @@ VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: LOG_WARN("{}", message.c_str()); break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
 			LOG_ERROR("{}", message.c_str());
-			if (validationBreakOnError) {
+			if (cons_validationBreakOnError) {
 				LOG_ABORT("");
 			}
 			break;
@@ -184,7 +185,7 @@ Instance_::Instance_(const std::vector<const char*>&& requiredExtensions, GLFWwi
 
 
 	if (Input.IsDown(Key::Shift)) {
-		*validationBreakOnError = true;
+		*cons_validationBreakOnError = true;
 	}
 }
 
