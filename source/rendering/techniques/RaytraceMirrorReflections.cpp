@@ -7,7 +7,7 @@
 #include "rendering/scene/SceneIrragrid.h"
 
 // TODO: use specific for each technique instance and waitIdle() resize
-ConsoleVariable<float> cons_mirrorScale{ "r.mirror.scale", 1.f, "Set mirror scale" };
+ConsoleVariable<float> cons_mirrorScale{ "r.mirror.scale", 1.f, "Set the scale of the mirror texture." };
 
 namespace vl {
 RaytraceMirrorReflections::RaytraceMirrorReflections()

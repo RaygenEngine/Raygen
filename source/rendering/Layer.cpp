@@ -17,8 +17,8 @@
 #include "rendering/resource/GpuResources.h"
 #include "rendering/VulkanLoader.h"
 
-ConsoleFunction<> console_BuildAll{ "s.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
-	"Builds all build-able scene nodes" };
+ConsoleFunction<> cons_buildAll{ "s.structs.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
+	"Builds all build-able scene structs." };
 // TODO: uncomment, change name
 // ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
 //	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };

@@ -8,7 +8,7 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-ConsoleVariable<int32> cons_mirrorDepth{ "r.mirror.depth", 1, "Set mirror depth" };
+ConsoleVariable<int32> cons_mirrorDepth{ "r.mirror.depth", 1, "Set the depth of mirror reflections." };
 
 namespace {
 struct PushConstant {

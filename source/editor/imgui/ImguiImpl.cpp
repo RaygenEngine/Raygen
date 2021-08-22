@@ -59,7 +59,7 @@ void AddMediumSizeIconsFont(ImFontAtlas* atlas)
 
 inline void CorporateStyle()
 {
-	static ConsoleVarFunc<float> brighness{ "e.theme.textBrightness", &CorporateStyle, 1.f };
+	static ConsoleVarFunc<float> cons_brighness{ "e.theme.textBrightness", &CorporateStyle, 1.f };
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	ImVec4* colors = style.Colors;
@@ -68,7 +68,7 @@ inline void CorporateStyle()
 	/// 1 = MORE "3D" LOOK
 	int is3D = 1;
 
-	colors[ImGuiCol_Text] = ImVec4(brighness, brighness, brighness, 1.00f);
+	colors[ImGuiCol_Text] = ImVec4(cons_brighness, cons_brighness, cons_brighness, 1.00f);
 	colors[ImGuiCol_TextDisabled] = ImVec4(0.58f, 0.58f, 0.58f, 1.00f);
 	colors[ImGuiCol_ChildBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
 	colors[ImGuiCol_WindowBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
@@ -211,10 +211,10 @@ void SetStyleCustom()
 
 void SetColors()
 {
-	static ConsoleVarFunc<int32> theme{ "e.theme", &SetColors, 2 };
+	static ConsoleVarFunc<int32> cons_theme{ "e.theme.style", &SetColors, 2 };
 
 
-	if (theme.Get() == 2) {
+	if (cons_theme.Get() == 2) {
 		CorporateStyle();
 		return;
 	}
@@ -225,7 +225,7 @@ void SetColors()
 	ImGui::GetStyle().Colors[ImGuiCol_Text] = ImVec4(0.85f, 0.85f, 0.89f, 0.98f);
 	ImGui::GetStyle().Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 0.8f);
 
-	if (theme.Get() == 0) {
+	if (cons_theme.Get() == 0) {
 		return;
 	}
 

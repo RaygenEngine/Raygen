@@ -34,10 +34,10 @@ void PtCollection::RunPrepares()
 void PtCollection::Draw(vk::CommandBuffer buffers, const SceneRenderDesc& sceneDesc)
 {
 	// Probably pointless to not draw anything, remove when in editor settings are available
-	static ConsoleVariable<bool> console_drawPostProc{ "r.drawPostProc", true,
-		"Wether to draw any post process pass from pt collection. (includes lights)" };
+	static ConsoleVariable<bool> cons_drawPostProc{ "r.ppt.draw", true,
+		"Whether to draw any post process pass from pt collection. (includes lights)" };
 
-	if (!console_drawPostProc.Get()) {
+	if (!cons_drawPostProc.Get()) {
 		return;
 	}
 

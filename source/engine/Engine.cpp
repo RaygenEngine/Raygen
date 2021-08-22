@@ -9,7 +9,7 @@
 #include "universe/Universe.h"
 
 
-static ConsoleFunction<> debugCoords{ "d.viewport", //
+static ConsoleFunction<> cons_debugCoords{ "e.viewport.printCoords", //
 	[]() {
 		auto& c = g_ViewportCoordinates;
 		LOG_REPORT("\n viewport.Size: {}, {}\n viewport.Pos: {} {}", c.size.x, c.size.y, c.position.x, c.position.y);

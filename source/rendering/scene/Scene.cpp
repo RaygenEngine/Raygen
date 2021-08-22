@@ -180,8 +180,8 @@ SceneRenderDesc Scene::GetRenderDesc(int32 frameIndex)
 	return SceneRenderDesc{ this, *camera, static_cast<uint32>(frameIndex) };
 }
 
-ConsoleVariable<int32> cons_sceneUpdateRt{ "rt.minFrames", 10,
-	"Min frames to do progressive before reseting due to scene update" };
+ConsoleVariable<int32> cons_sceneUpdateRt{ "r.raytracing.minFrames", 10,
+	"Minimum frames to do progressive before reseting due to scene update" };
 
 
 void Scene::UploadDirty(uint32 frameIndex)

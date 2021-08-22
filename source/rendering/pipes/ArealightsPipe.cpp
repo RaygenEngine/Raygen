@@ -18,7 +18,7 @@ struct PushConstant {
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
-ConsoleVariable<int32> cons_arealightSamples{ "r.arealights.samples", 1, "Set arealights sampler" };
+ConsoleVariable<int32> cons_arealightSamples{ "r.arealights.samples", 1, "Set the sample count of arealights." };
 
 namespace vl {
 vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()

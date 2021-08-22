@@ -63,18 +63,17 @@ struct SvgfPC {
 };
 static_assert(sizeof(SvgfPC) <= 128);
 
-ConsoleVariable<int32> console_SvgfIters{ "rt.svgf.iterations", 4,
-	"Controls how many times to apply svgf atrous filter." };
+ConsoleVariable<int32> cons_svgfIters{ "r.svgf.iterations", 4, "Controls how many times to apply svgf atrous filter." };
 
-ConsoleVariable<int32> console_SvgfProgressiveFeedback{ "rt.svgf.feedbackIndex", -1,
-	"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)" };
+ConsoleVariable<int32> cons_svgfProgressiveFeedback{ "r.svgf.feedbackIndex", -1,
+	"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)." };
 
-ConsoleVariable<bool> console_SvgfEnable{ "rt.svgf.enable", true, "Enable or disable svgf pass." };
+ConsoleVariable<bool> cons_svgfEnable{ "r.svgf.enable", true, "Enable or disable svgf pass." };
 
 void RaytraceArealights::PtSvgf::SvgfDraw(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, RenderingPassInstance& rpInstance)
 {
-	auto times = *console_SvgfIters;
+	auto times = *cons_svgfIters;
 	for (int32 i = 0; i < std::max(times, 1); ++i) {
 		rpInstance.RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
@@ -88,8 +87,8 @@ void RaytraceArealights::PtSvgf::SvgfDraw(
 
 			SvgfPC pc{
 				.iteration = i,
-				.totalIter = (times < 1 || !console_SvgfEnable) ? 0 : times,
-				.progressiveFeedbackIndex = console_SvgfProgressiveFeedback,
+				.totalIter = (times < 1 || !cons_svgfEnable) ? 0 : times,
+				.progressiveFeedbackIndex = cons_svgfProgressiveFeedback,
 			};
 
 			cmdBuffer.pushConstants(
