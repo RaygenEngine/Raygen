@@ -3,6 +3,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/Device.h"
 
 
 namespace {

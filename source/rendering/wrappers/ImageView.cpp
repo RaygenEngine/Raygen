@@ -1,5 +1,6 @@
 #include "ImageView.h"
 
+#include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 

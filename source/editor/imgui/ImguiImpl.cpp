@@ -5,6 +5,7 @@
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
+#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layer.h"
 #include "rendering/output/SwapchainOutputPass.h"
@@ -13,6 +14,7 @@
 
 #include <imgui/examples/imgui_impl_glfw.h>
 #include <imgui/examples/imgui_impl_vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 
 namespace imguistyle {

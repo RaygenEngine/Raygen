@@ -29,7 +29,7 @@ ConsoleVariable<int32> cons_pathtraceSamples{ "r.pathtrace.samples", 1, "Set pat
 ConsoleVariable<PtMode> const_pathtraceMode{ "r.pathtrace.mode", PtMode::Stochastic,
 	"Set pathtrace mode. Naive: unidirectional, not entirely naive, it just lacks direct light sampling,"
 	"Stochastic: similar to naive but uses direct light and light MIS,"
-	"Bpdt: Bidirectional:... WIP" };
+	"Bpdt: Bidirectional:... Work in progress" };
 
 namespace vl {
 

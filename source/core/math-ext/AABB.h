@@ -4,7 +4,7 @@
 namespace math {
 
 namespace detail {
-	// WIP: refactor this copy pasta
+	// TODO: refactor this copy pasta
 	inline bool GetIntersection(float fDst1, float fDst2, glm::vec3 P1, glm::vec3 P2, glm::vec3& Hit)
 	{
 		if ((fDst1 * fDst2) >= 0.0f) {
@@ -214,7 +214,7 @@ struct AABB {
 
 	[[nodiscard]] bool OverlapsHitPoint(glm::vec3 a, glm::vec3 b, glm::vec3& hitPoint) const
 	{
-		// WIP: what to return in this hitpoint
+		// TODO: what to return in this hitpoint
 		if (IsInside(a)) {
 			hitPoint = a;
 			return true;

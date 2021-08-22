@@ -110,7 +110,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 	setData("normalScale", static_cast<float>(data.normalTexture.scale));
 	setData("occlusionStrength", static_cast<float>(data.occlusionTexture.strength));
 
-	// WIP: remove, this shouldn't be part of gltf mat, but is used now for real time adjustments
+	// TODO: remove, this shouldn't be part of gltf mat, but is used now for real time adjustments
 	setData("baseReflectivity", 0.04f);
 
 	// alpha

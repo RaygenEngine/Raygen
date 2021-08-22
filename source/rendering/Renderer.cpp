@@ -99,7 +99,7 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_ptPass[i].framebuffer[0].view(); // WIP: [0]
+		views[i] = m_ptPass[i].framebuffer[0].view(); // TODO: [0]
 	}
 	return views;
 }
@@ -109,7 +109,7 @@ void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 	if (m_viewerPtr != &sceneDesc.viewer) [[unlikely]] {
 		for (size_t i = 0; i < c_framesInFlight; ++i) {
 			rvk::writeDescriptorBuffer(m_globalDesc[i], 16u, sceneDesc.viewer.buffer[i].handle(),
-				sceneDesc.viewer.uboSize); // WIP: binding index
+				sceneDesc.viewer.uboSize); // TODO: binding index
 		}
 		m_viewerPtr = &sceneDesc.viewer;
 	}
@@ -174,7 +174,7 @@ void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 
 	CMDSCOPE_BEGIN(cmdBuffer, "Raytrace area lights");
 
-	// calculates: total of arealights - wip: denoise
+	// calculates: total of arealights
 	// requires: -
 	m_raytraceArealights.RecordCmd(cmdBuffer, sceneDesc);
 

@@ -14,6 +14,7 @@
 #include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/Device.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -119,7 +120,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 		inst.transform = transform; // Position of the instance
 		inst.instanceId = k++;      // gl_InstanceCustomIndexEXT
 		inst.blas = Device->getAccelerationStructureAddressKHR(quadlightBlas.handle());
-		inst.materialId = 1;  // WIP:
+		inst.materialId = 1;  // TODO:
 		inst.cullMask = 0x02; // cull system, lights, geom etc
 		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
 

@@ -109,7 +109,7 @@ RayCastEntityHit PhysicsIntersection::RayCastChitSelection(glm::vec3 start, glm:
 	return result;
 }
 
-// WIP: remove copy paste
+// TODO: remove copy paste
 RayCastEntityHit PhysicsIntersection::RayCastChitGeom(glm::vec3 start, glm::vec3 end) const
 {
 	RayCastEntityHit result;
