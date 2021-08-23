@@ -17,6 +17,8 @@ layout(set = 1, binding = 1, rgba32f) uniform image2D momentsBuffer;
 layout(set = 1, binding = 2, rgba32f) uniform image2D svgfInput;
 layout(set = 1, binding = 3, rgba32f) uniform image2D svgfOutput;
 
+// uniform
+
 layout(push_constant) uniform PC {
 	int iteration;
 	int totalIter;

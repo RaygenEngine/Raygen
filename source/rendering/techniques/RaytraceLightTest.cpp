@@ -1,20 +1,20 @@
-#include "RaytraceArealights.h"
+#include "RaytraceLightTest.h"
 
 #include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
 #include "rendering/Layouts.h"
-#include "rendering/pipes/ArealightsPipe.h"
+#include "rendering/pipes/TestSptPipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
 
 // TODO: use specific for each technique instance and waitIdle() resize
-ConsoleVariable<float> cons_arealightsScale{ "r.arealights.scale", 1.f, "Set arealights scale" };
+ConsoleVariable<float> cons_testSptScale{ "r.lighttest.scale", 1.f, "Set lighttest scale" };
 
 namespace vl {
-RaytraceArealights::RaytraceArealights()
+RaytraceLightTest::RaytraceLightTest()
 {
 	imagesDescSet = Layouts->tripleStorageImage.AllocDescriptorSet();
 	DEBUG_NAME(imagesDescSet, "progressive arealights storage image desc set");
@@ -23,20 +23,25 @@ RaytraceArealights::RaytraceArealights()
 	svgfPass.MakePipeline();
 }
 
-void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+ConsoleVariable<float> cons_rtSptScale{ "r.rtSpt.scale", 1.f, "Set scale of the pathtraced image." };
+ConsoleVariable<int32> cons_rtSptBounces{ "r.rtSpt.bounces", 0, "Set the number of bounces of the pathtracer." };
+ConsoleVariable<int32> cons_rtSptSamples{ "r.rtSpt.samples", 1, "Set the number of samples of the pathtracer." };
+
+void RaytraceLightTest::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	// CHECK: this should not run if there are no area lights in the scene
 
-	StaticPipes::Get<ArealightsPipe>().Draw(cmdBuffer, sceneDesc, imagesDescSet, progressive.extent, frame++);
+	StaticPipes::Get<TestSptPipe>().Draw(
+		cmdBuffer, sceneDesc, imagesDescSet, progressive.extent, frame++, cons_rtSptSamples, cons_rtSptBounces);
 
 	svgfPass.SvgfDraw(cmdBuffer, sceneDesc, svgfRenderPassInstance);
 }
 
-void RaytraceArealights::Resize(vk::Extent2D extent)
+void RaytraceLightTest::Resize(vk::Extent2D extent)
 {
 	progressive = RImage2D("ArealightProg",
-		vk::Extent2D{ static_cast<uint32>(extent.width * cons_arealightsScale),
-			static_cast<uint32>(extent.height * cons_arealightsScale) },
+		vk::Extent2D{ static_cast<uint32>(extent.width * cons_testSptScale),
+			static_cast<uint32>(extent.height * cons_testSptScale) },
 		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
 
@@ -63,18 +68,17 @@ struct SvgfPC {
 };
 static_assert(sizeof(SvgfPC) <= 128);
 
-ConsoleVariable<int32> cons_arealightsSvgfIters{ "r.arealights.svgf.iterations", 4,
-	"Controls how many times to apply svgf atrous filter." };
+ConsoleVariable<int32> cons_svgfIters{ "r.svgf.iterations", 4, "Controls how many times to apply svgf atrous filter." };
 
-ConsoleVariable<int32> cons_arealightsSvgfProgressiveFeedback{ "r.arealights.svgf.feedbackIndex", -1,
+ConsoleVariable<int32> cons_svgfProgressiveFeedback{ "r.svgf.feedbackIndex", -1,
 	"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)." };
 
-ConsoleVariable<bool> cons_arealightsSvgfEnable{ "r.arealights.svgf.enable", true, "Enable or disable svgf pass." };
+ConsoleVariable<bool> cons_svgfEnable{ "r.svgf.enable", true, "Enable or disable svgf pass." };
 
-void RaytraceArealights::PtSvgf::SvgfDraw(
+void RaytraceLightTest::PtSvgf::SvgfDraw(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, RenderingPassInstance& rpInstance)
 {
-	auto times = *cons_arealightsSvgfIters;
+	auto times = *cons_svgfIters;
 	for (int32 i = 0; i < std::max(times, 1); ++i) {
 		rpInstance.RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
@@ -88,8 +92,8 @@ void RaytraceArealights::PtSvgf::SvgfDraw(
 
 			SvgfPC pc{
 				.iteration = i,
-				.totalIter = (times < 1 || !cons_arealightsSvgfEnable) ? 0 : times,
-				.progressiveFeedbackIndex = cons_arealightsSvgfProgressiveFeedback,
+				.totalIter = (times < 1 || !cons_svgfEnable) ? 0 : times,
+				.progressiveFeedbackIndex = cons_svgfProgressiveFeedback,
 			};
 
 			cmdBuffer.pushConstants(
@@ -99,7 +103,7 @@ void RaytraceArealights::PtSvgf::SvgfDraw(
 	}
 }
 
-void RaytraceArealights::PtSvgf::OnResize(vk::Extent2D extent, RaytraceArealights& rtPass)
+void RaytraceLightTest::PtSvgf::OnResize(vk::Extent2D extent, RaytraceLightTest& rtPass)
 {
 	swappingImages[0] = RImage2D("SVGF 0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
@@ -119,7 +123,7 @@ void RaytraceArealights::PtSvgf::OnResize(vk::Extent2D extent, RaytraceArealight
 	}
 }
 
-void RaytraceArealights::PtSvgf::MakeLayout()
+void RaytraceLightTest::PtSvgf::MakeLayout()
 {
 	std::array layouts{
 		Layouts->globalDescLayout.handle(),
@@ -141,7 +145,7 @@ void RaytraceArealights::PtSvgf::MakeLayout()
 	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
 }
 
-void RaytraceArealights::PtSvgf::MakePipeline()
+void RaytraceLightTest::PtSvgf::MakePipeline()
 {
 	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/raytrace/test/svgf.shader");
 	gpuShader.onCompile = [&]() {

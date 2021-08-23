@@ -14,6 +14,7 @@
 #include "rendering/Pathtracer.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/Renderer.h"
+#include "rendering/RtxRenderer.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/VulkanLoader.h"
 
@@ -44,10 +45,11 @@ Layer_::Layer_()
 
 	Renderer = new Renderer_();
 	Pathtracer = new Pathtracer_();
+	RtxRenderer = new RtxRenderer_();
 
-	renderer = Renderer;
+	renderer = RtxRenderer;
 
-	swapOutput->SetAttachedRenderer(Renderer);
+	swapOutput->SetAttachedRenderer(RtxRenderer);
 	Renderer->InitPipelines();
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
@@ -69,6 +71,7 @@ Layer_::~Layer_()
 
 	delete Renderer;
 	delete Pathtracer;
+	delete RtxRenderer;
 	delete swapOutput;
 	delete mainScene;
 	StaticPipes::DestroyAll();
@@ -90,12 +93,25 @@ void Layer_::DrawFrame()
 {
 	PROFILE_SCOPE(Renderer);
 
-	if (swapRenderer.Access() || Input.IsJustPressed(Key::Tab)) {
-		if (renderer == Renderer) {
-			renderer = Pathtracer;
+	auto doSwap = swapRenPath.flag.Access();
+
+	if (doSwap || Input.IsJustPressed(Key::Tab)) [[unlikely]] {
+		if (doSwap || Input.IsDown(Key::Ctrl)) {
+			if (renderer != Pathtracer) {
+				swapRenPath.prev = renderer;
+				renderer = Pathtracer;
+			}
+			else {
+				renderer = swapRenPath.prev;
+			}
 		}
 		else {
-			renderer = Renderer;
+			if (renderer == RtxRenderer) {
+				renderer = Renderer;
+			}
+			else {
+				renderer = RtxRenderer;
+			}
 		}
 		Device->waitIdle();
 		swapOutput->SetAttachedRenderer(renderer);

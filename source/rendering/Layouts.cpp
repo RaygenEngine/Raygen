@@ -57,11 +57,11 @@ void Layouts_::MakeRenderPassLayouts()
 		}
 
 		AttRef directAtt = mainPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
-		AttRef indirectAtt = mainPassLayout.CreateAttachment("Indirect", vk::Format::eR32G32B32A32Sfloat);
+		AttRef indirectAtt = mainPassLayout.CreateAttachment("IndirectLight", vk::Format::eR32G32B32A32Sfloat);
 
 		mainPassLayout.AddSubpass({}, std::vector{ gbufferAtts });              // Write GBuffer
 		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { directAtt });   // Write DirectLights
-		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write Indirect
+		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write IndirectLights
 
 		mainPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 		mainPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);

@@ -1,0 +1,262 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+#extension GL_EXT_ray_tracing : require
+
+// TODO:
+#define RAY
+#include "global.glsl"
+
+#include "global-descset.glsl"
+#include "random.glsl"
+
+struct hitPayload
+{
+	vec3 radiance; // radiance of traced ray
+
+	vec3 origin; // next ray stuff
+	vec3 direction;
+	vec3 attenuation;
+
+	int hitType; 
+	// 0 - direct
+	// 1 - general
+	// 2 - special
+	// 3 - stop
+	uint seed;
+};
+
+layout(push_constant) uniform PC
+{
+	int frame;
+	int samples;
+	int bounces;
+	int pointlightCount;
+	int spotlightCount;
+	int dirlightCount;
+	int quadlightCount;
+};
+
+layout(set = 1, binding = 0, rgba32f) uniform image2D image;
+layout(set = 1, binding = 1, rgba32f) uniform image2D progressiveResult;
+layout(set = 1, binding = 2, rgba32f) uniform image2D momentsBuffer;
+layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
+
+layout(location = 0) rayPayloadEXT hitPayload prd;
+
+void TraceRay() {
+	prd.radiance = vec3(0.f);
+
+    uint  rayFlags =  gl_RayFlagsCullFrontFacingTrianglesEXT;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+
+	// trace ray
+	traceRayEXT(topLevelAs,     // acceleration structure
+				rayFlags,       // rayFlags
+				0xFF,           // cullMask - nothing
+				0,              // sbtRecordOffset
+				0,              // sbtRecordStride
+				0,              // missIndex
+				prd.origin,     // ray origin
+				tMin,           // ray min range
+				prd.direction,  // ray direction
+				tMax,           // ray max range
+				0               // payload (location = 0)
+	);
+}
+
+bool RRTerminationCheck(inout vec3 totalAttenuation) {
+
+	float p_spawn = min(max(totalAttenuation), 0.99);
+	if(rand(prd.seed) >= p_spawn) {
+		return true; 
+	}
+
+	totalAttenuation /= p_spawn;
+	return false;
+}
+
+struct ReprojectionData {
+	vec3 color;
+	vec2 moments;
+	float historyLength; // 0 means reprojection was invalid
+};
+
+ReprojectionData GetReprojection(vec2 uv);
+
+void main() {
+
+	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, frame * samples);
+
+	vec4 origin = cam.viewInv * vec4(0, 0, 0, 1);
+
+	vec3 accumColor = vec3(0.f);
+	for(uint smpl = 0; smpl < samples; ++smpl) {
+		float r1 = rand(prd.seed);
+		float r2 = rand(prd.seed);
+
+		vec2 subpixel_jitter = frame == 0 && smpl == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+
+		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
+		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);
+		vec2       d           = inUV * 2.0 - 1.0;
+
+		
+		vec4 target    = cam.projInv * vec4(d.x, d.y, 1, 1);
+		vec4 direction = cam.viewInv * vec4(normalize(target.xyz), 0);
+
+		prd.origin = origin.xyz;
+		prd.direction = direction.xyz;
+
+		prd.attenuation = vec3(1.f);
+
+		prd.hitType = 0; // direct
+
+		vec3 currentTotalAttenuation = vec3(1);
+		for(int depth = 0; depth < bounces + 1 && (prd.hitType != 3); ++depth)
+		{
+			currentTotalAttenuation *= prd.attenuation;
+
+			TraceRay(); 
+
+			accumColor += prd.radiance * currentTotalAttenuation;
+		
+			if(depth > 4 && RRTerminationCheck(currentTotalAttenuation)) {
+				break;
+			}
+		}
+	}
+
+	vec3 color = accumColor / float(samples);
+
+
+	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
+
+	float depth = texture(g_DepthSampler, uv).r;
+
+
+	ReprojectionData reproj = GetReprojection(uv);
+	bool success = reproj.historyLength > 0;
+	float historyLength = min(32.0f, success ? reproj.historyLength + 1.0f : 1.0f);
+
+	vec2 moments;
+	moments.r = luminance(color);
+	moments.g = moments.r * moments.r;
+
+	// Mix reprojection
+	
+	#define minColorAlpha 0.05
+	#define minMomentsAlpha 0.05
+
+	const float colorAlpha = success ? max(1.0 / historyLength, minColorAlpha) : 1.0;
+	const float momentsAlpha = success ? max(1.0 / historyLength, minMomentsAlpha) : 1.0;
+
+	moments = mix(reproj.moments, moments, momentsAlpha);
+	color = mix(reproj.color, color, colorAlpha);
+	
+
+	// from SVGF paper:
+	float variance = max(0., moments.g - moments.r * moments.r);
+
+	if (historyLength < 2) {
+		variance += 0.2;
+	}
+
+	imageStore(progressiveResult, ivec2(gl_LaunchIDEXT.xy), vec4(color, variance));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, variance));
+
+	imageStore(momentsBuffer, ivec2(gl_LaunchIDEXT.xy), vec4(moments, depth, historyLength));
+}
+
+//
+//  PRE PROCESS (reproject)
+//
+
+bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
+{
+	if (coord.x < 0 || coord.y < 0 || 
+	    coord.x >= gl_LaunchSizeEXT.x || coord.y > gl_LaunchSizeEXT.y) {
+		return false;
+	}
+
+	momentsSample = imageLoad(momentsBuffer, coord);
+	if (abs(expectedPrevDepth - momentsSample.z) > 5e-3) {
+		return false;
+	}
+
+	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	if (abs(thisUvDrawIndex.z - centerUvDrawIndex.z) > 0.5) {
+		return false;
+	}
+
+	return true;
+}
+
+
+ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expectedPrevDepth)
+{
+	ivec2 pixelPos = ivec2(floor(sampleUv));
+	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
+
+	float x = fract(sampleUv.x);
+	float y = fract(sampleUv.y);
+
+	float w[4] = { 
+		(1 - x) * (1 - y),
+		      x * (1 - y),
+		(1 - x) * y,
+		      x * y 
+	};
+
+	vec4 color = vec4(0);
+	vec4 moments = vec4(0);
+	float sumW = 0;
+	
+	for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
+		ivec2 loc = pixelPos + offset[sampleIdx];
+		vec4 momentsSample;
+		if (IsReprojValid(loc, expectedPrevDepth, centerUvDrawIndex, momentsSample)) {
+			color += w[sampleIdx] * imageLoad(progressiveResult, loc);
+			moments += w[sampleIdx] * momentsSample;
+			sumW += w[sampleIdx];
+		}
+	}
+
+
+	// This "valid" check should probably have min bias
+	if (sumW > 0) {
+		color /= sumW;
+		moments /= sumW;
+	}
+
+	ReprojectionData reproj;
+	reproj.color = color.rgb;
+	reproj.moments = moments.rg;
+
+	reproj.historyLength = moments.a;
+	return reproj;
+}
+
+ReprojectionData GetReprojection(vec2 uv) {
+	// PERF:
+	if (frame < 1) {
+		ReprojectionData repr;
+		repr.color = vec3(0);
+		repr.moments = vec2(0);
+		repr.historyLength = 0;
+		return repr;
+	}
+
+	// xy: ScreenSpace (uv) motion vector
+	// z: expected previous depth
+	const vec4 motionSample = texture(g_VelocitySampler, uv);
+
+	const vec2 motion = motionSample.xy;
+	const float expectedDepth = motionSample.z;
+
+	const vec2 posPrev = vec2(gl_LaunchIDEXT.xy) + vec2(motion * gl_LaunchSizeEXT.xy) ;
+
+	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_LaunchIDEXT.xy), 0);
+
+	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
+}

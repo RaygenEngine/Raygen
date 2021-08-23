@@ -6,7 +6,7 @@
 #include "platform/Platform.h"
 #include "universe/Universe.h"
 #include "rendering/Layer.h"
-#include "rendering/Renderer.h"
+#include "rendering/Pathtracer.h"
 
 #include <glfw/glfw3.h>
 
@@ -97,7 +97,7 @@ namespace {
 		static const char* str = U8(FA_CAMERA u8"  Pathtrace ###PathTraceButtonCpt");
 
 		bool hasPushedStyle = false;
-		if (vl::Layer->renderer != vl::Renderer) {
+		if (vl::Layer->renderer == vl::Pathtracer) {
 			hasPushedStyle = true;
 			// ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.061f, 0.347f,
 			// 0.179f, 1.000f));
@@ -110,7 +110,10 @@ namespace {
 		float sizeW = std::round(size.x * 0.1f) / 0.1f; // Round some pixels to avoid resizing everyframe
 
 		if (ImEd::ButtonNoBorderText(str, ImVec2(sizeW, size.y), hasPushedStyle)) {
-			vl::Layer->swapRenderer.Set();
+			vl::Layer->swapRenPath.flag.Set();
+			if (vl::Layer->renderer != vl::Pathtracer) {
+				vl::Layer->swapRenPath.prev = vl::Layer->renderer;
+			}
 		}
 
 		if (hasPushedStyle) {
