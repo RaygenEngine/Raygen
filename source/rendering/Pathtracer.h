@@ -16,7 +16,8 @@ public:
 
 	InFlightResources<vk::ImageView> GetOutputViews() const override;
 
-	// CHECK: do we want unlit stuff here? - and/or editor stuff like icons etc?
+	// CHECK: do we want unlit stuff here? - and/or editor stuff like icons etc? - if so we will need depth calculation
+	// which is costly
 
 	ProgressivePathtrace m_progressivePathtrace;
 

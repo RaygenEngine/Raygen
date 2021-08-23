@@ -16,6 +16,7 @@
 #include "rendering/pipes/SpotlightPipe.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/pipes/VolumePipe.h"
+#include "rendering/pipes/TestSptPipe.h"
 
 
 namespace vl {
@@ -39,5 +40,6 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<StochasticPathtracePipe>();
 	StaticPipes::Init<BdptPipe>();
 	StaticPipes::Init<NaivePathtracePipe>();
+	StaticPipes::Init<TestSptPipe>();
 }
 } // namespace vl

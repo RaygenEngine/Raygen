@@ -24,7 +24,10 @@ public:
 
 	void ResetMainScene();
 
-	BoolFlag swapRenderer;
+	struct {
+		BoolFlag flag;
+		RendererBase* prev{ nullptr };
+	} swapRenPath;
 
 private:
 	InFlightResources<vk::UniqueFence> m_frameFence;
