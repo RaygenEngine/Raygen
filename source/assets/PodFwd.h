@@ -1,6 +1,5 @@
 #pragma once
 #include "assets/PodFwdUtl.h"
-#include "core/MetaTemplates.h"
 
 
 // When adding a pod, add it to engine pod types

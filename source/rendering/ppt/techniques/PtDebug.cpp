@@ -54,8 +54,8 @@ void PtDebug::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc
 	cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
-	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u,
-		{ Renderer->m_ptPass[sceneDesc.frameIndex].internalDescSet }, nullptr);
+	// cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, TODO:
+	//	{ Renderer->m_ptPass[sceneDesc.frameIndex].internalDescSet }, nullptr);
 
 	// big triangle
 	cmdBuffer.draw(3u, 1u, 0u, 0u);

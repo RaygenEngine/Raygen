@@ -4,7 +4,6 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "rendering/Layer.h"
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"
 
@@ -50,7 +49,7 @@ void App_::MainLoop()
 		Input.Z_ClearFrameState();
 		Platform::PollEvents();
 
-		Universe::MainWorld->UpdateWorld(vl::Layer->mainScene);
+		Universe::MainWorld->UpdateWorld(Rendering::GetMainScene());
 
 		Rendering::DrawFrame();
 
@@ -61,7 +60,7 @@ void App_::MainLoop()
 void App_::WhileResizing()
 {
 	Universe::LoadPendingWorlds();
-	Universe::MainWorld->UpdateWorld(vl::Layer->mainScene);
+	Universe::MainWorld->UpdateWorld(Rendering::GetMainScene());
 
 	Rendering::DrawFrame();
 	Engine.ReportFrameDrawn();

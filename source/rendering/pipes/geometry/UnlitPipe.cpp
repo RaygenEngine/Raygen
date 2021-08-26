@@ -1,7 +1,6 @@
 #include "UnlitPipe.h"
 
 #include "assets/shared/GeometryShared.h"
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"

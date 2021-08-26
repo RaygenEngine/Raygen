@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
 
+#include "rendering/VkCoreIncludes.h"
+
 namespace vl {
 inline class GpuAssetManager_ {
 	// NOTE: whenever any operation on this may move the vector, gpuassetdetail ::gpuAssetListData should be updated

@@ -1,14 +1,20 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+
 #define CMDSCOPE_BEGIN(cmdBuffer, name) cmdBuffer.beginDebugUtilsLabelEXT({ name, { 1.f, 1.f, 1.f, 1.f } })
 #define CMDSCOPE_END(cmdBuffer)         cmdBuffer.endDebugUtilsLabelEXT()
 
-#define DEBUG_NAME(handle, name) detail::RegisterDebugName(handle, name)
+#define DEBUG_NAME(handle, name) rvk::registerDebugName(handle, name)
 #define DEBUG_NAME_AUTO(handle)  DEBUG_NAME(handle, #handle)
 
-void SetDebugUtilsObjectName(vk::DebugUtilsObjectNameInfoEXT&&);
+namespace vl {
+struct RBuffer;
+}
 
-namespace detail {
+namespace rvk {
+void setDebugUtilsObjectName(vk::DebugUtilsObjectNameInfoEXT&&);
+
 template<typename T, typename = void>
 struct HasCType : std::false_type {
 };
@@ -18,7 +24,7 @@ struct HasCType<T, std::void_t<typename T::CType>> : std::true_type {
 };
 
 template<typename T>
-void RegisterDebugName(const T& handle, const std::string& name)
+void registerDebugName(const T& handle, const std::string& name)
 {
 	vk::DebugUtilsObjectNameInfoEXT debugNameInfo{};
 
@@ -34,6 +40,10 @@ void RegisterDebugName(const T& handle, const std::string& name)
 	}
 
 	debugNameInfo.setPObjectName(name.c_str());
-	SetDebugUtilsObjectName(std::move(debugNameInfo));
+	setDebugUtilsObjectName(std::move(debugNameInfo));
 }
-} // namespace detail
+
+template<>
+void registerDebugName<vl::RBuffer>(const vl::RBuffer& buffer, const std::string& name);
+
+} // namespace rvk

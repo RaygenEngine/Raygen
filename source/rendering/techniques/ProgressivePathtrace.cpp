@@ -1,12 +1,12 @@
 #include "ProgressivePathtrace.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/pipes/BdptPipe.h"
 #include "rendering/pipes/NaivePathtracePipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
+#include "rendering/VkCoreIncludes.h"
 
 namespace {
 enum class PtMode

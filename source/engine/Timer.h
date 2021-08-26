@@ -1,5 +1,4 @@
 #pragma once
-#include "core/MacroUtl.h"
 #include "engine/Logger.h"
 
 #include <chrono>

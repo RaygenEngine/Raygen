@@ -3,6 +3,7 @@
 #include "rendering/pipes/geometry/DepthmapPipe.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/VkCoreIncludes.h"
 
 namespace vl {
 void CalculateShadowmaps::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)

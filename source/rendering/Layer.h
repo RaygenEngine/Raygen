@@ -11,23 +11,13 @@ class RendererBase;
 
 inline class Layer_ : public Listener {
 
+	friend class Rendering;
+
 public:
 	Layer_();
 	~Layer_();
 
 	void DrawFrame();
-
-	// TODO:
-	SwapchainOutputPass* swapOutput{ nullptr };
-	Scene* mainScene{ nullptr };
-	RendererBase* renderer{ nullptr };
-
-	void ResetMainScene();
-
-	struct {
-		BoolFlag flag;
-		RendererBase* prev{ nullptr };
-	} swapRenPath;
 
 private:
 	InFlightResources<vk::UniqueFence> m_frameFence;
@@ -37,6 +27,11 @@ private:
 	InFlightCmdBuffers<Graphics> m_cmdBuffer;
 
 	uint32 m_currentFrame{ 0 };
+
+	SwapchainOutputPass* m_swapOutput{ nullptr };
+	Scene* m_mainScene{ nullptr };
+	RendererBase* m_renderer{ nullptr };
+	RendererBase* m_currentRasterizer{ nullptr };
 
 } * Layer{};
 } // namespace vl

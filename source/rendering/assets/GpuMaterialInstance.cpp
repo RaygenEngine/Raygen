@@ -6,6 +6,7 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
+#include "rendering/VkCoreIncludes.h"
 
 using namespace vl;
 

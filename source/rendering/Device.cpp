@@ -1,5 +1,6 @@
 #include "Device.h"
 
+#include "rendering/VkCoreIncludes.h"
 #include "rendering/VulkanLoader.h"
 
 #include <set>

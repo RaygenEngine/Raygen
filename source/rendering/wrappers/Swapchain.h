@@ -1,5 +1,7 @@
 #pragma once
 
+#include "rendering/VkCoreIncludes.h"
+
 namespace vl {
 struct RSwapchain {
 

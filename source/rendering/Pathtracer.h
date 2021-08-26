@@ -10,6 +10,8 @@ namespace vl {
 inline class Pathtracer_ : public RendererBase {
 
 public:
+	Pathtracer_();
+
 	void ResizeBuffers(uint32 width, uint32 height) override;
 
 	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) override;
@@ -19,12 +21,12 @@ public:
 	// CHECK: do we want unlit stuff here? - and/or editor stuff like icons etc? - if so we will need depth calculation
 	// which is costly
 
+private:
+	vk::Extent2D m_extent{};
+
 	ProgressivePathtrace m_progressivePathtrace;
 
 	int32 m_frame{ 0 };
-
-private:
-	vk::Extent2D m_extent{};
 
 } * Pathtracer{};
 } // namespace vl

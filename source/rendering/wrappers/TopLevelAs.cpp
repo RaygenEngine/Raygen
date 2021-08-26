@@ -15,6 +15,7 @@
 #include "rendering/scene/SceneSpotlight.h"
 #include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/Device.h"
+#include "rendering/VkCoreIncludes.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>

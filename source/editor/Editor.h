@@ -1,13 +1,17 @@
 #pragma once
 #include "universe/Entity.h"
 
+namespace vk {
+class CommandBuffer;
+}
+
+using ImTextureID = void*;
 
 class Editor {
 	friend class Engine_;
 
 	static void Init();
 	static void Destroy();
-
 
 public:
 	static void Update();
@@ -18,4 +22,9 @@ public:
 
 	static void BeforePlayWorld(World& world);
 	static void AfterStopWorld(World& world);
+
+	static void RecordCmd(vk::CommandBuffer* drawCommandBuffer);
+
+	static std::pair<glm::vec2, glm::vec2> GetIconUV(const char* icon);
+	static ImTextureID GetFontIconTexture();
 };

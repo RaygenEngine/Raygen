@@ -2,7 +2,8 @@
 
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/DebugName.h"
+#include "rendering/VkCoreIncludes.h"
+#include "engine/Events.h"
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
@@ -12,6 +13,10 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 } // namespace
 
 namespace vl {
+Pathtracer_::Pathtracer_()
+{
+	Event::OnViewerUpdated.Bind(this, [&]() { m_frame = 0; });
+}
 
 void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
 {

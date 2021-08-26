@@ -4,7 +4,6 @@
 #include "assets/PodEntry.h"
 #include "assets/PodHandle.h"
 #include "assets/UriLibrary.h"
-#include "core/StringUtl.h"
 
 
 struct Image;

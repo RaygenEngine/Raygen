@@ -1,6 +1,5 @@
 #include "SpirvCompiler.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "platform/DynLibLoader.h"
 
 #include <StandAlone/ResourceLimits.h>

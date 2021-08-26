@@ -1,4 +1,7 @@
 #pragma once
+
+#include "rendering/VkCoreIncludes.h"
+
 #include <optional>
 
 // NOTE: this is an ImageViewer wrapper that needs lots of work

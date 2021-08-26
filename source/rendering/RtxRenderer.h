@@ -21,6 +21,8 @@ public:
 
 	InFlightResources<vk::ImageView> GetOutputViews() const override;
 
+
+private:
 	// TODO: geometry + core light
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 
@@ -30,7 +32,6 @@ public:
 	// non-static techniques
 	RaytraceLightTest m_raytraceLightTest;
 
-private:
 	vk::Extent2D m_extent{};
 
 	void* m_viewerPtr{ nullptr };

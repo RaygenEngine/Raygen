@@ -1,6 +1,5 @@
 #include "PtCollection.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/ppt/techniques/PtDebug.h"
 #include "rendering/ppt/techniques/PtLightBlend.h"
 

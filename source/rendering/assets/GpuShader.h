@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
 
+#include "rendering/VkCoreIncludes.h"
+
 namespace vl {
 struct GpuShader : public GpuAssetTemplate<Shader> {
 	GpuShader(PodHandle<Shader> podHandle);

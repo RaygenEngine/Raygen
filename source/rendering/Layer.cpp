@@ -1,12 +1,11 @@
 #include "Layer.h"
 
 #include "assets/GpuAssetManager.h"
-#include "editor/EditorObject.h"
-#include "engine/console/ConsoleVariable.h"
+#include "assets/AssetRegistry.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "rendering/DebugName.h"
+#include "rendering/VkCoreIncludes.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
@@ -18,11 +17,6 @@
 #include "rendering/resource/GpuResources.h"
 #include "rendering/VulkanLoader.h"
 
-ConsoleFunction<> cons_buildAll{ "s.structs.buildAll", []() { vl::Layer->mainScene->BuildAll(); },
-	"Builds all build-able scene structs." };
-// TODO: uncomment, change name
-// ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
-//	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 namespace vl {
 
@@ -39,18 +33,15 @@ Layer_::Layer_()
 	Layouts = new Layouts_();
 	rvk::Shapes::InitShapes();
 	StaticPipes::InitRegistered();
-	swapOutput = new SwapchainOutputPass();
-	mainScene = new Scene();
-
+	m_swapOutput = new SwapchainOutputPass();
+	m_mainScene = new Scene();
 
 	Renderer = new Renderer_();
 	Pathtracer = new Pathtracer_();
 	RtxRenderer = new RtxRenderer_();
 
-	renderer = RtxRenderer;
-
-	swapOutput->SetAttachedRenderer(RtxRenderer);
-	Renderer->InitPipelines();
+	m_currentRasterizer = m_renderer = RtxRenderer;
+	m_swapOutput->SetAttachedRenderer(m_renderer);
 
 	for (int32 i = 0; i < c_framesInFlight; ++i) {
 		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
@@ -72,8 +63,8 @@ Layer_::~Layer_()
 	delete Renderer;
 	delete Pathtracer;
 	delete RtxRenderer;
-	delete swapOutput;
-	delete mainScene;
+	delete m_swapOutput;
+	delete m_mainScene;
 	StaticPipes::DestroyAll();
 	delete Layouts;
 	delete GpuAssetManager;
@@ -93,44 +84,42 @@ void Layer_::DrawFrame()
 {
 	PROFILE_SCOPE(Renderer);
 
-	auto doSwap = swapRenPath.flag.Access();
-
-	if (doSwap || Input.IsJustPressed(Key::Tab)) [[unlikely]] {
-		if (doSwap || Input.IsDown(Key::Ctrl)) {
-			if (renderer != Pathtracer) {
-				swapRenPath.prev = renderer;
-				renderer = Pathtracer;
+	if (Input.IsJustPressed(Key::Tab)) [[unlikely]] {
+		if (Input.IsDown(Key::Ctrl)) {
+			if (m_renderer != Pathtracer) {
+				m_currentRasterizer = m_renderer;
+				m_renderer = Pathtracer;
 			}
 			else {
-				renderer = swapRenPath.prev;
+				m_renderer = m_currentRasterizer;
 			}
 		}
 		else {
-			if (renderer == RtxRenderer) {
-				renderer = Renderer;
+			if (m_renderer == RtxRenderer) {
+				m_renderer = Renderer;
 			}
 			else {
-				renderer = RtxRenderer;
+				m_renderer = RtxRenderer;
 			}
 		}
 		Device->waitIdle();
-		swapOutput->SetAttachedRenderer(renderer);
+		m_swapOutput->SetAttachedRenderer(m_renderer);
 		Device->waitIdle();
 	}
 
 	// DOC:
 	if (!AssetRegistry::GetGpuUpdateRequests().empty()) {
-		mainScene->forceUpdateAccel = true;
+		m_mainScene->forceUpdateAccel = true;
 	}
 
 	GpuAssetManager->ConsumeAssetUpdates();
-	mainScene->ConsumeCmdQueue();
+	m_mainScene->ConsumeCmdQueue();
 
-	if (!swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
+	if (!m_swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
 		return;
 	}
 
-	swapOutput->OnPreRender();
+	m_swapOutput->OnPreRender();
 
 	m_currentFrame = (m_currentFrame + 1) % c_framesInFlight;
 	auto& currentCmdBuffer = m_cmdBuffer[m_currentFrame];
@@ -141,23 +130,23 @@ void Layer_::DrawFrame()
 		(void)Device->waitForFences({ *m_frameFence[m_currentFrame] }, true, UINT64_MAX);
 		(void)Device->resetFences({ *m_frameFence[m_currentFrame] });
 
-		mainScene->UploadDirty(m_currentFrame);
-		mainScene->forceUpdateAccel = false;
+		m_mainScene->UploadDirty(m_currentFrame);
+		m_mainScene->forceUpdateAccel = false;
 	}
 
 	uint32 imageIndex;
 
 	// TODO: could this be a swapOut func?
 	(void)Device->acquireNextImageKHR(
-		swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
+		m_swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
 
-	swapOutput->SetOutputImageIndex(imageIndex);
+	m_swapOutput->SetOutputImageIndex(imageIndex);
 
 
 	currentCmdBuffer.begin();
 	{
 		CMDSCOPE_BEGIN(currentCmdBuffer, "Render frame");
-		renderer->DrawFrame(currentCmdBuffer, mainScene->GetRenderDesc(m_currentFrame), *swapOutput);
+		m_renderer->DrawFrame(currentCmdBuffer, m_mainScene->GetRenderDesc(m_currentFrame), *m_swapOutput);
 		CMDSCOPE_END(currentCmdBuffer);
 	}
 	currentCmdBuffer.end();
@@ -177,7 +166,7 @@ void Layer_::DrawFrame()
 
 
 	// TODO: could present be a swapOut func?
-	vk::SwapchainKHR swapchain = swapOutput->GetSwapchain();
+	vk::SwapchainKHR swapchain = m_swapOutput->GetSwapchain();
 
 	vk::PresentInfoKHR presentInfo{};
 	presentInfo //
@@ -186,11 +175,5 @@ void Layer_::DrawFrame()
 		.setImageIndices(imageIndex);
 
 	(void)CmdPoolManager->presentQueue.presentKHR(presentInfo);
-}
-
-void Layer_::ResetMainScene()
-{
-	delete mainScene;
-	mainScene = new Scene();
 }
 } // namespace vl

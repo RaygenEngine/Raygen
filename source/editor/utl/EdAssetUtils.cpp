@@ -2,8 +2,8 @@
 
 #include "editor/EditorObject.h"
 #include "reflection/ReflectionTools.h"
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuImage.h"
+#include "rendering/assets/GpuAssetManager.h" // MAINT: module Leak
+#include "rendering/assets/GpuImage.h"        // MAINT: module Leak
 
 
 namespace ed::asset {

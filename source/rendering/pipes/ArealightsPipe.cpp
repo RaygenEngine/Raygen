@@ -1,6 +1,5 @@
 #include "ArealightsPipe.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/Layouts.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"

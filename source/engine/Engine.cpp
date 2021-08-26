@@ -3,7 +3,6 @@
 #include "App.h"
 #include "assets/Assets.h"
 #include "editor/Editor.h"
-#include "engine/console/ConsoleVariable.h"
 #include "platform/Platform.h"
 #include "rendering/Rendering.h"
 #include "universe/Universe.h"

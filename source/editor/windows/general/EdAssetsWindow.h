@@ -1,6 +1,6 @@
 #pragma once
+
 #include "assets/PodEntry.h"
-#include "core/StringUtl.h"
 #include "editor/windows/EdWindow.h"
 #include "engine/Logger.h"
 #include "engine/profiler/ProfilerSetup.h"

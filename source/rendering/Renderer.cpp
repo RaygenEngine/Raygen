@@ -1,10 +1,9 @@
 #include "Renderer.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
-#include "rendering/DebugName.h"
+#include "rendering/VkCoreIncludes.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/pipes/AmbientPipe.h"
 #include "rendering/pipes/BillboardPipe.h"
@@ -20,10 +19,8 @@
 #include "rendering/techniques/BakeProbes.h"
 #include "rendering/techniques/CalculateShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
+#include "engine/Events.h"
 
-
-ConsoleFunction<> cons_arealightsReset{ "r.arealights.resetProgressive",
-	[]() { vl::Renderer->m_raytraceArealights.frame = 0; }, "Reset the progressive raytracing of the arealights." };
 
 namespace {
 vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
@@ -36,13 +33,12 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
+	Event::OnViewerUpdated.Bind(this, [&]() { m_raytraceArealights.frame = 0; });
+
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_globalDesc[i] = Layouts->globalDescLayout.AllocDescriptorSet();
 	}
-}
 
-void Renderer_::InitPipelines()
-{
 	// m_postprocCollection.RegisterTechniques();
 
 	m_ptLightBlend.MakeLayout();
@@ -93,6 +89,13 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
 		rvk::writeDescriptorImages(m_globalDesc[i], 11u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
 	}
+
+	ClearDebugAttachments();
+	RegisterDebugAttachment(m_mainPassInst.at(0).framebuffer);
+	RegisterDebugAttachment(m_secondaryPassInst.at(0).framebuffer);
+	RegisterDebugAttachment(m_ptPass.at(0).framebuffer);
+	RegisterDebugAttachment(m_raytraceMirrorReflections.result.at(0));
+	RegisterDebugAttachment(m_raytraceArealights.svgfRenderPassInstance.framebuffer);
 }
 
 InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const

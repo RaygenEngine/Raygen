@@ -8,7 +8,6 @@
 #include "assets/specializations/PodExport.h"
 #include "assets/util/FindPodUsers.h"
 #include "engine/Timer.h"
-#include "engine/console/ConsoleVariable.h"
 #include "reflection/PodTools.h"
 
 #include <nlohmann/json.hpp>

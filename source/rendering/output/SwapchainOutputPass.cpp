@@ -1,11 +1,11 @@
 #include "SwapchainOutputPass.h"
 
-#include "editor/imgui/ImguiImpl.h"
+#include "editor/Editor.h"
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/DebugName.h"
+#include "rendering/VkCoreIncludes.h"
 #include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
@@ -107,7 +107,7 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 
 		CMDSCOPE_BEGIN(cmdBuffer, "Imgui Editor commands");
 
-		ImguiImpl::RenderVulkan(cmdBuffer);
+		Editor::RecordCmd(&cmdBuffer);
 
 		CMDSCOPE_END(cmdBuffer);
 	}

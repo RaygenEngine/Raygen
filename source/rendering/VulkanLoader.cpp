@@ -1,5 +1,7 @@
 #include "VulkanLoader.h"
 
+#include "rendering/VkCoreIncludes.h"
+
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
 #include <Windows.h>
