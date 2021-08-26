@@ -1,6 +1,5 @@
 #include "RendererBase.h"
 
-#include "rendering/wrappers/ImageView.h"
 #include "rendering/wrappers/Framebuffer.h"
 
 using namespace vl;

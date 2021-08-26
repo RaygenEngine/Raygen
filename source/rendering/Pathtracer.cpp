@@ -2,7 +2,6 @@
 
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/VkCoreIncludes.h"
 #include "engine/Events.h"
 
 namespace {

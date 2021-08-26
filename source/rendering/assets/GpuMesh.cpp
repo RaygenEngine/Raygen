@@ -4,7 +4,6 @@
 #include "assets/pods/Mesh.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuMaterialInstance.h"
-#include "rendering/VkCoreIncludes.h"
 
 using namespace vl;
 

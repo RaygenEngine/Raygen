@@ -23,8 +23,8 @@ App_::~App_()
 void App_::PreMainInit(int32 argc_, char* argv_[])
 {
 	// Copy the arguments for later use.
-	argc = argc_;
-	argv = argv_;
+	m_argc = argc_;
+	m_argv = argv_;
 }
 
 int32 App_::Main(int32 argc_, char* argv_[])

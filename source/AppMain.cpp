@@ -1,6 +1,5 @@
 #include "App.h"
 
-#include "engine/Logger.h"
 
 int32 main(int32 argc, char* argv[])
 {

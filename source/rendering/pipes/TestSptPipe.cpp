@@ -6,7 +6,6 @@
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/scene/Scene.h"
 
 
 namespace {

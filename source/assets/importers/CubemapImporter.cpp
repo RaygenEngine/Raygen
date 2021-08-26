@@ -5,7 +5,6 @@
 #include "assets/util/ImageUtl.h"
 
 #include <fstream>
-#include <nlohmann/json.hpp>
 
 BasePodHandle CubemapImporter::Import(const fs::path& path)
 {

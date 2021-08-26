@@ -1,6 +1,5 @@
 #include "SceneGeometry.h"
 
-#include "rendering/Device.h"
 
 void SceneAnimatedGeometry::UploadSsbo(uint32 curFrame)
 {

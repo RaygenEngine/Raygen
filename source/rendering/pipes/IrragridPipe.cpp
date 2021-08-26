@@ -5,7 +5,6 @@
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneIrragrid.h"
-#include "rendering/Device.h"
 
 namespace vl {
 

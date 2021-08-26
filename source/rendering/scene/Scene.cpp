@@ -8,7 +8,6 @@
 #include "rendering/scene/SceneQuadlight.h"
 #include "rendering/scene/SceneReflprobe.h"
 #include "rendering/scene/SceneSpotlight.h"
-#include "rendering/Device.h"
 
 void Scene::EnqueueEndFrame()
 {

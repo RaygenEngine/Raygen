@@ -58,10 +58,10 @@ namespace {
 
 #ifndef __cpp_lib_format
 		fmt::basic_memory_buffer<char, 100> s;
-		fmt::format_to(s, " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->windowTitle, Engine.GetFPS());
+		fmt::format_to(s, " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->GetWindowTitle(), Engine.GetFPS());
 #else
 		std::vector<char> s;
-		std::format_to(std::back_inserter(s), " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->windowTitle,
+		std::format_to(std::back_inserter(s), " {}  {} - {:.1f} FPS ###PlayStopCaptionTxt", icon, App->GetWindowTitle(),
 			Engine.GetFPS());
 #endif
 

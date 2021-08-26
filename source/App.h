@@ -7,22 +7,22 @@
 
 
 inline class App_ {
-public:
-	fs::path workingDirPath{ "assets" };
+
+	fs::path m_workingDirPath{ "assets" };
 
 	// The following paths are relative to workingDirPath
-	fs::path fileDialogPath{ "." };
-	fs::path templateScene{ "engine-data/default.json" };
+	fs::path m_fileDialogPath{ "." };
+	fs::path m_templateScene{ "engine-data/default.json" };
 	// If left empty, template Scene gets used as primary scene
-	fs::path localScene{};
+	fs::path m_localScene{};
 
-	std::string windowTitle{ "Raygen" };
+	std::string m_windowTitle{ "Raygen" };
 
-	glm::ivec2 windowSize{ 2304, 1296 };
+	glm::uvec2 m_windowSize{ 2304u, 1296u };
 
 protected:
-	int32 argc{ 1 };
-	char** argv{ nullptr };
+	int32 m_argc{ 1 };
+	char** m_argv{ nullptr };
 
 public:
 	App_();
@@ -37,5 +37,12 @@ public:
 
 	virtual void WhileResizing();
 
-	friend class Engine_;
+
+	std::string GetWindowTitle() const { return m_windowTitle; }
+	fs::path GetWorkingDirPath() const { return m_workingDirPath; }
+	fs::path GetFileDialogPath() const { return m_fileDialogPath; }
+	fs::path GetTemplateScene() const { return m_templateScene; }
+	fs::path GetLocalScene() const { return m_localScene; }
+	glm::uvec2 GetWindowSize() const { return m_windowSize; }
+
 } * App{ nullptr };

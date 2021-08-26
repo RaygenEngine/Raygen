@@ -3,7 +3,6 @@
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
-#include "rendering/VkCoreIncludes.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/pipes/AmbientPipe.h"
 #include "rendering/pipes/BillboardPipe.h"

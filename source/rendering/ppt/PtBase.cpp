@@ -2,7 +2,6 @@
 
 #include "rendering/Layouts.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
 
 namespace vl {
 
