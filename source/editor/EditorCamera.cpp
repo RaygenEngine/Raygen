@@ -4,8 +4,7 @@
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
-#include "rendering/Pathtracer.h" // TODO: remove
-#include "rendering/Renderer.h"   // TODO: remove -- see below TODO
+#include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
 namespace ed {
@@ -76,10 +75,8 @@ void EditorCamera::Update(float deltaSeconds)
 		UpdatePiloting();
 	}
 
-	// TODO: remove
 	if (dirtyThisFrame) {
-		vl::Renderer->m_raytraceArealights.frame = 0;
-		vl::Pathtracer->m_frame = 0;
+		Event::OnViewerUpdated.Broadcast();
 	}
 
 	dirtyThisFrame = true;
@@ -118,6 +115,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 	if (!dirtyThisFrame) {
 		return;
 	}
+
 	auto lookAt = transform.position + transform.front() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());
 

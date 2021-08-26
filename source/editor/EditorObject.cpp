@@ -1,23 +1,22 @@
 #include "EditorObject.h"
 
 #include "assets/pods/Mesh.h"
-#include "editor/EdUserSettings.h"
 #include "editor/Editor.h"
+#include "editor/EdUserSettings.h"
 #include "editor/misc/NativeFileBrowser.h"
-#include "editor/windows/WindowsRegistry.h"
 #include "editor/windows/general/EdAssetsWindow.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
 #include "editor/windows/general/EdPropertyEditorWindow.h"
+#include "editor/windows/WindowsRegistry.h"
 #include "engine/Engine.h"
 #include "engine/Events.h"
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "rendering/Layer.h"
-#include "rendering/Renderer.h"
+#include "rendering/Rendering.h"
+#include "universe/components/StaticMeshComponent.h"
 #include "universe/ComponentsDb.h"
 #include "universe/Universe.h"
-#include "universe/components/StaticMeshComponent.h"
 
 #include <glfw/glfw3.h>
 
@@ -161,7 +160,7 @@ void EditorObject_::UpdateEditor()
 	m_deferredCommands.clear();
 
 	edCamera.Update(1.f / std::max(Engine.GetFPS(), 1.f)); // TODO: fix 1 / fps
-	edCamera.EnqueueUpdateCmds(vl::Layer->mainScene);
+	edCamera.EnqueueUpdateCmds(Rendering::GetMainScene());
 
 	HandleInput();
 
@@ -218,7 +217,7 @@ void EditorObject_::AfterStopWorld(World& world)
 	if (&world == m_currentWorld) {
 		world.ResetWorld();
 		ComponentsDb::JsonToRegistry(m_lastPlayedWorld, world);
-		vl::Layer->ResetMainScene();
+		Rendering::ResetMainScene();
 	}
 }
 

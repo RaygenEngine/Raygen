@@ -1,9 +1,10 @@
 #include "BillboardPipe.h"
 
-#include "editor/imgui/ImguiImpl.h"
+#include "editor/Editor.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/Device.h"
+#include "rendering/VkCoreIncludes.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
 #include "universe/components/CameraComponent.h"
@@ -171,7 +172,7 @@ namespace {
 		glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
 
 		auto icon = ComponentsDb::GetType<T>()->clPtr->GetIcon();
-		auto uv = ImguiImpl::GetIconUV(U8(icon));
+		auto uv = Editor::GetIconUV(U8(icon));
 
 		for (auto&& [ent, comp, bc] : Universe::MainWorld->GetView<T, BasicComponent>().each()) {
 
@@ -201,7 +202,7 @@ namespace {
 		glm::vec4 cameraUp{ view[0][1], view[1][1], view[2][1], 0.f };
 
 		auto icon = ComponentsDb::GetType<CIrragrid>()->clPtr->GetIcon();
-		auto uv = ImguiImpl::GetIconUV(U8(icon));
+		auto uv = Editor::GetIconUV(U8(icon));
 
 
 		for (auto&& [ent, ig, bc] : Universe::MainWorld->GetView<CIrragrid, BasicComponent>().each()) {
@@ -241,7 +242,7 @@ void BillboardPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sce
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 	rvk::bindUnitRectTriangleStrip(cmdBuffer);
 
-	auto fontDescSet = ImguiImpl::GetIconFontDescriptorSet();
+	auto fontDescSet = static_cast<VkDescriptorSet>(Editor::GetFontIconTexture());
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u, { fontDescSet }, nullptr);
 
 	DrawComponent<CReflprobe>(cmdBuffer, sceneDesc, layout());

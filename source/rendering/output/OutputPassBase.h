@@ -2,6 +2,8 @@
 
 #include "engine/Listener.h"
 
+#include "rendering/VkCoreIncludes.h"
+
 namespace vl {
 class RendererBase;
 

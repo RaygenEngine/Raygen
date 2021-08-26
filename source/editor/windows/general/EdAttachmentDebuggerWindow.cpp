@@ -2,12 +2,8 @@
 
 #include "editor/EditorObject.h"
 #include "engine/Events.h"
-#include "rendering/Layer.h"
-#include "rendering/Pathtracer.h"
-#include "rendering/Renderer.h"
-#include "rendering/scene/SceneDirlight.h"
-#include "rendering/scene/SceneSpotlight.h"
-
+#include "rendering/Rendering.h"
+#include "rendering/RendererBase.h"
 
 namespace ed {
 
@@ -21,16 +17,16 @@ void AttachmentDebuggerWindow::ImguiDraw()
 {
 	bool shouldShowDescriptors = !m_willInvalidateDescriptors.Access();
 
-	auto showImage = [&, shouldShowDescriptors](vl::RImage& att) {
+	auto showImage = [&, shouldShowDescriptors](const vl::RendererBase::AttachmentData& att) {
 		bool& isOpen = isAttachmentOpen[att.name]; // find or insert
 
 		ImGui::PushID(&att);
-		ImGui::Checkbox(att.name.c_str(), &isOpen);
+		ImGui::Checkbox(att.name, &isOpen);
 		if (isOpen) {
 			std::string name = fmt::format("Att {}", att.name);
 			ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
 			if (ImGui::Begin(name.c_str(), &isOpen)) {
-				auto descrSet = att.GetDebugDescriptor();
+				auto descrSet = att.descSet;
 
 				if (!descrSet) {
 					ImGui::Text("Null handle");
@@ -38,7 +34,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 				}
 				auto ext = att.extent;
 
-				ImVec2 size = { static_cast<float>(ext.width), static_cast<float>(ext.height) };
+				ImVec2 size = { static_cast<float>(ext.x), static_cast<float>(ext.y) };
 
 				auto windowSize = ImGui::GetCurrentWindow()->Size;
 				windowSize.x -= 4;  // CHECK: Proper calculation for padding (to avoid scrollbar)
@@ -70,35 +66,11 @@ void AttachmentDebuggerWindow::ImguiDraw()
 		ImGui::PopID();
 	};
 
-	auto showFramebuffer = [&, shouldShowDescriptors](vl::RFramebuffer& fb) {
-		for (auto& att : fb.ownedAttachments) {
-			showImage(att);
-		}
-	};
+	auto activeRenderer = Rendering::GetActiveRenderer();
+	// TODO: GetMainScene()->GetDebugAttachments - or through renderer somehow
 
-	auto& mainFramebuffer = vl::Renderer->m_mainPassInst.at(0).framebuffer;
-	auto& secondaryFramebuffer = vl::Renderer->m_secondaryPassInst.at(0).framebuffer;
-	auto& ptPassFramebuffer = vl::Renderer->m_ptPass.at(0).framebuffer;
-	auto& mirrorRes = vl::Renderer->m_raytraceMirrorReflections.result.at(0);
-	auto& arealightsRes = vl::Renderer->m_raytraceArealights.svgfRenderPassInstance.framebuffer;
-	auto& progpath = vl::Pathtracer->m_progressivePathtrace.progressive;
-
-
-	showFramebuffer(mainFramebuffer);
-	showFramebuffer(secondaryFramebuffer);
-	showFramebuffer(arealightsRes);
-	showImage(mirrorRes);
-	showImage(progpath);
-
-
-	showFramebuffer(ptPassFramebuffer);
-
-	for (auto dl : vl::Layer->mainScene->Get<SceneDirlight>()) {
-		showFramebuffer(dl->shadowmapPass.at(0).framebuffer);
-	}
-
-	for (auto sl : vl::Layer->mainScene->Get<SceneSpotlight>()) {
-		showFramebuffer(sl->shadowmapPass.at(0).framebuffer);
+	for (const auto& debugAtt : activeRenderer->GetDebugAttachments()) {
+		showImage(debugAtt);
 	}
 }
 

@@ -1,10 +1,9 @@
 #include "RtxRenderer.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
-#include "rendering/DebugName.h"
+#include "rendering/VkCoreIncludes.h"
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/pipes/AmbientPipe.h"
 #include "rendering/pipes/BillboardPipe.h"
@@ -80,6 +79,13 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
 		rvk::writeDescriptorImages(m_globalDesc[i], 11u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
 	}
+
+	ClearDebugAttachments();
+	RegisterDebugAttachment(m_mainPassInst.at(0).framebuffer);
+	RegisterDebugAttachment(m_unlitPassInst.at(0).framebuffer);
+	RegisterDebugAttachment(m_raytraceLightTest.svgfRenderPassInstance.framebuffer);
+	RegisterDebugAttachment(m_raytraceLightTest.svgfPass.swappingImages.at(0));
+	RegisterDebugAttachment(m_raytraceLightTest.svgfPass.swappingImages.at(1));
 }
 
 InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const

@@ -1,5 +1,4 @@
 #pragma once
-#include "core/StringUtl.h"
 #include "engine/Logger.h"
 
 #include <string>

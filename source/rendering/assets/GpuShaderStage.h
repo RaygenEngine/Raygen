@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering/assets/GpuAssetBase.h"
 
+#include "rendering/VkCoreIncludes.h"
+
 namespace vl {
 struct GpuShaderStage : public GpuAssetTemplate<ShaderStage> {
 	vk::UniqueShaderModule module;

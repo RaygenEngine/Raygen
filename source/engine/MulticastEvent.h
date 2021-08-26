@@ -1,5 +1,4 @@
 #pragma once
-#include "core/BoolFlag.h"
 #include "engine/Listener.h"
 #include "engine/Logger.h"
 

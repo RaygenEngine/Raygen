@@ -6,6 +6,7 @@
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/VkCoreIncludes.h"
 
 namespace vl {
 

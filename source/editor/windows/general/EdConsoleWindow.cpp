@@ -1,7 +1,6 @@
 #include "EdConsoleWindow.h"
 
 #include "editor/imgui/ImEd.h"
-#include "engine/console/ConsoleVariable.h"
 
 
 namespace {

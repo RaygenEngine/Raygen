@@ -2,6 +2,7 @@
 
 #include "rendering/Device.h"
 #include "rendering/wrappers/CmdBuffer.h"
+#include "rendering/VkCoreIncludes.h"
 
 namespace vl {
 

@@ -106,7 +106,7 @@ void WindowScrollCb(GLFWwindow* window, double xoffset, double yoffset)
 			return;
 		}
 	}
-	// FIXME: Possible bug on other platforms due to rounding
+	// TODO: Possible bug on other platforms due to rounding
 	Input.Z_UpdateScrollWheel(static_cast<int32>(yoffset));
 }
 

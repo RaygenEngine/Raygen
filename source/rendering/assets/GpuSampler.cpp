@@ -2,6 +2,7 @@
 
 #include "assets/pods/Sampler.h"
 #include "rendering/resource/GpuResources.h"
+#include "rendering/VkCoreIncludes.h"
 
 using namespace vl;
 

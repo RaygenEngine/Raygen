@@ -2,6 +2,8 @@
 #include "assets/shared/ImageShared.h"
 #include "assets/shared/TextureShared.h"
 
+#include <vulkan/vulkan.hpp>
+
 namespace rvk {
 
 inline vk::Filter getTextureFilter(TextureFiltering f)

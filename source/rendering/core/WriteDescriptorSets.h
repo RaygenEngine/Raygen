@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vulkan/vulkan.hpp>
+
 namespace rvk {
 // clang-format off
 

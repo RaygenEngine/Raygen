@@ -1,7 +1,5 @@
 #include "Console.h"
 
-#include "engine/console/ConsoleVariable.h"
-
 ConsoleFunctionGeneric cons_commandAll(
 	"e.console.manual",
 	[](std::string_view view) {

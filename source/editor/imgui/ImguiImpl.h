@@ -6,6 +6,8 @@ class CommandBuffer;
 
 struct ImFont;
 
+using ImTextureID = void*;
+
 class ImguiImpl {
 public:
 	static void InitContext();
@@ -14,15 +16,14 @@ public:
 	static void NewFrame();
 	static void EndFrame();
 
-	static void RenderVulkan(vk::CommandBuffer drawCommandBuffer);
+	static void RenderVulkan(vk::CommandBuffer* drawCommandBuffer);
 
 	inline static ImFont* s_EditorFont{ nullptr };
 	inline static ImFont* s_CodeFont{ nullptr };
 	inline static ImFont* s_AssetIconFont{ nullptr };
 	inline static ImFont* s_MediumSizeIconFont{ nullptr };
 
-
 	static std::pair<glm::vec2, glm::vec2> GetIconUV(const char* icon);
 
-	static vk::DescriptorSet GetIconFontDescriptorSet();
+	static ImTextureID GetFontIconTexture();
 };

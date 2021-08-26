@@ -9,5 +9,6 @@ inline MulticastEvent<> OnViewportUpdated;          //
 inline MulticastEvent<bool> OnWindowFocus;          // @1: newIsFocused
 inline MulticastEvent<bool> OnWindowMinimize;       // @1: newIsMinimized
 inline MulticastEvent<bool> OnWindowMaximize;       // @1: newIsMaximized
+inline MulticastEvent<> OnViewerUpdated;            //
 
 } // namespace Event

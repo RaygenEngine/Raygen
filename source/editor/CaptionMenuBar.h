@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/BoolFlag.h"
 #include "editor/EdMenu.h"
 #include "editor/EdOperation.h"
 #include "editor/EditorCamera.h"

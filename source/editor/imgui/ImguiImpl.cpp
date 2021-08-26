@@ -1,21 +1,13 @@
 #include "ImguiImpl.h"
 
 #include "assets/PodIncludes.h"
-#include "engine/console/ConsoleVariable.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
 #include "reflection/PodTools.h"
-#include "rendering/Device.h"
-#include "rendering/Instance.h"
-#include "rendering/Layer.h"
-#include "rendering/output/SwapchainOutputPass.h"
-#include "rendering/resource/GpuResources.h"
+#include "rendering/Rendering.h"
 #include "universe/ComponentsDb.h"
 
 #include <imgui/examples/imgui_impl_glfw.h>
-#include <imgui/examples/imgui_impl_vulkan.h>
-#include <vulkan/vulkan.hpp>
-
 
 namespace imguistyle {
 void AddLargeAssetIconsFont(ImFontAtlas* atlas)
@@ -325,32 +317,8 @@ void SetStyle()
 
 void InitVulkan()
 {
-	using namespace vl;
-
-	auto& physDev = Device->pd;
-	auto& device = *Device;
-
-	ImGui_ImplVulkan_InitInfo init = {};
-	init.Instance = *Instance;
-	init.PhysicalDevice = physDev;
-	init.Device = device;
-	init.QueueFamily = CmdPoolManager->graphicsQueue.family.index;
-	init.Queue = CmdPoolManager->graphicsQueue;
-	init.PipelineCache = VK_NULL_HANDLE;
-	init.DescriptorPool = GpuResources::GetImguiPool();
-	init.ImageCount = c_framesInFlight;
-	init.MinImageCount = c_framesInFlight;
-	init.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	init.CheckVkResultFn = nullptr;
-	ImGui_ImplVulkan_Init(&init, Layer->swapOutput->GetRenderPass());
-
-	{
-		ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
-		ImGui_ImplVulkan_CreateFontsTexture(cmdBuffer);
-	}
-	ImGui_ImplVulkan_DestroyFontUploadObjects();
+	Rendering::Imgui_Prepare();
 }
-
 
 void ImguiImpl::InitContext()
 {
@@ -374,16 +342,14 @@ void ImguiImpl::InitContext()
 
 void ImguiImpl::NewFrame()
 {
-
 	ImGui_ImplGlfw_NewFrame();
-	ImGui_ImplVulkan_NewFrame();
+	Rendering::Imgui_NewFrame();
 	ImGui::NewFrame();
 }
 
 void ImguiImpl::CleanupContext()
 {
-	vl::Device->waitIdle();
-	ImGui_ImplVulkan_Shutdown();
+	Rendering::Imgui_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
@@ -402,10 +368,10 @@ void ImguiImpl::EndFrame()
 	ImGui::RenderPlatformWindowsDefault();
 }
 
-void ImguiImpl::RenderVulkan(vk::CommandBuffer drawCommandBuffer)
+void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
 {
 	PROFILE_SCOPE(Editor);
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), drawCommandBuffer);
+	Rendering::Imgui_DrawFrame(ImGui::GetDrawData(), drawCommandBuffer);
 }
 
 namespace {
@@ -492,7 +458,7 @@ std::pair<glm::vec2, glm::vec2> ImguiImpl::GetIconUV(const char* icon)
 	return { { glyph->U0, glyph->V0 }, { glyph->U1, glyph->V1 } };
 }
 
-vk::DescriptorSet ImguiImpl::GetIconFontDescriptorSet()
+ImTextureID ImguiImpl::GetFontIconTexture()
 {
-	return { static_cast<VkDescriptorSet>(ImGui::GetIO().Fonts->TexID) };
+	return ImGui::GetIO().Fonts->TexID;
 }

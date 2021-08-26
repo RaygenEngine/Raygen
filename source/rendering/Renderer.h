@@ -14,15 +14,13 @@ inline class Renderer_ : public RendererBase {
 public:
 	Renderer_();
 
-	void InitPipelines();
-
 	void ResizeBuffers(uint32 width, uint32 height) override;
 
 	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) override;
 
 	InFlightResources<vk::ImageView> GetOutputViews() const override;
 
-
+private:
 	// TODO: ppt
 	PtLightBlend m_ptLightBlend;
 	InFlightResources<RenderingPassInstance> m_ptPass;
@@ -38,7 +36,6 @@ public:
 	RaytraceMirrorReflections m_raytraceMirrorReflections;
 	RaytraceArealights m_raytraceArealights;
 
-private:
 	vk::Extent2D m_extent{};
 
 	void* m_viewerPtr{ nullptr };

@@ -1,6 +1,5 @@
 #include "MirrorPipe.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"

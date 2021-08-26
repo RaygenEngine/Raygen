@@ -1,6 +1,5 @@
 #include "Scene.h"
 
-#include "engine/console/ConsoleVariable.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"

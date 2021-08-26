@@ -2,6 +2,7 @@
 
 #include "editor/EditorObject.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
+#include "editor/imgui/ImguiImpl.h"
 
 void Editor::Init()
 {
@@ -48,4 +49,19 @@ void Editor::AfterStopWorld(World& world)
 	if (EditorObject) {
 		EditorObject->AfterStopWorld(world);
 	}
+}
+
+void Editor::RecordCmd(vk::CommandBuffer* drawCommandBuffer)
+{
+	ImguiImpl::RenderVulkan(drawCommandBuffer);
+}
+
+std::pair<glm::vec2, glm::vec2> Editor::GetIconUV(const char* icon)
+{
+	return ImguiImpl::GetIconUV(icon);
+}
+
+ImTextureID Editor::GetFontIconTexture()
+{
+	return ImguiImpl::GetFontIconTexture();
 }

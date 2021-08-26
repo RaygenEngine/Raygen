@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering/wrappers/Buffer.h"
 
+#include "rendering/VkCoreIncludes.h"
+
 // Fwd declared here for subclasses
 struct SceneRenderDesc;
 

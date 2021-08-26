@@ -5,8 +5,7 @@
 #include "engine/Engine.h"
 #include "platform/Platform.h"
 #include "universe/Universe.h"
-#include "rendering/Layer.h"
-#include "rendering/Pathtracer.h"
+#include "rendering/Rendering.h"
 
 #include <glfw/glfw3.h>
 
@@ -92,12 +91,12 @@ namespace {
 			ImGui::PopStyleColor(2);
 		}
 	}
-	void DrawPathTraceWidget()
+	void DrawPathtraceWidget()
 	{
-		static const char* str = U8(FA_CAMERA u8"  Pathtrace ###PathTraceButtonCpt");
+		static const char* str = U8(FA_CAMERA u8"  Pathtrace ###PathtraceButtonCpt");
 
 		bool hasPushedStyle = false;
-		if (vl::Layer->renderer == vl::Pathtracer) {
+		if (Rendering::IsPathtracing()) {
 			hasPushedStyle = true;
 			// ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.061f, 0.347f,
 			// 0.179f, 1.000f));
@@ -110,10 +109,7 @@ namespace {
 		float sizeW = std::round(size.x * 0.1f) / 0.1f; // Round some pixels to avoid resizing everyframe
 
 		if (ImEd::ButtonNoBorderText(str, ImVec2(sizeW, size.y), hasPushedStyle)) {
-			vl::Layer->swapRenPath.flag.Set();
-			if (vl::Layer->renderer != vl::Pathtracer) {
-				vl::Layer->swapRenPath.prev = vl::Layer->renderer;
-			}
+			Rendering::SwapRenderingMode();
 		}
 
 		if (hasPushedStyle) {
@@ -141,7 +137,7 @@ void CaptionMenuBar::DrawBar()
 	if (ImEd::ButtonIcon(FA_SAVE)) {
 		editor.SaveLevel();
 	}
-	DrawPathTraceWidget();
+	DrawPathtraceWidget();
 
 	// Draw FPS & play/stop widget in the middle:
 	DrawPlayStopFpsWidget(editor, scaledSize);
