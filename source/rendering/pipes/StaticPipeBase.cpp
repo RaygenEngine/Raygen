@@ -1,7 +1,6 @@
 #include "StaticPipeBase.h"
 
 #include "rendering/Device.h"
-#include "rendering/VkCoreIncludes.h"
 
 namespace vl {
 void StaticRaytracingPipeBase::AddRaygenGroup(vk::ShaderModule shader)

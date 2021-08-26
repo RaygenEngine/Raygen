@@ -6,7 +6,6 @@
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuSkinnedMesh.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/Device.h"
 
 namespace {
 struct PushConstant {

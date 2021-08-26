@@ -10,7 +10,6 @@
 #include "universe/ComponentsDb.h"
 #include "universe/World.h"
 
-
 inline float* FromVec4(glm::vec4& vec4)
 {
 	return glm::value_ptr(vec4);
@@ -24,8 +23,7 @@ namespace {
 	{
 		{
 			glm::clamp(a, Property::Editor_MinMaxRetType<T>{}, Property::Editor_MinMaxRetType<T>{})
-		}
-		->std::convertible_to<T>;
+			} -> std::convertible_to<T>;
 	};
 
 	static_assert(CanBeClamped<float>);

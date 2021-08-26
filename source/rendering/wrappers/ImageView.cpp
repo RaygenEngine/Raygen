@@ -1,9 +1,7 @@
 #include "ImageView.h"
 
-#include "rendering/Device.h"
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
-#include "rendering/VkCoreIncludes.h"
 
 namespace vl {
 RImage::RImage(vk::ImageType imageType, const std::string& name, vk::Extent3D extent, vk::Format format,

@@ -2,7 +2,6 @@
 
 #include "editor/EditorObject.h"
 #include "editor/windows/general/EdOutlinerWindow.h"
-#include "editor/imgui/ImguiImpl.h"
 
 void Editor::Init()
 {

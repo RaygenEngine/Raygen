@@ -2,8 +2,6 @@
 
 #include "assets/AssetRegistry.h"
 #include "assets/pods/ShaderStage.h"
-#include "assets/util/SpirvCompiler.h"
-#include "rendering/VkCoreIncludes.h"
 #include "rendering/Device.h"
 
 using namespace vl;

@@ -9,7 +9,7 @@ std::optional<fs::path> worldToLoad{};
 
 void Universe::InitFromApp()
 {
-	Init(App->templateScene, App->localScene);
+	Init(App->GetTemplateScene(), App->GetLocalScene());
 }
 
 void Universe::Init(const fs::path& defaultWorldPath, const fs::path& localPath)

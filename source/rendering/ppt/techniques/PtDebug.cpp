@@ -1,10 +1,8 @@
 #include "PtDebug.h"
 
 #include "rendering/Layouts.h"
-#include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
 
 namespace vl {
 void PtDebug::MakeLayout()

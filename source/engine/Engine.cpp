@@ -38,12 +38,12 @@ void Engine_::InitEngine(App_* app)
 	FixStartupPath();
 
 
-	fs::current_path(fs::current_path() / app->workingDirPath);
+	fs::current_path(fs::current_path() / app->GetWorkingDirPath());
 
 	Assets::Init();
 
 	WindowCreationParams mainWindowParams;
-	mainWindowParams.size = { app->windowSize.x, app->windowSize.y };
+	mainWindowParams.size = app->GetWindowSize();
 	Platform::Init(mainWindowParams);
 
 	Rendering::Init();
@@ -51,7 +51,7 @@ void Engine_::InitEngine(App_* app)
 	Editor::Init();
 
 
-	Universe::Init(app->templateScene, app->localScene);
+	Universe::Init(app->GetTemplateScene(), app->GetLocalScene());
 }
 
 float Engine_::GetFPS()
@@ -69,7 +69,7 @@ void Engine_::ReportFrameDrawn()
 
 		if (titleCounter == 1) {
 			std::string s_title;
-			s_title = fmt::format("{} - {:4.2f}", App->windowTitle, m_gameThreadFps.GetSteadyFps());
+			s_title = fmt::format("{} - {:4.2f}", App->GetWindowTitle(), m_gameThreadFps.GetSteadyFps());
 			Platform::GetMainWindow()->SetTitle(s_title.c_str());
 		}
 	}

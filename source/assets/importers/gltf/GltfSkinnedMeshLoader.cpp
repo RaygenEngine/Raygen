@@ -6,7 +6,6 @@
 #include "assets/pods/Animation.h"
 #include "assets/pods/SkinnedMesh.h"
 
-#include <nlohmann/json.hpp>
 #include <queue>
 
 namespace {

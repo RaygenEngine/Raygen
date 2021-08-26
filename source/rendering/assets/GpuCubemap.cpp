@@ -3,7 +3,6 @@
 #include "assets/AssetRegistry.h"
 #include "assets/pods/Cubemap.h"
 #include "rendering/wrappers/Buffer.h"
-#include "rendering/VkCoreIncludes.h"
 
 using namespace vl;
 

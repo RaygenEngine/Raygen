@@ -1,12 +1,11 @@
 #include "Rendering.h"
 
-#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layer.h"
 #include "rendering/output/SwapchainOutputPass.h"
-#include "rendering/resource/GpuResources.h"
 #include "rendering/Pathtracer.h"
-
+#include "rendering/resource/GpuResources.h"
+#include "rendering/scene/Scene.h"
 
 #include <imgui/examples/imgui_impl_vulkan.h>
 

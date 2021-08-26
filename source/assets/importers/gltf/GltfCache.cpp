@@ -8,7 +8,6 @@
 #include "assets/pods/MaterialInstance.h"
 #include "assets/pods/Sampler.h"
 
-#include <nlohmann/json.hpp>
 
 namespace gltfutl {
 GltfCache::GltfCache(const fs::path& path)

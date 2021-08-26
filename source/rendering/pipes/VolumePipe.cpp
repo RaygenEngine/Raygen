@@ -3,7 +3,6 @@
 #include "editor/Editor.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
-#include "rendering/Device.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
 #include "universe/components/CameraComponent.h"

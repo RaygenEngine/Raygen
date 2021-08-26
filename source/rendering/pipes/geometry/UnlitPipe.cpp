@@ -6,7 +6,6 @@
 #include "rendering/assets/GpuMesh.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneGeometry.h"
-#include "rendering/Device.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
 

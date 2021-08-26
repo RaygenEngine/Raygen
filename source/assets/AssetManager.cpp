@@ -10,7 +10,6 @@
 #include "engine/Timer.h"
 #include "reflection/PodTools.h"
 
-#include <nlohmann/json.hpp>
 #include <set>
 #include <thread>
 

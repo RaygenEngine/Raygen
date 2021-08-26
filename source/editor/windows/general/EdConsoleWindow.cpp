@@ -2,7 +2,6 @@
 
 #include "editor/imgui/ImEd.h"
 
-
 namespace {
 // CHECK: fix log levels here when/if logger gets redone
 

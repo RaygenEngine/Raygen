@@ -5,8 +5,6 @@
 #include "engine/Input.h"
 #include "engine/profiler/ProfileScope.h"
 #include "platform/Platform.h"
-#include "rendering/VkCoreIncludes.h"
-#include "rendering/Device.h"
 #include "rendering/Instance.h"
 #include "rendering/Layouts.h"
 #include "rendering/output/SwapchainOutputPass.h"

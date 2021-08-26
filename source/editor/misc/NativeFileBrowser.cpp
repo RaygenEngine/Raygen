@@ -1,7 +1,6 @@
 #include "NativeFileBrowser.h"
 
 #include "App.h"
-#include "engine/Logger.h"
 
 #include <nativefiledialog/src/include/nfd.h>
 
@@ -22,7 +21,8 @@ fs::path ToForwardSlashPath(nfdchar_t* txt)
 std::string ResolvePath(const fs::path& initialPath)
 {
 	std::string path
-		= fs::weakly_canonical(initialPath.empty() ? (fs::current_path() / App->fileDialogPath) : initialPath).string();
+		= fs::weakly_canonical(initialPath.empty() ? (fs::current_path() / App->GetFileDialogPath()) : initialPath)
+			  .string();
 	return path;
 }
 

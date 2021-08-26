@@ -1,6 +1,5 @@
 #include "ImporterRegistry.h"
 
-#include "assets/AssetImporterManager.h"
 #include "assets/importers/CubemapImporter.h"
 #include "assets/importers/GltfImporter.h"
 #include "assets/importers/ImageImporter.h"
