@@ -30,7 +30,7 @@ namespace {
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
 		vk::PipelineVertexInputStateCreateInfo vertexInputInfo)
 	{
-		static ConsoleVariable<vk::PolygonMode> cons_unlitFillMode{ "r.unlit.fillMode", vk::PolygonMode::eFill,
+		static ConsoleVariable<vk::PolygonMode> cons_fillMode{ "r.unlit.fillMode", vk::PolygonMode::eFill,
 			"Fill mode for unlit custom shaders. Recompile the archetype to apply." };
 
 		vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -55,7 +55,7 @@ namespace {
 		rasterizer
 			.setDepthClampEnable(VK_FALSE) //
 			.setRasterizerDiscardEnable(VK_FALSE)
-			.setPolygonMode(cons_unlitFillMode)
+			.setPolygonMode(cons_fillMode)
 			.setLineWidth(1.f)
 			.setCullMode(vk::CullModeFlagBits::eBack)
 			.setFrontFace(vk::FrontFace::eCounterClockwise)

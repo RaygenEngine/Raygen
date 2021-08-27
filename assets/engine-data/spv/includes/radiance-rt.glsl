@@ -4,7 +4,7 @@
 #include "intersection.glsl"
 #include "surface.glsl"
 
-// WIP: this can't handle alpha mask
+// TODO: this can't handle alpha mask
 float ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
 { 
 	// Initializes a ray query object but does not start traversal
@@ -51,7 +51,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 	return Li * explicitBRDFcosTheta(surface);
 }
 
-// WIP:
+// TODO:
 //vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 //{
 //	if(surface.a < SPEC_THRESHOLD) {
@@ -67,7 +67,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 //	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
 //		return vec3(0);
 //		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
-//		vec3 pointOnPlane = ql.center + perp_r_n * INF; // WIP: something big
+//		vec3 pointOnPlane = ql.center + perp_r_n * INF; // TODO: something big
 //		L = normalize(pointOnPlane - surface.position);
 //	}
 //
@@ -103,7 +103,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 
 vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface)
 {
-	//WIP:
+	//TODO:
 	vec3 L = normalize(ql.center - surface.position);
 
 	float cosTheta_o = dot(ql.normal, -L);

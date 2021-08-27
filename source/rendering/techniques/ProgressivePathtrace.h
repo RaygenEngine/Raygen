@@ -5,6 +5,14 @@
 struct SceneRenderDesc;
 
 namespace vl {
+
+enum class PtMode
+{
+	Naive,
+	Stochastic,
+	Bdpt,
+};
+
 struct ProgressivePathtrace {
 	ProgressivePathtrace();
 
@@ -16,12 +24,12 @@ struct ProgressivePathtrace {
 	// use for compatibility with other callers of pathtracing
 	RBuffer viewer;
 	vk::DescriptorSet viewerDescSet;
+	BoolFlag updateViewer{ true };
 
 	int32 iteration{ 0 };
 
-	BoolFlag updateViewer{ true };
-
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces,
+		PtMode mode = PtMode::Stochastic);
 	void Resize(vk::Extent2D extent);
 };
 

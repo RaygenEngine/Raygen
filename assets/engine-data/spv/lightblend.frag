@@ -66,7 +66,7 @@ vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
 		//return vec3(0);
 		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
-		vec3 pointOnPlane = ql.center + perp_r_n * INF; // WIP: something big
+		vec3 pointOnPlane = ql.center + perp_r_n * INF; // TODO: something big
 		L = normalize(pointOnPlane - surface.position);
 	}
 
@@ -156,7 +156,7 @@ void main()
 
     vec3 arealights = vec3(0);
 
-	// WIP: max 3 quadlights atm
+	// TODO: max 3 quadlights atm
     for (int i = 0; i < quadlightCount; ++i) {
 		if(i > 2) break;
 		Quadlight ql = quadlights.light[i];

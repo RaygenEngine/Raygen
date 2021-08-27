@@ -18,7 +18,7 @@ inline class App_ {
 
 	std::string m_windowTitle{ "Raygen" };
 
-	glm::uvec2 m_windowSize{ 2560u, 1440u };
+	glm::uvec2 m_windowSize{ 1920u, 1080u };
 
 protected:
 	int32 m_argc{ 1 };

@@ -140,7 +140,7 @@ Layouts_::Layouts_()
 	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 9; ++i) {
 		globalDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
 			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
-				| vk::ShaderStageFlagBits::eClosestHitKHR);
+				| vk::ShaderStageFlagBits::eClosestHitKHR | vk::ShaderStageFlagBits::eCompute);
 	}
 	globalDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer,
 		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute
@@ -204,6 +204,10 @@ Layouts_::Layouts_()
 	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
 	imageDebugDescLayout.Generate();
 
+	oneSamplerTwoStorageImages.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eCompute);
+	oneSamplerTwoStorageImages.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eCompute);
+	oneSamplerTwoStorageImages.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eCompute);
+	oneSamplerTwoStorageImages.Generate();
 
 	singleStorageBuffer.AddBinding(eStorageBuffer, eFragment | eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
 	singleStorageBuffer.Generate();

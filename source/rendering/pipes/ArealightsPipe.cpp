@@ -17,7 +17,6 @@ struct PushConstant {
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
-ConsoleVariable<int32> cons_arealightSamples{ "r.arealights.samples", 1, "Set the sample count of arealights." };
 
 namespace vl {
 vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
@@ -85,9 +84,11 @@ void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 		},
 		nullptr);
 
+	static ConsoleVariable<int32> cons_samples{ "r.arealights.samples", 1, "Set the sample count of arealights." };
+
 	PushConstant pc{
 		frame,
-		std::max(*cons_arealightSamples, 0),
+		std::max(*cons_samples, 0),
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 

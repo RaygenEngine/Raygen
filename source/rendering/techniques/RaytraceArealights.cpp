@@ -13,7 +13,7 @@ namespace vl {
 RaytraceArealights::RaytraceArealights()
 {
 	imagesDescSet = Layouts->tripleStorageImage.AllocDescriptorSet();
-	DEBUG_NAME(imagesDescSet, "progressive arealights storage image desc set");
+	DEBUG_NAME_AUTO(imagesDescSet, "ProgArealights storage descriptor set");
 
 	svgfPass.MakeLayout();
 	svgfPass.MakePipeline();

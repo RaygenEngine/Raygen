@@ -1,0 +1,154 @@
+#version 460
+#extension GL_GOOGLE_include_directive : enable
+
+#include "global.glsl"
+
+#include "global-descset.glsl"
+
+layout (local_size_x = 32, local_size_y = 32) in;
+
+layout(set = 1, binding = 0) uniform sampler2D inputImage; 
+layout(set = 1, binding = 1, rgba32f) uniform image2D progressiveImage;
+layout(set = 1, binding = 2, rgba32f) uniform image2D momentsImage; 
+
+layout(push_constant) uniform PC {
+	float minColorAlpha;
+	float minMomentsAlpha;
+};
+      
+struct ReprojectionData {
+	vec3 color;
+	vec2 moments;
+	float historyLength; // 0 means reprojection was invalid
+};
+
+ReprojectionData GetReprojection(vec2 uv);
+
+void main() 
+{
+	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
+	const vec2 uv        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+
+	vec3 color = texture(inputImage, uv).xyz;
+
+	float depth = texture(g_DepthSampler, uv).r;
+
+	ReprojectionData reproj = GetReprojection(uv);
+	bool success = reproj.historyLength > 0;
+	float historyLength = min(32.0f, success ? reproj.historyLength + 1.0f : 1.0f);
+
+	vec2 moments;
+	moments.r = luminance(color);
+	moments.g = moments.r * moments.r;
+
+	// Mix reprojection
+	const float colorAlpha = success ? max(1.0 / historyLength, minColorAlpha) : 1.0;
+	const float momentsAlpha = success ? max(1.0 / historyLength, minMomentsAlpha) : 1.0;
+
+	moments = mix(reproj.moments, moments, momentsAlpha);
+	color = mix(reproj.color, color, colorAlpha);
+	
+
+	// from SVGF paper:
+	float variance = max(0., moments.g - moments.r * moments.r);
+
+	if (historyLength < 2) {
+		variance += 0.2;
+	}
+
+	imageStore(momentsImage, ivec2(gl_GlobalInvocationID.xy), vec4(moments, depth, historyLength));
+	imageStore(progressiveImage, ivec2(gl_GlobalInvocationID.xy), vec4(color, variance));
+}
+
+bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
+{
+	vec2 size = vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+
+	if (coord.x < 0 || coord.y < 0 || 
+	    coord.x >= size.x || coord.y > size.y) {
+		return false;
+	}
+
+	momentsSample = imageLoad(momentsImage, coord);
+	if (abs(expectedPrevDepth - momentsSample.z) > 5e-3) {
+		return false;
+	}
+
+	vec4 thisUvDrawIndex = texelFetch(g_UVDrawIndexSampler, coord, 0);
+	if (abs(thisUvDrawIndex.z - centerUvDrawIndex.z) > 0.5) {
+		return false;
+	}
+
+	return true;
+}
+
+
+ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expectedPrevDepth)
+{
+	ivec2 pixelPos = ivec2(floor(sampleUv));
+	ivec2 offset[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
+
+	float x = fract(sampleUv.x);
+	float y = fract(sampleUv.y);
+
+	float w[4] = { 
+		(1 - x) * (1 - y),
+		      x * (1 - y),
+		(1 - x) * y,
+		      x * y 
+	};
+
+	vec4 color = vec4(0);
+	vec4 moments = vec4(0);
+	float sumW = 0;
+	
+	for (int sampleIdx = 0; sampleIdx < 4; sampleIdx++) {
+		ivec2 loc = pixelPos + offset[sampleIdx];
+		vec4 momentsSample;
+		if (IsReprojValid(loc, expectedPrevDepth, centerUvDrawIndex, momentsSample)) {
+			color += w[sampleIdx] * imageLoad(progressiveImage, loc);
+			moments += w[sampleIdx] * momentsSample;
+			sumW += w[sampleIdx];
+		}
+	}
+
+	// This "valid" check should probably have min bias
+	if (sumW > 0) {
+		color /= sumW;
+		moments /= sumW;
+	}
+
+	ReprojectionData reproj;
+	reproj.color = color.rgb;
+	reproj.moments = moments.rg;
+
+	reproj.historyLength = moments.a;
+	return reproj;
+}
+
+ReprojectionData GetReprojection(vec2 uv) {
+	// PERF:
+	//if (frame < 1) { WIP: check paper math again
+	//	ReprojectionData repr;
+	//	repr.color = vec3(0);
+	//	repr.moments = vec2(0);
+	//	repr.historyLength = 0;
+	//	return repr;
+	//} 
+
+	// xy: ScreenSpace (uv) motion vector
+	// z: expected previous depth
+	const vec4 motionSample = texture(g_VelocitySampler, uv);
+
+	const vec2 motion = motionSample.xy;
+	const float expectedDepth = motionSample.z;
+
+	vec2 size = vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+
+	const vec2 posPrev = vec2(gl_GlobalInvocationID.xy) + motion * size;
+
+	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_GlobalInvocationID.xy), 0);
+
+	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
+}
+

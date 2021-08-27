@@ -6,11 +6,6 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-ConsoleVariable<float> cons_aoBias{ "r.ao.bias", 0.001f, "Set the ambient occlusion bias." };
-ConsoleVariable<float> cons_aoStrength{ "r.ao.strength", 1.0f, "Set the ambient occlusion strength." };
-ConsoleVariable<float> cons_aoRadius{ "r.ao.radius", .2f, "Set the ambient occlusion radius." };
-ConsoleVariable<int32> cons_aoSamples{ "r.ao.samples", 4, "Set the ambient occlusion samples." };
-
 namespace {
 struct PushConstant {
 	float bias;
@@ -165,11 +160,16 @@ void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& scene
 		},
 		nullptr);
 
+	static ConsoleVariable<float> cons_bias{ "r.ao.bias", 0.001f, "Set the ambient occlusion bias." };
+	static ConsoleVariable<float> cons_strength{ "r.ao.strength", 1.0f, "Set the ambient occlusion strength." };
+	static ConsoleVariable<float> cons_radius{ "r.ao.radius", .2f, "Set the ambient occlusion radius." };
+	static ConsoleVariable<int32> cons_samples{ "r.ao.samples", 4, "Set the ambient occlusion samples." };
+
 	PushConstant pc{
-		cons_aoBias,
-		cons_aoStrength,
-		cons_aoRadius,
-		cons_aoSamples,
+		cons_bias,
+		cons_strength,
+		cons_radius,
+		cons_samples,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
