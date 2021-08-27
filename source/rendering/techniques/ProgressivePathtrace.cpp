@@ -1,10 +1,13 @@
 #include "ProgressivePathtrace.h"
 
+#include "rendering/Layouts.h"
+#include "rendering/pipes/AccumulationPipe.h"
 #include "rendering/pipes/BdptPipe.h"
 #include "rendering/pipes/NaivePathtracePipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
-#include "rendering/scene/SceneIrragrid.h"
+#include "rendering/scene/Scene.h"
+#include "rendering/scene/SceneCamera.h"
 
 namespace {
 enum class PtMode
@@ -36,11 +39,14 @@ namespace vl {
 
 ProgressivePathtrace::ProgressivePathtrace()
 {
-	progressiveDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
-	DEBUG_NAME(progressiveDescSet, "progressive pathtrace storage image desc set");
+	pathtracedDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
+	DEBUG_NAME(pathtracedDescSet, "pathtrace storage image desc set");
+
+	inputOutputDescSet = Layouts->doubleStorageImage.AllocDescriptorSet();
+	DEBUG_NAME(inputOutputDescSet, "progressive pathtrace storage image desc set");
 
 	viewerDescSet = Layouts->singleUboDescLayout.AllocDescriptorSet();
-	DEBUG_NAME(progressiveDescSet, "progressive pathtrace camera desc set");
+	DEBUG_NAME(viewerDescSet, "pathtrace viewer desc set");
 
 	auto uboSize = sizeof(UBO_viewer);
 
@@ -50,8 +56,21 @@ ProgressivePathtrace::ProgressivePathtrace()
 	rvk::writeDescriptorBuffer(viewerDescSet, 0u, viewer.handle());
 }
 
-void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 iteration)
+void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	if (updateViewer.Access()) {
+		UBO_viewer data = {
+			sceneDesc.viewer.ubo.viewInv,
+			sceneDesc.viewer.ubo.projInv,
+			0,
+		};
+
+		viewer.UploadData(&data, sizeof(UBO_viewer));
+	}
+
+	pathtraced.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
 	progressive.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
@@ -59,44 +78,62 @@ void ProgressivePathtrace::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRen
 
 	// CHECK: if there is no geometry this is validation error here
 
+	CMDSCOPE_BEGIN(cmdBuffer, "Pathtracer commands");
+
 	switch (const_pathtraceMode) {
 		case PtMode::Naive:
-			StaticPipes::Get<NaivePathtracePipe>().Draw(cmdBuffer, sceneDesc, progressiveDescSet, viewerDescSet, extent,
+			StaticPipes::Get<NaivePathtracePipe>().Draw(cmdBuffer, sceneDesc, pathtracedDescSet, viewerDescSet, extent,
 				iteration, std::max(*cons_pathtraceSamples, 0), std::max(*cons_pathtraceBounces, 0));
 			break;
 		case PtMode::Stochastic:
-			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, progressiveDescSet, viewerDescSet,
+			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, pathtracedDescSet, viewerDescSet,
 				extent, iteration, std::max(*cons_pathtraceSamples, 0), std::max(*cons_pathtraceBounces, 0));
 			break;
 		case PtMode::Bdpt:
 			StaticPipes::Get<BdptPipe>().Draw(
-				cmdBuffer, sceneDesc, progressiveDescSet, extent, iteration, std::max(*cons_pathtraceBounces, 0));
+				cmdBuffer, sceneDesc, pathtracedDescSet, extent, iteration, std::max(*cons_pathtraceBounces, 0));
 			break;
 	}
 
+	CMDSCOPE_END(cmdBuffer);
+
+	CMDSCOPE_BEGIN(cmdBuffer, "Compute Accumulation");
+
+	StaticPipes::Get<AccumulationPipe>().Draw(cmdBuffer, inputOutputDescSet, extent, iteration);
+
+	CMDSCOPE_END(cmdBuffer);
+
+	pathtraced.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+
 	progressive.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+
+	iteration += 1;
 }
 
 void ProgressivePathtrace::Resize(vk::Extent2D extent)
 {
-	progressive = RImage2D("PathtraceProg",
+	pathtraced = RImage2D("Pathtraced Result",
+		vk::Extent2D{ static_cast<uint32>(extent.width * cons_pathtraceScale),
+			static_cast<uint32>(extent.height * cons_pathtraceScale) },
+		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	progressive = RImage2D("Pathtraced Progressive",
 		vk::Extent2D{ static_cast<uint32>(extent.width * cons_pathtraceScale),
 			static_cast<uint32>(extent.height * cons_pathtraceScale) },
 		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	rvk::writeDescriptorImages(
-		progressiveDescSet, 0u, { progressive.view() }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-}
+		pathtracedDescSet, 0u, { pathtraced.view() }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-void ProgressivePathtrace::UpdateViewer(const glm::mat4& viewInv, const glm::mat4& projInv, float offset)
-{
-	UBO_viewer data = {
-		viewInv,
-		projInv,
-		offset,
-	};
+	rvk::writeDescriptorImages(inputOutputDescSet, 0u,
+		{
+			pathtraced.view(),
+			progressive.view(),
+		},
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-	viewer.UploadData(&data, sizeof(UBO_viewer));
+	iteration = 0;
 }
 } // namespace vl

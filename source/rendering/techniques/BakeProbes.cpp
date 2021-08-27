@@ -1,5 +1,6 @@
 #include "BakeProbes.h"
 
+#include "rendering/pipes/AccumulationPipe.h"
 #include "rendering/pipes/CubemapConvolutionPipe.h"
 #include "rendering/pipes/CubemapPrefilterPipe.h"
 #include "rendering/pipes/StaticPipes.h"
@@ -26,6 +27,7 @@ inline glm::mat4 standardProjection()
 
 } // namespace
 
+// TODO: this was made in a hurry, many potential gpu mem leaks
 namespace vl {
 void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 {
@@ -128,16 +130,11 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::vector<vk::UniqueImageView>& faceViews,
 	const glm::vec3& probePosition, int32 ptSamples, int32 ptBounces, float offset, const vk::Extent3D& extent)
 {
-	RBuffer viewer[6];
-
 	struct UBO_viewer {
 		glm::mat4 viewInv;
 		glm::mat4 projInv;
 		float offset;
 	};
-
-	vk::DescriptorSet faceDescSet[6];
-	vk::DescriptorSet viewerDescSet[6];
 
 	// clang-format off
 
@@ -155,18 +152,37 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 	// TODO: estimate time to complete (roughly)
 	// command buffers shouldn't be divided per face
 	auto iterations = 1 + ptSamples / 128;
-	auto samplesPerIteration = ptSamples / iterations;
-	auto finalIterationSamples = samplesPerIteration + ptSamples % iterations;
+	auto samplesPerIteration = ptSamples / iterations; // samples per iteration must be equal each iteration
 
+	RBuffer viewer[6];
+	RImage2D faceTempImage[6];
+	vk::DescriptorSet faceTempDescSet[6];
+	vk::DescriptorSet faceTraceDescSet[6];
+	vk::DescriptorSet viewerDescSet[6]; // TODO: those leak
 	for (auto i = 0; i < 6; ++i) {
-		faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
-		rvk::writeDescriptorImages(
-			faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
+		faceTempImage[i] = RImage2D("Face temp image " + i,
+			vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
+			vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+
+		faceTempDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
+		rvk::writeDescriptorImages(faceTempDescSet[i], 0u,
+			{
+				faceTempImage[i].view(), // pathtrace target
+			},
+			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
+		faceTraceDescSet[i] = Layouts->doubleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
+		rvk::writeDescriptorImages(faceTraceDescSet[i], 0u,
+			{
+				faceTempImage[i].view(), // input
+				*faceViews[i],           // output
+			},
+			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
 
 		viewerDescSet[i] = Layouts->singleUboDescLayout.AllocDescriptorSet(); // TODO: doesn't release
-
 		auto uboSize = sizeof(UBO_viewer);
-
 		viewer[i] = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
@@ -185,8 +201,11 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 
 			ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
-			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, faceDescSet[i], viewerDescSet[i],
-				extent, iter, iter != iterations - 1 ? samplesPerIteration : finalIterationSamples, ptBounces);
+			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, faceTempDescSet[i], viewerDescSet[i],
+				extent, iter, samplesPerIteration, ptBounces);
+
+
+			StaticPipes::Get<AccumulationPipe>().Draw(cmdBuffer, faceTraceDescSet[i], extent, iter); // TODO: check
 		}
 	}
 }

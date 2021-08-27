@@ -8,15 +8,21 @@ namespace vl {
 struct ProgressivePathtrace {
 	ProgressivePathtrace();
 
+	RImage2D pathtraced;
+	vk::DescriptorSet pathtracedDescSet;
 	RImage2D progressive;
-	vk::DescriptorSet progressiveDescSet;
+	vk::DescriptorSet inputOutputDescSet;
 
+	// use for compatibility with other callers of pathtracing
 	RBuffer viewer;
 	vk::DescriptorSet viewerDescSet;
 
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 iteration);
+	int32 iteration{ 0 };
+
+	BoolFlag updateViewer{ true };
+
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
 	void Resize(vk::Extent2D extent);
-	void UpdateViewer(const glm::mat4& viewInv, const glm::mat4& projInv, float offset);
 };
 
 } // namespace vl

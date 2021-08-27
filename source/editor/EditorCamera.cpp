@@ -116,6 +116,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		return;
 	}
 
+
 	auto lookAt = transform.position + transform.front() * focalLength;
 	view = glm::lookAt(transform.position, lookAt, transform.up());
 
@@ -159,6 +160,7 @@ void EditorCamera::EnqueueUpdateCmds(Scene* worldScene)
 		cam.ubo.viewProjInv = viewProjInv;
 		cam.ubo.filmArea = filmArea;
 	});
+
 
 	proj[1][1] *= -1.f;
 	dirtyThisFrame = false;
