@@ -18,15 +18,11 @@ public:
 
 	InFlightResources<vk::ImageView> GetOutputViews() const override;
 
-	// CHECK: do we want unlit stuff here? - and/or editor stuff like icons etc? - if so we will need depth calculation
-	// which is costly
+	// CHECK: do we want unlit stuff here? - and/or editor stuff like icons etc? - costly (depth, passes)
 
 private:
 	vk::Extent2D m_extent{};
 
 	ProgressivePathtrace m_progressivePathtrace;
-
-	int32 m_frame{ 0 };
-
 } * Pathtracer{};
 } // namespace vl

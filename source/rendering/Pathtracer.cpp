@@ -2,6 +2,8 @@
 
 #include "rendering/output/OutputPassBase.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/pipes/StaticPipes.h"
+#include "rendering/pipes/AccumulationPipe.h"
 #include "engine/Events.h"
 
 namespace {
@@ -14,7 +16,10 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 namespace vl {
 Pathtracer_::Pathtracer_()
 {
-	Event::OnViewerUpdated.Bind(this, [&]() { m_frame = 0; });
+	Event::OnViewerUpdated.Bind(this, [&]() {
+		m_progressivePathtrace.iteration = 0;
+		m_progressivePathtrace.updateViewer.Set();
+	});
 }
 
 void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
@@ -27,6 +32,10 @@ void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
 	m_extent = fbSize;
 
 	m_progressivePathtrace.Resize(fbSize);
+
+	ClearDebugAttachments();
+	RegisterDebugAttachment(m_progressivePathtrace.pathtraced);
+	RegisterDebugAttachment(m_progressivePathtrace.progressive);
 }
 
 InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
@@ -40,12 +49,9 @@ InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
 
 void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
 {
-	// PERF: only if camera is dirty
-	m_progressivePathtrace.UpdateViewer(sceneDesc.viewer.ubo.viewInv, sceneDesc.viewer.ubo.projInv, 0.0);
+	CMDSCOPE_BEGIN(cmdBuffer, "Progressive Pathtrace");
 
-	CMDSCOPE_BEGIN(cmdBuffer, "Pathtracer commands");
-
-	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, m_frame++);
+	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc);
 
 	CMDSCOPE_END(cmdBuffer);
 

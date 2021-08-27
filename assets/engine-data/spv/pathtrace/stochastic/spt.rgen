@@ -119,13 +119,6 @@ void main() {
 	}
 
 	vec3 curColor = accumColor / float(samples);
-
-	// Do accumulation
-	if(iteration > 0) {
-		float a = 1.0f / float(iteration);
-		vec3 oldColor = imageLoad(image, ivec2(gl_LaunchIDEXT.xy)).xyz;
-		curColor = mix(oldColor, curColor, a);
-	}
 	
 	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
 }
