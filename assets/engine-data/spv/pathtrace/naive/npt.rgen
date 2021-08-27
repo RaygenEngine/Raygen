@@ -23,7 +23,7 @@ struct hitPayload
 
 layout(push_constant) uniform PC
 {
-	int iteration;
+	int seed;
 	int samples;
 	int bounces;
 	int pointlightCount;
@@ -78,7 +78,7 @@ bool RRTerminationCheck(inout vec3 totalAttenuation) {
 
 void main() {
 
-	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, iteration * samples);
+	prd.seed = tea16(gl_LaunchIDEXT.y * gl_LaunchSizeEXT.x + gl_LaunchIDEXT.x, seed * samples);
 
 	vec4 origin = viewer.viewInv * vec4(0, 0, 0, 1);
 
@@ -87,7 +87,7 @@ void main() {
 		float r1 = rand(prd.seed);
 		float r2 = rand(prd.seed);
 
-		vec2 subpixel_jitter = iteration == 0 && smpl == 0 ? vec2(0.0f, 0.0f) : vec2(r1 - 0.5f, r2 - 0.5f);
+		vec2 subpixel_jitter = vec2(r1 - 0.5f, r2 - 0.5f);
 
 		const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5) + subpixel_jitter;
 		const vec2 inUV        = pixelCenter / vec2(gl_LaunchSizeEXT.xy);

@@ -10,6 +10,7 @@
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
+#include "engine/Events.h"
 
 
 namespace {
@@ -26,6 +27,8 @@ RtxRenderer_::RtxRenderer_()
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_globalDesc[i] = Layouts->globalDescLayout.AllocDescriptorSet();
 	}
+
+	Event::OnViewerUpdated.Bind(this, [&]() { m_testTech.updateViewer.Set(); });
 }
 
 void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
@@ -42,13 +45,7 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
 	}
 
-	m_raytraceLightTest.Resize(fbSize);
-
-	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_unlitPassInst[i] = Layouts->unlitPassLayout.CreatePassInstance(fbSize.width, fbSize.height,
-			{ &m_mainPassInst[i].framebuffer[0],
-				&m_raytraceLightTest.svgfRenderPassInstance.framebuffer[0] }); // TODO: indices and stuff
-	}
+	m_testTech.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
@@ -63,8 +60,8 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
 		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved0
 		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved1
-		views.emplace_back(m_raytraceLightTest.svgfRenderPassInstance.framebuffer[0].view()); // WIP: -
-		views.emplace_back(brdfLutImg.Lock().image.view());                                   // sceneColorSampler
+		views.emplace_back(brdfLutImg.Lock().image.view()); // WIP: -
+		views.emplace_back(brdfLutImg.Lock().image.view()); // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
 		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
@@ -73,17 +70,16 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	ClearDebugAttachments();
 	RegisterDebugAttachment(m_mainPassInst.at(0).framebuffer);
-	RegisterDebugAttachment(m_unlitPassInst.at(0).framebuffer);
-	RegisterDebugAttachment(m_raytraceLightTest.svgfRenderPassInstance.framebuffer);
-	RegisterDebugAttachment(m_raytraceLightTest.svgfPass.swappingImages.at(0));
-	RegisterDebugAttachment(m_raytraceLightTest.svgfPass.swappingImages.at(1));
+	RegisterDebugAttachment(m_testTech.pathtraced);
+	RegisterDebugAttachment(m_testTech.progressiveVariance);
+	RegisterDebugAttachment(m_testTech.momentsHistory);
 }
 
 InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_raytraceLightTest.svgfRenderPassInstance.framebuffer[0].view(); // TODO: [0]
+		views[i] = m_testTech.progressiveVariance.view(); // TODO: [0]
 	}
 	return views;
 }
@@ -120,7 +116,6 @@ void RtxRenderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 
 	UpdateGlobalDescSet(sceneDesc);
 
-
 	CMDSCOPE_BEGIN(cmdBuffer, "Draw geometry and lights");
 
 	// calculates: gbuffer, direct lights, gi, ambient
@@ -131,21 +126,14 @@ void RtxRenderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 
 	CMDSCOPE_BEGIN(cmdBuffer, "Pathtracer commands");
 
-	m_raytraceLightTest.RecordCmd(cmdBuffer, sceneDesc);
+	static ConsoleVariable<int32> cons_bounces{ "r.rtxRenderer.bounces", 1,
+		"Set the number of bounces of the RTX Renderer." };
+	static ConsoleVariable<int32> cons_samples{ "r.rtxRenderer.samples", 1,
+		"Set the number of samples of the RTX Renderer." };
+
+	m_testTech.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces);
 
 	CMDSCOPE_END(cmdBuffer);
-
-	static ConsoleVariable<bool> cons_drawUnlit{ "r.rtxRenderer.drawUnlit", true }; // CHECK: more specific
-
-	if (cons_drawUnlit) [[likely]] {
-		CMDSCOPE_BEGIN(cmdBuffer, "Unlit pass");
-		m_unlitPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
-			UnlitPipe::RecordCmd(cmdBuffer, sceneDesc);
-			DrawSelectedEntityDebugVolume::RecordCmd(cmdBuffer, sceneDesc);
-			StaticPipes::Get<BillboardPipe>().Draw(cmdBuffer, sceneDesc);
-		});
-		CMDSCOPE_END(cmdBuffer);
-	}
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

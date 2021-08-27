@@ -16,10 +16,7 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 namespace vl {
 Pathtracer_::Pathtracer_()
 {
-	Event::OnViewerUpdated.Bind(this, [&]() {
-		m_progressivePathtrace.iteration = 0;
-		m_progressivePathtrace.updateViewer.Set();
-	});
+	Event::OnViewerUpdated.Bind(this, [&]() { m_progressivePathtrace.updateViewer.Set(); });
 }
 
 void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
@@ -51,7 +48,16 @@ void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scene
 {
 	CMDSCOPE_BEGIN(cmdBuffer, "Progressive Pathtrace");
 
-	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc);
+	static ConsoleVariable<int32> cons_bounces{ "r.pathtracer.bounces", 1,
+		"Set the number of bounces of the pathtracer." };
+	static ConsoleVariable<int32> cons_samples{ "r.pathtracer.samples", 1,
+		"Set the number of samples of the pathtracer." };
+	static ConsoleVariable<PtMode> cons_mode{ "r.pathtracer.mode", PtMode::Stochastic,
+		"Set the pathtracing mode. Naive: unidirectional, not entirely naive, it just lacks direct light sampling,"
+		"Stochastic: similar to naive but uses direct light and light MIS,"
+		"Bpdt: Bidirectional:... Work in progress" };
+
+	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces, *cons_mode);
 
 	CMDSCOPE_END(cmdBuffer);
 

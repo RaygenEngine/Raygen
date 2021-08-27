@@ -99,7 +99,7 @@ void main()
 		// sample random direction, random magnitude (for screen space)
 		vec3 L = uniformSampleHemisphere(u) * m; 
 
-		occlusion += VisibilityOfRay(surface.position, normalize(outOnbSpace(surface.basis, L)), bias, radius); // WIP: radius
+		occlusion += VisibilityOfRay(surface.position, normalize(outOnbSpace(surface.basis, L)), bias, radius); // TODO: radius
 	}
 
 	// object occlusion

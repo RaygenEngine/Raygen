@@ -204,7 +204,6 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, faceTempDescSet[i], viewerDescSet[i],
 				extent, iter, samplesPerIteration, ptBounces);
 
-
 			StaticPipes::Get<AccumulationPipe>().Draw(cmdBuffer, faceTraceDescSet[i], extent, iter); // TODO: check
 		}
 	}

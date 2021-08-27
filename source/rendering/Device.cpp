@@ -111,9 +111,9 @@ CmdPoolManager_::CmdPoolManager_()
 	, dmaCmdPool(dmaQueue)
 	, computeCmdPool(computeQueue)
 {
-	DEBUG_NAME(graphicsQueue, "Graphics Queue");
-	DEBUG_NAME(dmaQueue, "Dma Queue");
-	DEBUG_NAME(computeQueue, "Compute Queue");
-	DEBUG_NAME(presentQueue, "Present Queue");
+	DEBUG_NAME_AUTO(graphicsQueue);
+	DEBUG_NAME_AUTO(dmaQueue);
+	DEBUG_NAME_AUTO(computeQueue);
+	DEBUG_NAME_AUTO(presentQueue);
 }
 } // namespace vl

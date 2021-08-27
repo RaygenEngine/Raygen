@@ -7,7 +7,6 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-ConsoleVariable<int32> cons_mirrorDepth{ "r.mirror.depth", 1, "Set the depth of mirror reflections." };
 
 namespace {
 struct PushConstant {
@@ -95,8 +94,10 @@ void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneD
 		},
 		nullptr);
 
+	static ConsoleVariable<int32> cons_depth{ "r.mirror.depth", 1, "Set the depth of mirror reflections." };
+
 	PushConstant pc{
-		std::max(0, *cons_mirrorDepth),
+		std::max(0, *cons_depth),
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,

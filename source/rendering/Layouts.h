@@ -42,6 +42,8 @@ inline struct Layouts_ {
 	RDescriptorSetLayout tenStorageImage = GenerateStorageImageDescSet(10);
 	RDescriptorSetLayout storageImageArray10;
 
+	RDescriptorSetLayout oneSamplerTwoStorageImages;
+
 	RDescriptorSetLayout singleStorageBuffer;
 
 	RDescriptorSetLayout bufferAndSamplersDescLayout;

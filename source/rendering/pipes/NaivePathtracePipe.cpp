@@ -9,7 +9,7 @@
 
 namespace {
 struct PushConstant {
-	int32 iteration;
+	int32 seed;
 	int32 samples;
 	int32 bounces;
 	int32 pointlightCount;
@@ -72,7 +72,7 @@ vk::UniquePipeline NaivePathtracePipe::MakePipeline()
 }
 
 void NaivePathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet storageImageDescSet, vk::DescriptorSet viewerDescSet, const vk::Extent3D& extent, int32 iteration,
+	vk::DescriptorSet storageImageDescSet, vk::DescriptorSet viewerDescSet, const vk::Extent3D& extent, int32 seed,
 	int32 samples, int32 bounces) const
 {
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
@@ -91,7 +91,7 @@ void NaivePathtracePipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc
 		nullptr);
 
 	PushConstant pc{
-		iteration,
+		seed,
 		samples,
 		bounces,
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,

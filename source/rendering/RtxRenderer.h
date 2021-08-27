@@ -4,7 +4,7 @@
 #include "rendering/RendererBase.h"
 #include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
-#include "rendering/techniques/RaytraceLightTest.h"
+#include "rendering/techniques/TestSVGFProgPT.h"
 
 namespace vl {
 
@@ -12,8 +12,6 @@ inline class RtxRenderer_ : public RendererBase {
 
 public:
 	RtxRenderer_();
-
-	void InitPipelines();
 
 	void ResizeBuffers(uint32 width, uint32 height) override;
 
@@ -26,11 +24,8 @@ private:
 	// TODO: geometry + core light
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 
-
-	InFlightResources<RenderingPassInstance> m_unlitPassInst;
-
 	// non-static techniques
-	RaytraceLightTest m_raytraceLightTest;
+	TestSVGFProgPT m_testTech;
 
 	vk::Extent2D m_extent{};
 
