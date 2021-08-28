@@ -1,13 +1,16 @@
 #include "Scene.h"
 
+#include "rendering/pipes/geometry/DepthmapPipe.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/scene/SceneDirlight.h"
 #include "rendering/scene/SceneGeometry.h"
 #include "rendering/scene/SceneIrragrid.h"
 #include "rendering/scene/ScenePointlight.h"
 #include "rendering/scene/SceneQuadlight.h"
-#include "rendering/scene/SceneReflprobe.h"
+#include "rendering/scene/SceneReflProbe.h"
 #include "rendering/scene/SceneSpotlight.h"
+#include "rendering/techniques/BakeProbes.h"
+#include "rendering/wrappers/CmdBuffer.h"
 
 void Scene::EnqueueEndFrame()
 {
@@ -217,11 +220,34 @@ void Scene::UploadDirty(uint32 frameIndex)
 		}
 	}
 
+
 	for (auto sl : Get<SceneSpotlight>()) {
 		if (sl->isDirty[frameIndex]) {
 			sl->UploadUbo(frameIndex);
 			sl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
+
+			if (sl->ubo.hasShadow && !sl->isDynamic) {
+				vl::ScopedOneTimeSubmitCmdBuffer<vl::Graphics> cmdBuffer{};
+
+				sl->shadowmapPass[frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
+					[&]() { vl::DepthmapPipe::RecordCmd(cmdBuffer, sl->ubo.viewProj, GetRenderDesc(frameIndex)); });
+			}
+		}
+	}
+
+	for (auto dl : Get<SceneDirlight>()) {
+		if (dl->isDirty[frameIndex]) {
+			dl->UploadUbo(frameIndex);
+			dl->isDirty[frameIndex] = false;
+			requireUpdateAccel = true;
+
+			if (dl->ubo.hasShadow && !dl->isDynamic) {
+				vl::ScopedOneTimeSubmitCmdBuffer<vl::Graphics> cmdBuffer{};
+
+				dl->shadowmapPass[frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
+					[&]() { vl::DepthmapPipe::RecordCmd(cmdBuffer, dl->ubo.viewProj, GetRenderDesc(frameIndex)); });
+			}
 		}
 	}
 
@@ -237,14 +263,6 @@ void Scene::UploadDirty(uint32 frameIndex)
 		if (ql->isDirty[frameIndex]) {
 			ql->UploadUbo(frameIndex);
 			ql->isDirty[frameIndex] = false;
-			requireUpdateAccel = true;
-		}
-	}
-
-	for (auto dl : Get<SceneDirlight>()) {
-		if (dl->isDirty[frameIndex]) {
-			dl->UploadUbo(frameIndex);
-			dl->isDirty[frameIndex] = false;
 			requireUpdateAccel = true;
 		}
 	}
@@ -265,6 +283,5 @@ void Scene::UploadDirty(uint32 frameIndex)
 		UpdateTopLevelAs();
 	}
 
-	// WIP: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
-	// BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
+	vl::BakeProbes::RecordCmd(GetRenderDesc(frameIndex));
 }

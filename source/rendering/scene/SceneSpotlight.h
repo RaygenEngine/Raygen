@@ -39,4 +39,6 @@ struct SceneSpotlight : SceneStruct {
 
 	std::string name;
 	void MaybeResizeShadowmap(uint32 width, uint32 height);
+
+	bool isDynamic;
 };

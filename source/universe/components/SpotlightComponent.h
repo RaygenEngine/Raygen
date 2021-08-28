@@ -30,6 +30,8 @@ struct CSpotlight : CLightBase {
 		REFLECT_VAR(linearTerm).Clamp();
 		REFLECT_VAR(quadraticTerm).Clamp();
 
+		REFLECT_VAR(type);
+
 		REFLECT_VAR(hasShadow);
 	}
 

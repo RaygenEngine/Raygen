@@ -38,4 +38,6 @@ struct SceneDirlight : SceneStruct {
 
 	void MaybeResizeShadowmap(uint32 width, uint32 height);
 	void UpdateBox(const math::Frustum& frustum, glm::vec3 apex);
+
+	bool isDynamic;
 };

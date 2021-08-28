@@ -15,8 +15,7 @@
 #include "rendering/pipes/SpotlightPipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/techniques/BakeProbes.h"
-#include "rendering/techniques/CalculateShadowmaps.h"
+#include "rendering/techniques/CalculateDynamicShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
 #include "engine/Events.h"
 
@@ -154,12 +153,9 @@ void Renderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 
 	UpdateGlobalDescSet(sceneDesc);
 
-	// calculates: shadowmaps, gi maps
+	// calculates: dynamic shadowmaps
 	// requires: -
-	CalculateShadowmaps::RecordCmd(cmdBuffer, sceneDesc);
-
-	// WIP: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
-	BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
+	CalculateDynamicShadowmaps::RecordCmd(cmdBuffer, sceneDesc);
 
 	// calculates: gbuffer, direct lights, gi, ambient
 	// requires: shadowmaps, gi maps

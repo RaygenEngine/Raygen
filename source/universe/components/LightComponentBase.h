@@ -2,7 +2,15 @@
 
 #include "universe/SceneComponentBase.h"
 
+
 struct CLightBase : CSceneBase {
+
+	enum LightType
+	{
+		Static,
+		Dynamic,
+	};
+
 	glm::vec3 color{ 1.f };
 	float intensity{ 30.f };
 
@@ -18,4 +26,6 @@ struct CLightBase : CSceneBase {
 
 	int32 samples{ 1 };
 	float radius{ 0.002f };
+
+	LightType type{ Dynamic };
 };
