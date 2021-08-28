@@ -10,6 +10,8 @@
 
 #include <imgui/examples/imgui_impl_vulkan.h>
 
+// CHECK: multithreading, some operations in this file should be moved to the Layer
+
 ConsoleFunction<> cons_buildAll{ "s.structs.buildAll", []() { Rendering::GetMainScene()->BuildAll(); },
 	"Builds all build-able scene structs." };
 

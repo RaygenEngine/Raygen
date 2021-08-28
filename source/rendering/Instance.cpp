@@ -23,7 +23,7 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(
 
 ConsoleVariable<bool> cons_showValidationErrors{ "vk.validation.show", true,
 	"Enable printing of vulkan validation layer errors." };
-ConsoleVariable<bool> cons_validationBreakOnError{ "vk.validation.breakOnError", true,
+ConsoleVariable<bool> cons_validationBreakOnError{ "vk.validation.breakOnError", true, // NEXT:
 	"Break after vulkan validation layer error to allow the debugger to get a call stack." };
 
 namespace {

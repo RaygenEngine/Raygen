@@ -48,6 +48,45 @@ void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding, 
 	Device->updateDescriptorSets(descWrites, nullptr);
 }
 
+void rvk::writeDescriptorImages(vk::DescriptorSet descSet, uint32 firstBinding,
+	std::vector<ImageSampler>&& imageSamplers, vk::DescriptorType descriptorType, vk::ImageLayout layout)
+{
+	CLOG_ABORT(descriptorType != vk::DescriptorType::eCombinedImageSampler
+				   && descriptorType != vk::DescriptorType::eSampledImage,
+		"Invalid Descriptor Type for this helper function");
+
+
+	std::vector<vk::DescriptorImageInfo> imageInfos;
+	imageInfos.reserve(imageSamplers.size());
+
+	for (auto& imageSampler : imageSamplers) {
+		auto& info = imageInfos.emplace_back();
+		info //
+			.setImageLayout(layout)
+			.setImageView(imageSampler.imageView)
+			.setSampler(!imageSampler.sampler ? GpuAssetManager->GetDefaultSampler() : imageSampler.sampler);
+	}
+
+	std::vector<vk::WriteDescriptorSet> descWrites;
+	descWrites.reserve(imageSamplers.size());
+
+	// NOTE: this has to be a seperate loop to not invalidate PImageInfo parameter
+	for (uint32 i = 0; auto& info : imageInfos) {
+		auto& descriptorWrite = descWrites.emplace_back();
+		descriptorWrite
+			.setDstSet(descSet) //
+			.setDstBinding(i + firstBinding)
+			.setDstArrayElement(0u)
+			.setDescriptorType(descriptorType)
+			.setDescriptorCount(1u)
+			.setPImageInfo(&info);
+
+		++i;
+	}
+
+	Device->updateDescriptorSets(descWrites, nullptr);
+}
+
 void rvk::writeDescriptorImageArray(vk::DescriptorSet descSet, uint32 targetBinding,
 	std::vector<vk::ImageView>&& imageViews, vk::Sampler sampler, vk::DescriptorType descriptorType,
 	vk::ImageLayout layout)
@@ -108,5 +147,5 @@ void rvk::writeDescriptorBuffer(
 		.setDescriptorType(descriptorType)
 		.setBufferInfo(bufferInfo);
 
-	Device->updateDescriptorSets(1u, &descriptorWrite, 0u, nullptr);
+	Device->updateDescriptorSets(descriptorWrite, nullptr);
 }

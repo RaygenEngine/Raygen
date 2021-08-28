@@ -34,6 +34,27 @@ inline struct PassLayouts_ {
 // PERF: request from pool
 inline struct DescriptorLayouts_ {
 
+	enum GlobalIndex : int32
+	{
+		DepthSampler,
+		SNormalSampler,
+		GNormalSampler,
+		AlbedoSampler,
+		SpecularSampler,
+		EmissiveSampler,
+		VelocitySampler,
+		UVDrawIndexSampler,
+		DirectLightSampler,
+		IndirectLightSampler,
+		AmbientLightSampler,
+		BrdfLut,
+		Reserved0,
+		Reserved1,
+		Reserved2,
+		SceneColorSampler,
+		Viewer
+	};
+
 	// Uniform buffers
 	RDescriptorSetLayout _1uniformBuffer = GenerateMultipleSameTypeDescLayout<1>(vk::DescriptorType::eUniformBuffer);
 

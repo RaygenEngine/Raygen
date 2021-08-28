@@ -33,7 +33,20 @@ namespace impl {
 		begin(beginInfo);
 	}
 
-	void CmdBufferBase::submit(vk::SubmitInfo& submitInfo, const vk::Fence& fence)
+	void CmdBufferBase::submit(
+		vk::Semaphore waitSemaphore, vk::PipelineStageFlags waitStage, vk::Semaphore signalSemaphore, vk::Fence fence)
+	{
+		vk::SubmitInfo submitInfo{};
+		submitInfo
+			.setWaitSemaphores(waitSemaphore) //
+			.setWaitDstStageMask(waitStage)
+			.setSignalSemaphores(signalSemaphore)
+			.setCommandBuffers(*this);
+
+		submit(submitInfo, fence);
+	}
+
+	void CmdBufferBase::submit(vk::SubmitInfo& submitInfo, vk::Fence fence)
 	{
 		submitInfo.setCommandBuffers(*this);
 		pool.queue.submit(submitInfo, fence);

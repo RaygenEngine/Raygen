@@ -9,33 +9,6 @@ AttachmentDeclaration rendererFinalAttachment = {};
 
 namespace vl {
 
-
-/*
-// GBuffer
-layout(set = 0, binding = 0) uniform sampler2D g_DepthSampler;
-layout(set = 0, binding = 1) uniform sampler2D g_SNormalSampler;
-layout(set = 0, binding = 2) uniform sampler2D g_GNormalSampler;
-layout(set = 0, binding = 3) uniform sampler2D g_AlbedoSampler;
-layout(set = 0, binding = 4) uniform sampler2D g_SpecularSampler;
-layout(set = 0, binding = 5) uniform sampler2D g_EmissiveSampler;
-layout(set = 0, binding = 6) uniform sampler2D g_VelocitySampler;
-layout(set = 0, binding = 7) uniform sampler2D g_UVDrawIndexSampler;
-
-layout(set = 0, binding = 8) uniform sampler2D directLightSampler;
-layout(set = 0, binding = 9) uniform sampler2D indirectLightSampler;
-
-layout(set = 0, binding = 10) uniform sampler2D aoSampler;
-
-layout(set = 0, binding = 11) uniform sampler2D std_BrdfLut;
-
-layout(set = 0, binding = 12) uniform sampler2D _reserved0_;
-layout(set = 0, binding = 13) uniform sampler2D _reserved1_;
-
-layout(set = 0, binding = 14) uniform sampler2D mirrorSampler;
-
-layout(set = 0, binding = 15) uniform sampler2D sceneColorSampler;
-*/
-
 PassLayouts_::PassLayouts_()
 {
 	using Att = RRenderPassLayout::Attachment;
@@ -139,10 +112,35 @@ DescriptorLayouts_::DescriptorLayouts_()
 	using enum vk::DescriptorType;
 	using enum vk::DescriptorBindingFlagBits;
 
-	// TODO: + 8, gDepth + rest
-	for (uint32 i = 0u; i < PassLayouts_::gBufferColorAttachments.size() + 9; ++i) {
+	// binding 0 sampler2D g_DepthSampler
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 1 sampler2D g_SNormalSampler
+	// binding 2 sampler2D g_GNormalSampler
+	// binding 3 sampler2D g_AlbedoSampler
+	// binding 4 sampler2D g_SpecularSampler
+	// binding 5 sampler2D g_EmissiveSampler
+	// binding 6 sampler2D g_VelocitySampler
+	// binding 7 sampler2D g_UVDrawIndexSampler
+	for (uint32 i = 0u; i < PassLayouts_::gBufferColorAttachments.size(); ++i) {
 		global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
 	}
+	// binding 8 sampler2D directLightSampler
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 9 sampler2D indirectLightSampler
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 10 sampler2D ambientLightSampler
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 11 sampler2D std_BrdfLut
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 12 sampler2D _reserved0_
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 13 sampler2D _reserved1_
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 14 sampler2D _reserved2_
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 15 sampler2D sceneColorSampler
+	global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+	// binding 16 ubo Viewer
 	global.AddBinding(eUniformBuffer, eFragment | eVertex | eCompute | eRaygenKHR);
 	global.Generate();
 

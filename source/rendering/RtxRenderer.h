@@ -21,10 +21,8 @@ public:
 
 
 private:
-	// TODO: geometry + core light
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 
-	// non-static techniques
 	TestSVGFProgPT m_testTech;
 
 	vk::Extent2D m_extent{};

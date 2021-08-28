@@ -63,7 +63,7 @@ void AccumulationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1);
+	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1); // WIP: fix black bars
 }
 
 } // namespace vl

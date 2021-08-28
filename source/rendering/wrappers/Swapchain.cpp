@@ -112,6 +112,22 @@ RSwapchain::RSwapchain(vk::SurfaceKHR surface)
 	InitFrameBuffers();
 }
 
+void RSwapchain::AcquireNextImage(vk::Semaphore signalSemaphore)
+{
+	(void)Device->acquireNextImageKHR(uHandle.get(), UINT64_MAX, signalSemaphore, {}, &imageIndex);
+}
+
+void RSwapchain::Present(vk::Semaphore waitSemaphore)
+{
+	vk::PresentInfoKHR presentInfo{};
+	presentInfo //
+		.setWaitSemaphores(waitSemaphore)
+		.setSwapchains(uHandle.get())
+		.setImageIndices(imageIndex);
+
+	(void)CmdPoolManager->presentQueue.presentKHR(presentInfo);
+}
+
 void RSwapchain::InitRenderPass()
 {
 	vk::AttachmentDescription colorAttachment{};

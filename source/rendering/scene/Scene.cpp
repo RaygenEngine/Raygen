@@ -264,4 +264,7 @@ void Scene::UploadDirty(uint32 frameIndex)
 	if (requireUpdateAccel) {
 		UpdateTopLevelAs();
 	}
+
+	// WIP: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
+	// BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
 }

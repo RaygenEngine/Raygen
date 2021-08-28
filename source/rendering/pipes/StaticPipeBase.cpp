@@ -98,7 +98,7 @@ vk::UniquePipeline StaticRaytracingPipeBase::MakeRtPipeline(vk::RayTracingPipeli
 	m_hitShaderBindingTable
 		= vk::StridedDeviceAddressRegionKHR{ m_rtSBTBuffer.address() + hitGroupOffset, baseAlignment, baseAlignment };
 
-	// TODO: Tidy
+
 	auto mem = m_rtSBTBuffer.memory();
 
 	void* dptr = Device->mapMemory(mem, 0, sbtSize);

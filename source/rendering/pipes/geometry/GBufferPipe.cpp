@@ -18,7 +18,7 @@ struct PushConstant {
 	float drawIndex;
 };
 
-// TODO:
+// WIP:
 // static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
@@ -42,7 +42,7 @@ namespace {
 		std::array dynamicStates{
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor,
-			// TODO: hack, this should be created from the archetype
+			// WIP: hack, this should be created from the archetype
 			vk::DynamicState::eCullModeEXT,
 		};
 		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
@@ -253,7 +253,7 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			auto& arch = mat.archetype.Lock();
 
 			{
-				// TODO: hack - this is part of every archetype
+				// WIP: hack - this is part of every archetype
 				PodHandle<MaterialArchetype> pod{ arch.podUid };
 				auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
 				auto prp = cl.GetPropertyByName(std::string("mask"));

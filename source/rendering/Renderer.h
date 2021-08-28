@@ -26,11 +26,10 @@ private:
 	InFlightResources<RenderingPassInstance> m_ptPass;
 	//
 
-	// TODO: geometry + core light
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 	InFlightResources<RenderingPassInstance> m_secondaryPassInst;
 	InFlightResources<RenderingPassInstance> m_unlitPassInst;
-	//
+
 
 	// non-static techniques
 	RaytraceMirrorReflections m_raytraceMirrorReflections;

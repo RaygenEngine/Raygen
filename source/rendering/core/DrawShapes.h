@@ -20,8 +20,6 @@ struct Shapes {
 	static void DeinitShapes();
 };
 
-// TODO: request cache based on shape, primitive, winding, etc
-
 void bindCubeLines(vk::CommandBuffer cmdBuffer);
 void drawCubeLines(vk::CommandBuffer cmdBuffer);
 
