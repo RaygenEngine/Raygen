@@ -108,14 +108,14 @@ float AmbientInfoBlurredOcclusion()
 {
 	float Offsets[4] = float[]( -1.5, -0.5, 0.5, 1.5 );
 
-    float color = texture(aoSampler, uv).a;
+    float color = texture(ambientLightSampler, uv).a;
 
     for (int i = 0 ; i < 4 ; i++) {
         for (int j = 0 ; j < 4 ; j++) {
             vec2 tc = uv;
-            tc.x = uv.x + Offsets[j] / textureSize(aoSampler, 0).x;
-            tc.y = uv.y + Offsets[i] / textureSize(aoSampler, 0).y;
-            color += texture(aoSampler, tc).a;
+            tc.x = uv.x + Offsets[j] / textureSize(ambientLightSampler, 0).x;
+            tc.y = uv.y + Offsets[i] / textureSize(ambientLightSampler, 0).y;
+            color += texture(ambientLightSampler, tc).a;
         }
     }
 
@@ -128,7 +128,7 @@ void main()
 {
 	float depth = texture(g_DepthSampler, uv).r;
 
-	vec4 ambientInfo = texture(aoSampler, uv);
+	vec4 ambientInfo = texture(ambientLightSampler, uv);
 
 
 	if(depth == 1.0) {
@@ -150,7 +150,7 @@ void main()
 	vec3 directLight = texture(directLightSampler, uv).rgb;
 	vec3 indirectLight = texture(indirectLightSampler, uv).rgb;
     vec4 arealightShadowing = texture(_reserved0_, uv);
-    vec3 mirror = texture(mirrorSampler, uv).rgb;
+    vec3 mirror = texture(_reserved2_, uv).rgb;
 
 	// ...
 

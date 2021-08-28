@@ -55,17 +55,11 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 			views.emplace_back(att.view());
 		}
 
-		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
-		views.emplace_back(brdfLutImg.Lock().image.view());
-		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved0
-		views.emplace_back(brdfLutImg.Lock().image.view()); // reserved1
-		views.emplace_back(brdfLutImg.Lock().image.view()); // WIP: -
-		views.emplace_back(brdfLutImg.Lock().image.view()); // sceneColorSampler
-
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
-		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
-		rvk::writeDescriptorImages(m_globalDesc[i], 11u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
+
+		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
+		rvk::writeDescriptorImages(m_globalDesc[i], DescriptorLayouts_::GlobalIndex::BrdfLut,
+			{ brdfLutImg.Lock().image.view() }, brdfLutSampler);
 	}
 
 	ClearDebugAttachments();
@@ -79,7 +73,7 @@ InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_testTech.progressiveVariance.view(); // TODO: [0]
+		views[i] = m_testTech.progressiveVariance.view();
 	}
 	return views;
 }
@@ -87,10 +81,12 @@ InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const
 void RtxRenderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 {
 	if (m_viewerPtr != &sceneDesc.viewer) [[unlikely]] {
+		Device->waitIdle();
 		for (size_t i = 0; i < c_framesInFlight; ++i) {
-			rvk::writeDescriptorBuffer(m_globalDesc[i], 16u, sceneDesc.viewer.buffer[i].handle(),
-				sceneDesc.viewer.uboSize); // TODO: binding index
+			rvk::writeDescriptorBuffer(m_globalDesc[i], DescriptorLayouts_::GlobalIndex::Viewer,
+				sceneDesc.viewer.buffer[i].handle(), sceneDesc.viewer.uboSize);
 		}
+		Device->waitIdle();
 		m_viewerPtr = &sceneDesc.viewer;
 	}
 

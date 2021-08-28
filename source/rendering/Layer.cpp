@@ -22,7 +22,6 @@ Layer_::Layer_()
 {
 	VulkanLoader::InitLoaderBase();
 
-	// TODO: use static init / destroy scheme?
 	Instance = new Instance_(Platform::GetVulkanExtensions(), Platform::GetMainHandle());
 	Device = new Device_(Instance->physicalDevices[0]);
 	CmdPoolManager = new CmdPoolManager_();
@@ -56,7 +55,6 @@ Layer_::Layer_()
 
 Layer_::~Layer_()
 {
-	// TODO: use static init / destroy scheme?
 	rvk::Shapes::DeinitShapes();
 
 	delete Renderer;
@@ -115,10 +113,6 @@ void Layer_::DrawFrame()
 	GpuAssetManager->ConsumeAssetUpdates();
 	m_mainScene->ConsumeCmdQueue();
 
-	if (!m_swapOutput->ShouldRenderThisFrame()) [[unlikely]] {
-		return;
-	}
-
 	m_swapOutput->OnPreRender();
 
 	m_currentFrame = (m_currentFrame + 1) % c_framesInFlight;
@@ -127,22 +121,17 @@ void Layer_::DrawFrame()
 	{
 		PROFILE_SCOPE(Renderer);
 
-		(void)Device->waitForFences({ *m_frameFence[m_currentFrame] }, true, UINT64_MAX);
-		(void)Device->resetFences({ *m_frameFence[m_currentFrame] });
+		// wait until previous frame fence of index m_currentFrame is signaled
+		(void)Device->waitForFences(m_frameFence[m_currentFrame].get(), true, UINT64_MAX);
+		(void)Device->resetFences(m_frameFence[m_currentFrame].get());
 
 		m_mainScene->UploadDirty(m_currentFrame);
 		m_mainScene->forceUpdateAccel = false;
 	}
 
-	uint32 imageIndex;
+	// swap images and signal when image is available after swapping
+	m_swapOutput->SwapImages(m_imageAvailSem[m_currentFrame].get());
 
-	// TODO: could this be a swapOut func?
-	(void)Device->acquireNextImageKHR(
-		m_swapOutput->GetSwapchain(), UINT64_MAX, { m_imageAvailSem[m_currentFrame].get() }, {}, &imageIndex);
-
-	m_swapOutput->SetOutputImageIndex(imageIndex);
-
-#define adfas
 	currentCmdBuffer.begin();
 	{
 		COMMAND_SCOPE(currentCmdBuffer, "Recorded Commands");
@@ -150,29 +139,13 @@ void Layer_::DrawFrame()
 	}
 	currentCmdBuffer.end();
 
+	// wait for present image to be availabe during the color attachment output stage,
+	// signal that rendering is done,
+	// signal frame fence of index m_currentFrame
+	currentCmdBuffer.submit(m_imageAvailSem[m_currentFrame].get(), vk::PipelineStageFlagBits::eColorAttachmentOutput,
+		m_renderFinishedSem[m_currentFrame].get(), m_frameFence[m_currentFrame].get());
 
-	std::array<vk::PipelineStageFlags, 1> waitStage = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-	std::array waitSems = { *m_imageAvailSem[m_currentFrame] };
-	std::array signalSems = { *m_renderFinishedSem[m_currentFrame] };
-
-	vk::SubmitInfo submitInfo{};
-	submitInfo
-		.setWaitSemaphores(waitSems) //
-		.setWaitDstStageMask(waitStage)
-		.setSignalSemaphores(signalSems);
-
-	currentCmdBuffer.submit(submitInfo, m_frameFence[m_currentFrame].get());
-
-
-	// TODO: could present be a swapOut func?
-	vk::SwapchainKHR swapchain = m_swapOutput->GetSwapchain();
-
-	vk::PresentInfoKHR presentInfo{};
-	presentInfo //
-		.setWaitSemaphores(m_renderFinishedSem[m_currentFrame].get())
-		.setSwapchains(swapchain)
-		.setImageIndices(imageIndex);
-
-	(void)CmdPoolManager->presentQueue.presentKHR(presentInfo);
+	// wait until rendering is done and then present
+	m_swapOutput->Present(m_renderFinishedSem[m_currentFrame].get());
 }
 } // namespace vl

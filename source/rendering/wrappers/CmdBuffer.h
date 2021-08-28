@@ -21,7 +21,10 @@ namespace impl {
 		void begin(const vk::CommandBufferBeginInfo& beginInfo);
 		void begin();
 
-		void submit(vk::SubmitInfo& submitInfo, const vk::Fence& fence = {});
+
+		void submit(vk::Semaphore waitSemaphore, vk::PipelineStageFlags waitStage, vk::Semaphore signalSemaphore,
+			vk::Fence fence = {});
+		void submit(vk::SubmitInfo& submitInfo, vk::Fence fence = {});
 		void submit();
 
 	protected:

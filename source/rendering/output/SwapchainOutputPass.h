@@ -21,11 +21,11 @@ public:
 
 	virtual void OnPreRender() override;
 
+	void SwapImages(vk::Semaphore signalSemaphore) { m_swapchain->AcquireNextImage(signalSemaphore); }
+	void Present(vk::Semaphore waitSemaphore) { m_swapchain->Present(waitSemaphore); }
+
 	[[nodiscard]] vk::SwapchainKHR GetSwapchain() const { return m_swapchain->handle(); }
 	[[nodiscard]] vk::RenderPass GetRenderPass() const { return m_swapchain->renderPass(); }
-
-	// Sets the temporary  ImageIndex given by the swapchain aquire image call
-	void SetOutputImageIndex(uint32 swapchainImageIndex) { m_swapchainImageIndex = swapchainImageIndex; }
 
 private:
 	void RecompileCpyShader();
@@ -44,8 +44,6 @@ private:
 
 	BoolFlag m_didViewportResize;
 	BoolFlag m_didWindowResize;
-
-	uint32 m_swapchainImageIndex{};
 
 	bool m_isMinimized{ false };
 	bool m_isFocused{ true };

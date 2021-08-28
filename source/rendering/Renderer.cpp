@@ -65,28 +65,28 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_unlitPassInst[i] = PassLayouts->unlit.CreatePassInstance(fbSize.width, fbSize.height,
-			{ &m_mainPassInst[i].framebuffer[0], &m_ptPass[i].framebuffer[0] }); // TODO: indices and stuff
+			{ &m_mainPassInst[i].framebuffer[0], &m_ptPass[i].framebuffer[0] }); // WIP: indices and stuff
 	}
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
-		std::vector<vk::ImageView> views;
+		std::vector<rvk::ImageSampler> imageSamplers;
 
 		for (auto& att : m_mainPassInst[i].framebuffer.ownedAttachments) {
-			views.emplace_back(att.view());
+			imageSamplers.emplace_back(att.view());
 		}
 
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
-		views.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
-		views.emplace_back(brdfLutImg.Lock().image.view()); // std_BrdfLut <- rewritten below with the correct sampler
-		views.emplace_back(m_raytraceArealights.svgfRenderPassInstance.framebuffer[0].view()); // reserved0
-		views.emplace_back(m_raytraceArealights.progressive.view());                           // reserved1
-		views.emplace_back(m_raytraceMirrorReflections.result[i].view());                      // mirror buffer
-		views.emplace_back(m_ptPass[i].framebuffer[0].view());                                 // sceneColorSampler
+		imageSamplers.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
+		imageSamplers.emplace_back(
+			brdfLutImg.Lock().image.view(), brdfLutSampler); // std_BrdfLut <- rewritten below with the correct sampler
+		imageSamplers.emplace_back(
+			m_raytraceArealights.svgfRenderPassInstance.framebuffer[0].view());   // arealightShadowing
+		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());      // reserved1
+		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror
+		imageSamplers.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
 
-		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(views));
-		// TODO: should not rewrite, instead pass pairs with their sampler, if sampler is empty then default
-		rvk::writeDescriptorImages(m_globalDesc[i], 11u, { brdfLutImg.Lock().image.view() }, brdfLutSampler);
+		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(imageSamplers));
 	}
 
 	ClearDebugAttachments();
@@ -101,7 +101,7 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_ptPass[i].framebuffer[0].view(); // TODO: [0]
+		views[i] = m_ptPass[i].framebuffer[0].view(); // WIP: [0]
 	}
 	return views;
 }
@@ -109,10 +109,12 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 {
 	if (m_viewerPtr != &sceneDesc.viewer) [[unlikely]] {
+		Device->waitIdle();
 		for (size_t i = 0; i < c_framesInFlight; ++i) {
-			rvk::writeDescriptorBuffer(m_globalDesc[i], 16u, sceneDesc.viewer.buffer[i].handle(),
-				sceneDesc.viewer.uboSize); // TODO: binding index
+			rvk::writeDescriptorBuffer(m_globalDesc[i], DescriptorLayouts_::GlobalIndex::Viewer,
+				sceneDesc.viewer.buffer[i].handle(), sceneDesc.viewer.uboSize);
 		}
+		Device->waitIdle();
 		m_viewerPtr = &sceneDesc.viewer;
 	}
 
@@ -156,7 +158,7 @@ void Renderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 	// requires: -
 	CalculateShadowmaps::RecordCmd(cmdBuffer, sceneDesc);
 
-	// TODO: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
+	// WIP: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
 	BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
 
 	// calculates: gbuffer, direct lights, gi, ambient

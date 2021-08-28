@@ -77,7 +77,7 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(m_swapchain->renderPass()) //
-		.setFramebuffer(m_swapchain->framebuffer(m_swapchainImageIndex));
+		.setFramebuffer(m_swapchain->framebuffer(m_swapchain->imageIndex));
 
 	renderPassInfo.renderArea
 		.setOffset({ 0, 0 }) //
@@ -141,8 +141,11 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 
 void SwapchainOutputPass::OnPreRender()
 {
+	static ConsoleVariable<bool> cons_workInBackground{ "r.out.workInBackground", false,
+		"Enable rendering even when window is unfocused. (Useful for progressive renderers)" };
+
 	using namespace std::literals;
-	if (!m_isFocused) {
+	if (!m_isFocused && !(*cons_workInBackground)) {
 		std::this_thread::sleep_for(100ms);
 	}
 

@@ -5,6 +5,7 @@
 namespace vl {
 struct RSwapchain {
 
+	uint32 imageIndex;
 	uint32 imageCount;
 
 	vk::Format imageFormat;
@@ -16,6 +17,9 @@ struct RSwapchain {
 
 	// CHECK: Automatically makes a swapchain as big as the main window
 	RSwapchain(vk::SurfaceKHR surface);
+
+	void AcquireNextImage(vk::Semaphore signalSemaphore);
+	void Present(vk::Semaphore waitSemaphore);
 
 private:
 	void InitRenderPass();
