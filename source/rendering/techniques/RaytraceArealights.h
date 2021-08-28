@@ -47,7 +47,7 @@ public:
 		void OnResize(vk::Extent2D extent, RaytraceArealights& rtPass);
 
 
-		void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) override{};
+		void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) override{};
 	};
 
 

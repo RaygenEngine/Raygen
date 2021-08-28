@@ -5,7 +5,7 @@ SceneStruct::SceneStruct(size_t _uboSize)
 	: uboSize(_uboSize)
 {
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		uboDescSet[i] = vl::Layouts->singleUboDescLayout.AllocDescriptorSet();
+		uboDescSet[i] = vl::DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
 
 		buffer[i] = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };

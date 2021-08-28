@@ -7,15 +7,9 @@
 namespace vl {
 void PtDebug::MakeLayout()
 {
-	std::array layouts{
-		Layouts->ptPassLayout.internalDescLayout.handle(),
-	};
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setSetLayouts(layouts);
-
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = rvk::makeLayoutNoPC({
+		PassLayouts->pt.internalDescLayout.handle(),
+	});
 }
 
 void PtDebug::MakePipeline()
@@ -47,8 +41,10 @@ void PtDebug::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending, 1u);
 }
 
-void PtDebug::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void PtDebug::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 

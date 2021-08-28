@@ -25,14 +25,14 @@ vk::UniquePipelineLayout BdptPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->singleStorageImage.handle(),          // images
-			Layouts->singleUboDescLayout.handle(),         // camera
-			Layouts->accelLayout.handle(),                 // as
-			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture
-			Layouts->singleStorageBuffer.handle(),         // pointlights
-			Layouts->bufferAndSamplersDescLayout.handle(), // spotlights
-			Layouts->bufferAndSamplersDescLayout.handle(), // dirlights
-			Layouts->singleStorageBuffer.handle()          // quadlights
+			DescriptorLayouts->_1storageImage.handle(),                   // images
+			DescriptorLayouts->_1uniformBuffer.handle(),                  // camera
+			DescriptorLayouts->accelerationStructure.handle(),            // as
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // geometry and texture
+			DescriptorLayouts->_1storageBuffer.handle(),                  // pointlights
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // spotlights
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // dirlights
+			DescriptorLayouts->_1storageBuffer.handle()                   // quadlights
 		},
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
 }
@@ -78,9 +78,11 @@ vk::UniquePipeline BdptPipe::MakePipeline()
 	return MakeRtPipeline(rayPipelineInfo);
 }
 
-void BdptPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame, int32 bounces) const
+void BdptPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const vk::Extent3D& extent,
+	vk::DescriptorSet storageImagesDescSet, int32 frame, int32 bounces) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u,

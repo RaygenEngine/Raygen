@@ -16,26 +16,13 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 void PtLightBlend::MakeLayout()
 {
-	std::array layouts{
-		Layouts->globalDescLayout.handle(),
-		Layouts->singleStorageBuffer.handle(), // quadlights
-		Layouts->accelLayout.handle(),
-	};
-
-	// pipeline layout
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setPushConstantRanges(pushConstantRange) //
-		.setSetLayouts(layouts);
-
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = rvk::makePipelineLayoutEx(
+		{
+			DescriptorLayouts->global.handle(),
+			DescriptorLayouts->_1storageBuffer.handle(), // quadlights
+			DescriptorLayouts->accelerationStructure.handle(),
+		},
+		vk::ShaderStageFlagBits::eFragment, sizeof(PushConstant));
 }
 
 void PtLightBlend::MakePipeline()
@@ -62,8 +49,10 @@ void PtLightBlend::MakePipeline()
 	Utl_CreatePipeline(gpuShader, colorBlending);
 }
 
-void PtLightBlend::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void PtLightBlend::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u,

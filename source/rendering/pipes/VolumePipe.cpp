@@ -3,6 +3,7 @@
 #include "editor/Editor.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
+#include "rendering/Layouts.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneCamera.h"
 #include "universe/components/CameraComponent.h"
@@ -24,17 +25,7 @@ static_assert(sizeof(PushConstant) <= 128);
 
 vk::UniquePipelineLayout MakePipelineLayout()
 {
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setPushConstantRanges(pushConstantRange);
-
-	return vl::Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return rvk::makePipelineLayoutEx({}, vk::ShaderStageFlagBits::eVertex, sizeof(PushConstant));
 }
 
 template<typename PipeType>
@@ -162,7 +153,7 @@ vk::UniquePipeline MakePipeline(vk::PipelineLayout layout)
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout)
-		.setRenderPass(vl::Layouts->unlitPassLayout.compatibleRenderPass.get())
+		.setRenderPass(vl::PassLayouts->unlit.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -184,7 +175,7 @@ vk::UniquePipeline VolumePointsPipe::MakePipeline()
 	return ::MakePipeline<VolumePointsPipe>(layout());
 }
 
-void VolumePointsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const {}
+void VolumePointsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const {}
 
 vk::UniquePipelineLayout VolumeLinesPipe::MakePipelineLayout()
 {
@@ -196,8 +187,10 @@ vk::UniquePipeline VolumeLinesPipe::MakePipeline()
 	return ::MakePipeline<VolumeLinesPipe>(layout());
 }
 
-void VolumeLinesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const
+void VolumeLinesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	if (entity.Has<CCamera>()) {
@@ -329,8 +322,10 @@ vk::UniquePipeline VolumeTrianglesPipe::MakePipeline()
 	return ::MakePipeline<VolumeTrianglesPipe>(layout());
 }
 
-void VolumeTrianglesPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const
+void VolumeTrianglesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, Entity& entity) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	if (entity.Has<CPointlight>()) {

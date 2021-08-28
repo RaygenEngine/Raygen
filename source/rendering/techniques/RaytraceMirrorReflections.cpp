@@ -9,20 +9,22 @@ namespace vl {
 RaytraceMirrorReflections::RaytraceMirrorReflections()
 {
 	for (size_t i = 0; i < c_framesInFlight; i++) {
-		descSet[i] = Layouts->singleStorageImage.AllocDescriptorSet();
+		descSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
 		DEBUG_NAME(descSet[i], "Mirror Storage Image");
 	}
 }
 
 void RaytraceMirrorReflections::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 	auto extent = result[sceneDesc.frameIndex].extent;
 
-	StaticPipes::Get<MirrorPipe>().Draw(cmdBuffer, sceneDesc, descSet[sceneDesc.frameIndex], extent);
+	StaticPipes::Get<MirrorPipe>().RecordCmd(cmdBuffer, sceneDesc, extent, descSet[sceneDesc.frameIndex]);
 
 	result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,

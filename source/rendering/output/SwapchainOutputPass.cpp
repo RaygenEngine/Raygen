@@ -14,7 +14,7 @@ namespace vl {
 SwapchainOutputPass::SwapchainOutputPass()
 {
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_descSet[i] = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
+		m_descSet[i] = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
 	}
 
 	OnWindowResize();
@@ -40,7 +40,7 @@ void SwapchainOutputPass::RecompileCpyShader()
 		RecompileCpyShader();
 	};
 
-	m_pipelineLayout = rvk::makeLayoutNoPC({ Layouts->singleSamplerDescLayout.handle() });
+	m_pipelineLayout = rvk::makeLayoutNoPC({ DescriptorLayouts->_1imageSampler.handle() });
 	m_pipeline = rvk::makePostProcPipeline(gpuShader.shaderStages, *m_pipelineLayout, m_swapchain->renderPass());
 }
 
@@ -53,6 +53,8 @@ void SwapchainOutputPass::OnViewsUpdated(InFlightResources<vk::ImageView> render
 
 void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 frameIndex)
 {
+	COMMAND_SCOPE(cmdBuffer, "Output Pass");
+
 	vk::RenderPassBeginInfo renderPassInfo{};
 	renderPassInfo
 		.setRenderPass(m_swapchain->renderPass()) //
@@ -68,7 +70,6 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 		.setClearValueCount(1u) //
 		.setPClearValues(&clearValue);
 
-	CMDSCOPE_BEGIN(cmdBuffer, "Out render pass");
 	cmdBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 	{
 		auto& scissor = m_viewportRect;
@@ -89,9 +90,8 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 		cmdBuffer.setViewport(0, { viewport });
 		cmdBuffer.setScissor(0, { scissor });
 
-		// Copy hdr texture
 		{
-			CMDSCOPE_BEGIN(cmdBuffer, "Copy hdr texture");
+			COMMAND_SCOPE(cmdBuffer, "Copy Hdr Texture");
 
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 			cmdBuffer.bindDescriptorSets(
@@ -99,19 +99,11 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 
 			// big triangle
 			cmdBuffer.draw(3u, 1u, 0u, 0u);
-
-			CMDSCOPE_END(cmdBuffer);
 		}
 
-		CMDSCOPE_BEGIN(cmdBuffer, "Imgui Editor commands");
-
-		Editor::RecordCmd(&cmdBuffer);
-
-		CMDSCOPE_END(cmdBuffer);
+		Editor::Draw(&cmdBuffer);
 	}
 	cmdBuffer.endRenderPass();
-
-	CMDSCOPE_END(cmdBuffer);
 }
 
 void SwapchainOutputPass::OnPreRender()

@@ -7,6 +7,8 @@
 namespace vl {
 void CalculateShadowmaps::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE(cmdBuffer, "CalculateShadowmaps::RecordCmd");
+
 	for (auto sl : sceneDesc->Get<SceneSpotlight>()) {
 		if (sl->ubo.hasShadow) {
 			sl->shadowmapPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {

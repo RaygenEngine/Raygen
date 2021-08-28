@@ -36,7 +36,7 @@ protected:
 
 public:
 	virtual void ResizeBuffers(uint32 width, uint32 height) = 0;
-	virtual void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) = 0;
+	virtual void RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) = 0;
 	virtual InFlightResources<vk::ImageView> GetOutputViews() const = 0;
 
 	const std::vector<AttachmentData>& GetDebugAttachments() const { return m_debugAttachments; }

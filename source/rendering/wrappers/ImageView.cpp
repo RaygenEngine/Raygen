@@ -288,7 +288,7 @@ vk::DescriptorSet RImage::GetDebugDescriptor()
 		return *debugDescriptorSet;
 	}
 
-	debugDescriptorSet = Layouts->imageDebugDescLayout.AllocDescriptorSet();
+	debugDescriptorSet = DescriptorLayouts->_1imageSamplerFragmentOnly.AllocDescriptorSet();
 
 	rvk::writeDescriptorImages(*debugDescriptorSet, 0u, { uView.get() });
 

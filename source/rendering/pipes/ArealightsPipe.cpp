@@ -23,11 +23,11 @@ vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->globalDescLayout.handle(),            // gbuffer and stuff
-			Layouts->tripleStorageImage.handle(),          // image result
-			Layouts->accelLayout.handle(),                 // accel structure
-			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture
-			Layouts->singleStorageBuffer.handle(),         // quadlights
+			DescriptorLayouts->global.handle(),                           // gbuffer and stuff
+			DescriptorLayouts->_3storageImage.handle(),                   // image result
+			DescriptorLayouts->accelerationStructure.handle(),            // accel structure
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // geometry and texture
+			DescriptorLayouts->_1storageBuffer.handle(),                  // quadlights
 		},
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
 }
@@ -65,9 +65,11 @@ vk::UniquePipeline ArealightsPipe::MakePipeline()
 	return MakeRtPipeline(rayPipelineInfo);
 }
 
-void ArealightsPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet storageImagesDescSet, const vk::Extent3D& extent, int32 frame) const
+void ArealightsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
+	const vk::Extent3D& extent, vk::DescriptorSet storageImagesDescSet, int32 frame) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	if (!sceneDesc.scene->tlas.sceneDesc.quadlightCount) {
 		return;
 	}

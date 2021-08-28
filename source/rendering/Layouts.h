@@ -4,7 +4,9 @@
 
 namespace vl {
 
-inline struct Layouts_ {
+
+// PERF: request from pool
+inline struct PassLayouts_ {
 
 	inline constexpr static std::array gBufferColorAttachments = {
 		std::pair{ "G_SNormal", vk::Format::eR16G16B16A16Snorm },
@@ -16,60 +18,65 @@ inline struct Layouts_ {
 		std::pair{ "G_UVDrawIndex", vk::Format::eR32G32B32A32Sfloat },
 	};
 
-	RDescriptorSetLayout gltfMaterialDescLayout;
-	RDescriptorSetLayout singleUboDescLayout;
-	RDescriptorSetLayout jointsDescLayout;
-	RDescriptorSetLayout singleSamplerDescLayout;
-	RDescriptorSetLayout singleSamplerFragOnlyLayout;
-	RDescriptorSetLayout cubemapLayout;
-	RDescriptorSetLayout envmapLayout;
-	RDescriptorSetLayout accelLayout;
+	// Render passes
+	RRenderPassLayout main{ "Main Pass" };
+	RRenderPassLayout secondary{ "Secondary Pass" };
+	RRenderPassLayout shadow{ "Shadow Pass" };
+	RRenderPassLayout singleFloatColorAtt{ "SingleFloatColor Pass" };
+	RRenderPassLayout pt{ "PostProcess Pass" };
+	RRenderPassLayout svgf{ "SVGF Pass" };
+	RRenderPassLayout unlit{ "Unlit Pass" };
 
-	RDescriptorSetLayout rtTriangleGeometry;
+	PassLayouts_();
 
-	RDescriptorSetLayout cubemapArray6;
-	RDescriptorSetLayout cubemapArray64;
-	RDescriptorSetLayout cubemapArray1024;
-	RDescriptorSetLayout cubemapArray;
-	RDescriptorSetLayout cubemapArrayStorage;
+} * PassLayouts{};
 
-	RDescriptorSetLayout storageImageArray6;
+// PERF: request from pool
+inline struct DescriptorLayouts_ {
 
-	RDescriptorSetLayout singleStorageImage = GenerateStorageImageDescSet(1);
-	RDescriptorSetLayout doubleStorageImage = GenerateStorageImageDescSet(2);
-	RDescriptorSetLayout tripleStorageImage = GenerateStorageImageDescSet(3);
-	RDescriptorSetLayout quadStorageImage = GenerateStorageImageDescSet(4);
-	RDescriptorSetLayout tenStorageImage = GenerateStorageImageDescSet(10);
-	RDescriptorSetLayout storageImageArray10;
+	// Uniform buffers
+	RDescriptorSetLayout _1uniformBuffer = GenerateMultipleSameTypeDescLayout<1>(vk::DescriptorType::eUniformBuffer);
 
-	RDescriptorSetLayout oneSamplerTwoStorageImages;
-
-	RDescriptorSetLayout singleStorageBuffer;
-
-	RDescriptorSetLayout bufferAndSamplersDescLayout;
+	// Storage buffers
+	RDescriptorSetLayout _1storageBuffer = GenerateMultipleSameTypeDescLayout<1>(vk::DescriptorType::eStorageBuffer);
 
 
-	RDescriptorSetLayout imageDebugDescLayout;
+	// Sampler images
+	RDescriptorSetLayout _1imageSampler
+		= GenerateMultipleSameTypeDescLayout<1>(vk::DescriptorType::eCombinedImageSampler);
 
-	// Global descriptor Set
-	RDescriptorSetLayout globalDescLayout;
+	// Storage images
+	RDescriptorSetLayout _1storageImage = GenerateMultipleSameTypeDescLayout<1>(vk::DescriptorType::eStorageImage);
+	RDescriptorSetLayout _2storageImage = GenerateMultipleSameTypeDescLayout<2>(vk::DescriptorType::eStorageImage);
+	RDescriptorSetLayout _3storageImage = GenerateMultipleSameTypeDescLayout<3>(vk::DescriptorType::eStorageImage);
+	RDescriptorSetLayout _4storageImage = GenerateMultipleSameTypeDescLayout<4>(vk::DescriptorType::eStorageImage);
 
-	RRenderPassLayout mainPassLayout;
-	RRenderPassLayout secondaryPassLayout;
-	RRenderPassLayout shadowPassLayout;
-	RRenderPassLayout singleFloatColorAttPassLayout;
-	RRenderPassLayout ptPassLayout;
 
-	RRenderPassLayout svgfPassLayout;
-	// Ray Trace Here
-	RRenderPassLayout unlitPassLayout;
-	// Output pass
+	// Special descriptor layouts
+	RDescriptorSetLayout global;
+	RDescriptorSetLayout joints;
+	RDescriptorSetLayout accelerationStructure;
+	RDescriptorSetLayout _1storageBuffer_1024samplerImage;
+	RDescriptorSetLayout _1imageSampler_2storageImage;
+	RDescriptorSetLayout _1imageSamplerFragmentOnly;
 
-	void MakeRenderPassLayouts();
 
-	Layouts_();
+	DescriptorLayouts_();
 
 private:
-	static RDescriptorSetLayout GenerateStorageImageDescSet(size_t Count);
-} * Layouts{};
+	template<size_t Count>
+	static RDescriptorSetLayout GenerateMultipleSameTypeDescLayout(vk::DescriptorType type)
+	{
+		using enum vk::ShaderStageFlagBits;
+		using enum vk::DescriptorType;
+
+		RDescriptorSetLayout descLayout;
+		for (size_t i = 0; i < Count; i++) {
+			descLayout.AddBinding(type, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
+		}
+		descLayout.Generate();
+		return descLayout;
+	}
+} * DescriptorLayouts{};
+
 } // namespace vl

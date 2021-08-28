@@ -25,7 +25,7 @@ namespace vl {
 RtxRenderer_::RtxRenderer_()
 {
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_globalDesc[i] = Layouts->globalDescLayout.AllocDescriptorSet();
+		m_globalDesc[i] = DescriptorLayouts->global.AllocDescriptorSet();
 	}
 
 	Event::OnViewerUpdated.Bind(this, [&]() { m_testTech.updateViewer.Set(); });
@@ -42,7 +42,7 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
-		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(fbSize.width, fbSize.height);
 	}
 
 	m_testTech.Resize(fbSize);
@@ -110,21 +110,16 @@ void RtxRenderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRende
 	});
 }
 
-void RtxRenderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
+void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
 {
 	PROFILE_SCOPE(Renderer);
+	COMMAND_SCOPE_AUTO(cmdBuffer);
 
 	UpdateGlobalDescSet(sceneDesc);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Draw geometry and lights");
 
 	// calculates: gbuffer, direct lights, gi, ambient
 	// requires: shadowmaps, gi maps
 	DrawGeometryAndLights(cmdBuffer, sceneDesc);
-
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Pathtracer commands");
 
 	static ConsoleVariable<int32> cons_bounces{ "r.rtxRenderer.bounces", 1,
 		"Set the number of bounces of the RTX Renderer." };
@@ -132,8 +127,6 @@ void RtxRenderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 		"Set the number of samples of the RTX Renderer." };
 
 	m_testTech.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces);
-
-	CMDSCOPE_END(cmdBuffer);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

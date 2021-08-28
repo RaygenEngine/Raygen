@@ -81,7 +81,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
 		// TODO: POSTPROC
-		.setRenderPass(*Layouts->ptPassLayout.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->pt.compatibleRenderPass)
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -164,7 +164,7 @@ void PtBase_SinglePipeline::Utl_CreatePipelineLightPass(
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
-		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->main.compatibleRenderPass)
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

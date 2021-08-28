@@ -11,9 +11,9 @@ void DrawSelectedEntityDebugVolume::RecordCmd(vk::CommandBuffer cmdBuffer, const
 	auto selEnt = Editor::GetSelection();
 
 	if (selEnt) {
-		// StaticPipes::Get<VolumePointsPipe>().Draw(cmdBuffer, sceneDesc, selEnt);
-		StaticPipes::Get<VolumeLinesPipe>().Draw(cmdBuffer, sceneDesc, selEnt);
-		StaticPipes::Get<VolumeTrianglesPipe>().Draw(cmdBuffer, sceneDesc, selEnt);
+		// StaticPipes::Get<VolumePointsPipe>().RecordCmd(cmdBuffer, sceneDesc, selEnt);
+		StaticPipes::Get<VolumeLinesPipe>().RecordCmd(cmdBuffer, sceneDesc, selEnt);
+		StaticPipes::Get<VolumeTrianglesPipe>().RecordCmd(cmdBuffer, sceneDesc, selEnt);
 	}
 }
 

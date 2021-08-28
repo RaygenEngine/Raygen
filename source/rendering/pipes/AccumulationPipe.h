@@ -9,7 +9,7 @@ struct AccumulationPipe : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 
-	void Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet inputOutputStorageImages, const vk::Extent3D& extent,
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent, vk::DescriptorSet inputOutputStorageImages,
 		int32 iteration) const;
 };
 } // namespace vl

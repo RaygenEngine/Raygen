@@ -22,8 +22,8 @@ vk::UniquePipelineLayout MomentsBufferCalculationPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->globalDescLayout.handle(),
-			Layouts->oneSamplerTwoStorageImages.handle(),
+			DescriptorLayouts->global.handle(),
+			DescriptorLayouts->_1imageSampler_2storageImage.handle(),
 		},
 		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
 }
@@ -46,9 +46,11 @@ vk::UniquePipeline MomentsBufferCalculationPipe::MakePipeline()
 	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
 }
 
-void MomentsBufferCalculationPipe::Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet inputOutputsImageDescSet,
-	const SceneRenderDesc& sceneDesc, const vk::Extent3D& extent) const
+void MomentsBufferCalculationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
+	vk::DescriptorSet inputOutputsImageDescSet, const SceneRenderDesc& sceneDesc) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, layout(), 0u,

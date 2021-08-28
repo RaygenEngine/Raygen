@@ -6,15 +6,12 @@
 #include "rendering/Pathtracer.h"
 #include "rendering/resource/GpuResources.h"
 #include "rendering/scene/Scene.h"
+#include "rendering/VkCoreIncludes.h"
 
 #include <imgui/examples/imgui_impl_vulkan.h>
 
 ConsoleFunction<> cons_buildAll{ "s.structs.buildAll", []() { Rendering::GetMainScene()->BuildAll(); },
 	"Builds all build-able scene structs." };
-
-// TODO: uncomment, change name
-// ConsoleFunction<> console_BuildAS{ "s.buildTestAccelerationStructure", []() {},
-//	"Builds a top level acceleration structure, for debugging purposes, todo: remove" };
 
 using namespace vl;
 
@@ -93,9 +90,10 @@ void Rendering::Imgui_NewFrame()
 	ImGui_ImplVulkan_NewFrame();
 }
 
-void Rendering::Imgui_DrawFrame(ImDrawData* drawData, vk::CommandBuffer* drawCommandBuffer)
+void Rendering::Imgui_DrawFrame(ImDrawData* drawData, vk::CommandBuffer* cmdBuffer)
 {
-	ImGui_ImplVulkan_RenderDrawData(drawData, *drawCommandBuffer);
+	COMMAND_SCOPE(*cmdBuffer, "Imgui Commands");
+	ImGui_ImplVulkan_RenderDrawData(drawData, *cmdBuffer);
 }
 
 void Rendering::SwapRenderingMode()

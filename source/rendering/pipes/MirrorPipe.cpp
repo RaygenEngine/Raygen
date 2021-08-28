@@ -27,16 +27,16 @@ vk::UniquePipelineLayout MirrorPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->globalDescLayout.handle(),            // gbuffer and stuff
-			Layouts->singleStorageImage.handle(),          // images
-			Layouts->accelLayout.handle(),                 // as
-			Layouts->bufferAndSamplersDescLayout.handle(), // geometry and texture
-			Layouts->singleStorageBuffer.handle(),         // pointlights
-			Layouts->bufferAndSamplersDescLayout.handle(), // spotlights
-			Layouts->bufferAndSamplersDescLayout.handle(), // dirlights
-			Layouts->bufferAndSamplersDescLayout.handle(), // irragrids
-			Layouts->singleStorageBuffer.handle(),         // quadlights
-			Layouts->bufferAndSamplersDescLayout.handle(), // reflprobes
+			DescriptorLayouts->global.handle(),                           // gbuffer and stuff
+			DescriptorLayouts->_1storageImage.handle(),                   // images
+			DescriptorLayouts->accelerationStructure.handle(),            // as
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // geometry and texture
+			DescriptorLayouts->_1storageBuffer.handle(),                  // pointlights
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // spotlights
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // dirlights
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // irragrids
+			DescriptorLayouts->_1storageBuffer.handle(),                  // quadlights
+			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // reflprobes
 		},
 		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
 }
@@ -74,9 +74,11 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 	return MakeRtPipeline(rayPipelineInfo);
 }
 
-void MirrorPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet mirrorImageStorageDescSet, const vk::Extent3D& extent) const
+void MirrorPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const vk::Extent3D& extent,
+	vk::DescriptorSet mirrorImageStorageDescSet) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eRayTracingKHR, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eRayTracingKHR, layout(), 0u,

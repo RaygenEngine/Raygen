@@ -8,8 +8,7 @@ struct CubemapConvolutionPipe : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 
-	void Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet storageImageDescSet,
-		vk::DescriptorSet environmentSamplerDescSet, const vk::Extent3D& extent, const glm::mat4& viewInv,
-		const glm::mat4& projInv) const;
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent, vk::DescriptorSet storageImageDescSet,
+		vk::DescriptorSet environmentSamplerDescSet, const glm::mat4& viewInv, const glm::mat4& projInv) const;
 };
 } // namespace vl

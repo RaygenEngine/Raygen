@@ -368,10 +368,10 @@ void ImguiImpl::EndFrame()
 	ImGui::RenderPlatformWindowsDefault();
 }
 
-void ImguiImpl::RenderVulkan(vk::CommandBuffer* drawCommandBuffer)
+void ImguiImpl::RenderVulkan(vk::CommandBuffer* cmdBuffer)
 {
 	PROFILE_SCOPE(Editor);
-	Rendering::Imgui_DrawFrame(ImGui::GetDrawData(), drawCommandBuffer);
+	Rendering::Imgui_DrawFrame(ImGui::GetDrawData(), cmdBuffer);
 }
 
 namespace {

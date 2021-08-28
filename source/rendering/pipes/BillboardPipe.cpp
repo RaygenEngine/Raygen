@@ -34,7 +34,7 @@ namespace vl {
 vk::UniquePipelineLayout BillboardPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayout<PushConstant>({
-		Layouts->singleSamplerFragOnlyLayout.handle(),
+		DescriptorLayouts->_1imageSamplerFragmentOnly.handle(),
 	});
 }
 
@@ -150,7 +150,7 @@ vk::UniquePipeline BillboardPipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(Layouts->unlitPassLayout.compatibleRenderPass.get())
+		.setRenderPass(PassLayouts->unlit.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -235,8 +235,10 @@ namespace {
 	};
 } // namespace
 
-void BillboardPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void BillboardPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 	rvk::bindUnitRectTriangleStrip(cmdBuffer);
 

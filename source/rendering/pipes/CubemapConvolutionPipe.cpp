@@ -21,8 +21,8 @@ vk::UniquePipelineLayout CubemapConvolutionPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->singleStorageImage.handle(),
-			Layouts->singleSamplerDescLayout.handle(),
+			DescriptorLayouts->_1storageImage.handle(),
+			DescriptorLayouts->_1imageSampler.handle(),
 		},
 		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
 }
@@ -44,10 +44,12 @@ vk::UniquePipeline CubemapConvolutionPipe::MakePipeline()
 	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
 }
 
-void CubemapConvolutionPipe::Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet storageImageDescSet,
-	vk::DescriptorSet environmentSamplerDescSet, const vk::Extent3D& extent, const glm::mat4& viewInv,
+void CubemapConvolutionPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
+	vk::DescriptorSet storageImageDescSet, vk::DescriptorSet environmentSamplerDescSet, const glm::mat4& viewInv,
 	const glm::mat4& projInv) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, layout(), 0u,

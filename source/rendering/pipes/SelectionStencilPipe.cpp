@@ -24,17 +24,7 @@ namespace vl {
 
 vk::UniquePipelineLayout SelectionStencilPipe::MakePipelineLayout()
 {
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.setPushConstantRanges(pushConstantRange);
-
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return rvk::makePipelineLayoutEx({}, vk::ShaderStageFlagBits::eVertex, sizeof(PushConstant));
 }
 
 vk::UniquePipeline SelectionStencilPipe::MakePipeline()
@@ -170,7 +160,7 @@ vk::UniquePipeline SelectionStencilPipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(Layouts->unlitPassLayout.compatibleRenderPass.get())
+		.setRenderPass(PassLayouts->unlit.compatibleRenderPass.get())
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -178,8 +168,10 @@ vk::UniquePipeline SelectionStencilPipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void SelectionStencilPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void SelectionStencilPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	auto selEnt = Editor::GetSelection();

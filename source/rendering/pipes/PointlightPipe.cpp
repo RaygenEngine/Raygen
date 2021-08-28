@@ -20,26 +20,14 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout PointlightPipe::MakePipelineLayout()
 {
-	auto layouts = {
-		Layouts->globalDescLayout.handle(),
-		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->accelLayout.handle(),
-	};
-
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayouts(layouts) //
-		.setPushConstantRanges(pushConstantRange);
-
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return rvk::makePipelineLayoutEx(
+		{
+			DescriptorLayouts->global.handle(),
+			PassLayouts->main.internalDescLayout.handle(),
+			DescriptorLayouts->_1uniformBuffer.handle(),
+			DescriptorLayouts->accelerationStructure.handle(),
+		},
+		vk::ShaderStageFlagBits::eVertex, sizeof(PushConstant));
 }
 
 vk::UniquePipeline PointlightPipe::MakePipeline()
@@ -154,7 +142,7 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->main.compatibleRenderPass)
 		.setSubpass(1u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -162,9 +150,11 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void PointlightPipe::Draw(
+void PointlightPipe::RecordCmd(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,

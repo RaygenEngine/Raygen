@@ -7,8 +7,8 @@ using namespace vl;
 SceneIrragrid::SceneIrragrid()
 	: SceneStruct(sizeof(Irragrid_UBO))
 {
-	environmentSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
-	irradianceSamplerDescSet = Layouts->cubemapArray.AllocDescriptorSet();
+	environmentSamplerDescSet = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
+	irradianceSamplerDescSet = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
 }
 
 void SceneIrragrid::UploadUbo(uint32 curFrame)

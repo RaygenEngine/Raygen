@@ -19,29 +19,16 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout ReflprobePipe::MakePipelineLayout()
 {
-	auto layouts = {
-		Layouts->globalDescLayout.handle(),
-		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->singleSamplerDescLayout.handle(),
-		Layouts->singleSamplerDescLayout.handle(),
-		Layouts->singleSamplerDescLayout.handle(),
-	};
-
-	// pipeline layout
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eVertex) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setPushConstantRanges(pushConstantRange) //
-		.setSetLayouts(layouts);
-
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return rvk::makePipelineLayoutEx(
+		{
+			DescriptorLayouts->global.handle(),
+			PassLayouts->main.internalDescLayout.handle(),
+			DescriptorLayouts->_1uniformBuffer.handle(),
+			DescriptorLayouts->_1imageSampler.handle(),
+			DescriptorLayouts->_1imageSampler.handle(),
+			DescriptorLayouts->_1imageSampler.handle(),
+		},
+		vk::ShaderStageFlagBits::eVertex, sizeof(PushConstant));
 }
 
 vk::UniquePipeline ReflprobePipe::MakePipeline()
@@ -160,7 +147,7 @@ vk::UniquePipeline ReflprobePipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->main.compatibleRenderPass)
 		.setSubpass(2u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -168,9 +155,11 @@ vk::UniquePipeline ReflprobePipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void ReflprobePipe::Draw(
+void ReflprobePipe::RecordCmd(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,

@@ -7,9 +7,9 @@ using namespace vl;
 SceneReflprobe::SceneReflprobe()
 	: SceneStruct(sizeof(Reflprobe_UBO))
 {
-	environmentSamplerDescSet = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
-	irradianceSamplerDescSet = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
-	prefilteredSamplerDescSet = Layouts->singleSamplerDescLayout.AllocDescriptorSet();
+	environmentSamplerDescSet = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
+	irradianceSamplerDescSet = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
+	prefilteredSamplerDescSet = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
 }
 
 void SceneReflprobe::Allocate()

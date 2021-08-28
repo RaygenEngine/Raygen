@@ -80,7 +80,7 @@ namespace {
 			.setAlphaToCoverageEnable(VK_FALSE)
 			.setAlphaToOneEnable(VK_FALSE);
 
-		auto colorAttCount = Layouts->gBufferColorAttachments.size();
+		auto colorAttCount = PassLayouts->gBufferColorAttachments.size();
 
 		std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachment{};
 		for (uint32 i = 0u; i < colorAttCount; ++i) {
@@ -130,7 +130,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+			.setRenderPass(*PassLayouts->main.compatibleRenderPass)
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
@@ -231,7 +231,12 @@ vk::UniquePipeline GbufferPipe::CreateAnimPipeline(
 
 void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE(cmdBuffer, "GbufferPipe::RecordCmd");
+
 	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
+
+		COMMAND_SCOPE(cmdBuffer, "Model Draw");
+
 		PushConstant pc{
 			//
 			geom->transform,
@@ -241,6 +246,8 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+
+			COMMAND_SCOPE(cmdBuffer, "Geometry Group Draw");
 
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
@@ -294,11 +301,16 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 
 	for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
 
+		COMMAND_SCOPE(cmdBuffer, "Skinned Model Draw");
+
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+
+			COMMAND_SCOPE(cmdBuffer, "Skinned Geometry Group Draw");
+
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 			if (arch.isUnlit) [[unlikely]] {

@@ -104,7 +104,7 @@ Scene::Scene()
 	EnqueueEndFrame();
 	size_t uid;
 	EnqueueCreateDestoryCmds<SceneCamera>({}, { &uid }); // TODO: Editor camera
-	sceneAsDescSet = vl::Layouts->accelLayout.AllocDescriptorSet();
+	sceneAsDescSet = vl::DescriptorLayouts->accelerationStructure.AllocDescriptorSet();
 
 	auto unitRectData = rvk::getUnitRectTriangleListInfo();
 

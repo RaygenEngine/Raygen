@@ -99,7 +99,7 @@ namespace {
 			.setPColorBlendState(nullptr)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(*Layouts->shadowPassLayout.compatibleRenderPass)
+			.setRenderPass(*PassLayouts->shadow.compatibleRenderPass)
 			.setSubpass(0u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
@@ -201,12 +201,20 @@ vk::UniquePipeline DepthmapPipe::CreateAnimPipeline(
 
 void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewProj, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE(cmdBuffer, "DepthmapPipe::RecordCmd");
+
 	for (auto geom : sceneDesc->Get<SceneGeometry>()) {
+
+		COMMAND_SCOPE(cmdBuffer, "Model Draw");
+
 		PushConstant pc{ //
 			viewProj * geom->transform
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+
+			COMMAND_SCOPE(cmdBuffer, "Geometry Group Draw");
+
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 
@@ -253,11 +261,17 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 	}
 
 	for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
+
+		COMMAND_SCOPE(cmdBuffer, "Skinned Model Draw");
+
 		PushConstant pc{ //
 			viewProj * geom->transform
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+
+			COMMAND_SCOPE(cmdBuffer, "Skinned Geometry Group Draw");
+
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 			if (arch.isUnlit) [[unlikely]] {

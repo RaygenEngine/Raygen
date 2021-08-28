@@ -249,6 +249,7 @@ void RRenderPassLayout::AddSubpass(std::vector<AttachmentRef>&& inputs, std::vec
 		att.Get().previousOutputSubpassIndex = subpassIndex;
 	}
 
+	name += " | " + outputs.at(0).Get().name;
 
 	subpass.descr
 		.setInputAttachments(subpass.vkInputs) //

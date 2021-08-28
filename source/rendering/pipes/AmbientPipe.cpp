@@ -5,6 +5,7 @@
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
+#include "rendering/VkCoreIncludes.h"
 
 namespace {
 struct PushConstant {
@@ -20,24 +21,12 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout AmbientPipe::MakePipelineLayout()
 {
-	auto layouts = {
-		Layouts->globalDescLayout.handle(),
-		Layouts->accelLayout.handle(),
-	};
-
-	vk::PushConstantRange pushConstantRange{};
-	pushConstantRange
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment) //
-		.setSize(sizeof(PushConstant))
-		.setOffset(0u);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayouts(layouts) //
-		.setPushConstantRanges(pushConstantRange);
-
-	return Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	return rvk::makePipelineLayoutEx(
+		{
+			DescriptorLayouts->global.handle(),
+			DescriptorLayouts->accelerationStructure.handle(),
+		},
+		vk::ShaderStageFlagBits::eFragment, sizeof(PushConstant));
 }
 
 vk::UniquePipeline AmbientPipe::MakePipeline()
@@ -141,7 +130,7 @@ vk::UniquePipeline AmbientPipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->secondaryPassLayout.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->secondary.compatibleRenderPass)
 		.setSubpass(0u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -149,8 +138,10 @@ vk::UniquePipeline AmbientPipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void AmbientPipe::Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void AmbientPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,
