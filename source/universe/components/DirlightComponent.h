@@ -22,8 +22,6 @@ struct CDirlight : CLightBase {
 		REFLECT_VAR(samples).Clamp(1.f);
 		REFLECT_VAR(radius).Clamp();
 
-		REFLECT_VAR(hasShadow);
-
 
 		REFLECT_VAR(left);
 		REFLECT_VAR(right);
@@ -31,6 +29,10 @@ struct CDirlight : CLightBase {
 		REFLECT_VAR(bottom);
 
 		REFLECT_VAR(skyInstance);
+
+		REFLECT_VAR(type);
+
+		REFLECT_VAR(hasShadow);
 	}
 
 	float left{ -20.f };

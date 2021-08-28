@@ -24,6 +24,7 @@ DECLARE_DIRTY_FUNC(CSpotlight)(BasicComponent& bc)
 
 	return [=](SceneSpotlight& sl) {
 		sl.name = "spot depth: " + bc.name;
+		sl.isDynamic = type == LightType::Dynamic;
 		sl.ubo.position = glm::vec4(bc.world().position, 1.f);
 		sl.ubo.front = glm::vec4(bc.world().front(), 0.f);
 		sl.ubo.viewProj = viewProj;

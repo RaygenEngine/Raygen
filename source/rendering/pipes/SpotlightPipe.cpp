@@ -67,7 +67,7 @@ void SpotlightPipe::RecordCmd(
 		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 2u,
 			{
 				sp->uboDescSet[sceneDesc.frameIndex],
-				sp->shadowmapDescSet[sceneDesc.frameIndex],
+				sp->shadowmapDescSet[sceneDesc.frameIndex], // CHECK: if this is sp static, use 0 index?
 			},
 			nullptr);
 
