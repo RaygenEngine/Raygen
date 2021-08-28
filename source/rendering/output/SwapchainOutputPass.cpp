@@ -9,6 +9,24 @@
 #include "rendering/Layouts.h"
 #include "rendering/Renderer.h"
 
+namespace {
+enum TONEMAP_MODE : int32
+{
+	DEFAULT = 0,
+	UNCHARTED,
+	HEJLRICHARD,
+	ACES,
+};
+
+struct PushConstant {
+	float gamma;
+	float exposure;
+	int32 tonemapMode;
+};
+
+static_assert(sizeof(PushConstant) <= 128);
+} // namespace
+
 namespace vl {
 
 SwapchainOutputPass::SwapchainOutputPass()
@@ -40,7 +58,8 @@ void SwapchainOutputPass::RecompileCpyShader()
 		RecompileCpyShader();
 	};
 
-	m_pipelineLayout = rvk::makeLayoutNoPC({ DescriptorLayouts->_1imageSampler.handle() });
+	m_pipelineLayout = rvk::makePipelineLayoutEx(
+		{ DescriptorLayouts->_1imageSampler.handle() }, vk::ShaderStageFlagBits::eFragment, sizeof(PushConstant));
 	m_pipeline = rvk::makePostProcPipeline(gpuShader.shaderStages, *m_pipelineLayout, m_swapchain->renderPass());
 }
 
@@ -96,6 +115,20 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 			cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline.get());
 			cmdBuffer.bindDescriptorSets(
 				vk::PipelineBindPoint::eGraphics, m_pipelineLayout.get(), 0u, { m_descSet[frameIndex] }, nullptr);
+
+			static ConsoleVariable<float> cons_gamma{ "r.out.gamma", 2.2f, "Set the gamma correction." };
+			static ConsoleVariable<float> cons_exposure{ "r.out.exposure", 1.0f, "Set the exposure." };
+			static ConsoleVariable<TONEMAP_MODE> cons_tonemapMode{ "r.out.tonemap.mode", DEFAULT,
+				"Set the tonemapping mode." };
+
+			PushConstant pc{
+				*cons_gamma,
+				*cons_exposure,
+				cons_tonemapMode,
+			};
+
+			cmdBuffer.pushConstants(
+				m_pipelineLayout.get(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);
 
 			// big triangle
 			cmdBuffer.draw(3u, 1u, 0u, 0u);
