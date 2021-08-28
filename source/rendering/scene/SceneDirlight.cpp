@@ -11,9 +11,9 @@ void SceneDirlight::MaybeResizeShadowmap(uint32 width, uint32 height)
 
 		for (size_t i = 0; i < c_framesInFlight; ++i) {
 			// TODO: this should be called once at the start (constructor - tidy scene structs)
-			shadowmapDescSet[i] = vl::Layouts->singleSamplerDescLayout.AllocDescriptorSet();
+			shadowmapDescSet[i] = vl::DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
 
-			shadowmapPass[i] = vl::Layouts->shadowPassLayout.CreatePassInstance(width, height);
+			shadowmapPass[i] = vl::PassLayouts->shadow.CreatePassInstance(width, height);
 
 			depthSampler = vl::GpuAssetManager->GetShadow2dSampler();
 

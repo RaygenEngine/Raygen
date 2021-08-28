@@ -107,7 +107,7 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 
 						vk::DescriptorSet environmentCubemapSamplerDescSet;
 						environmentCubemapSamplerDescSet
-							= Layouts->singleSamplerDescLayout.AllocDescriptorSet(); // TODO: doesn't release
+							= DescriptorLayouts->_1imageSampler.AllocDescriptorSet(); // TODO: doesn't release
 
 						auto cubemapView = ig->environmentCubemaps.GetCubemapView(i);
 
@@ -165,14 +165,14 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 			vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
 			vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-		faceTempDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
+		faceTempDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(faceTempDescSet[i], 0u,
 			{
 				faceTempImage[i].view(), // pathtrace target
 			},
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-		faceTraceDescSet[i] = Layouts->doubleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
+		faceTraceDescSet[i] = DescriptorLayouts->_2storageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(faceTraceDescSet[i], 0u,
 			{
 				faceTempImage[i].view(), // input
@@ -181,7 +181,7 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 
-		viewerDescSet[i] = Layouts->singleUboDescLayout.AllocDescriptorSet(); // TODO: doesn't release
+		viewerDescSet[i] = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet(); // TODO: doesn't release
 		auto uboSize = sizeof(UBO_viewer);
 		viewer[i] = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
@@ -201,10 +201,11 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 
 			ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
-			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, faceTempDescSet[i], viewerDescSet[i],
-				extent, iter, samplesPerIteration, ptBounces);
+			StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, faceTempDescSet[i],
+				viewerDescSet[i], iter, samplesPerIteration, ptBounces);
 
-			StaticPipes::Get<AccumulationPipe>().Draw(cmdBuffer, faceTraceDescSet[i], extent, iter); // TODO: check
+			StaticPipes::Get<AccumulationPipe>().RecordCmd(
+				cmdBuffer, extent, faceTraceDescSet[i], iter); // TODO: debug and deal with leaks
 		}
 	}
 }
@@ -231,13 +232,13 @@ void BakeProbes::BakeIrradiance(const std::vector<vk::UniqueImageView>& faceView
 
 	for (auto i = 0; i < 6; ++i) {
 
-		faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
+		faceDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(
 			faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 
-		StaticPipes::Get<CubemapConvolutionPipe>().Draw(
-			cmdBuffer, faceDescSet[i], environmentSamplerDescSet, extent, viewInverses[i], standardProjection());
+		StaticPipes::Get<CubemapConvolutionPipe>().RecordCmd(
+			cmdBuffer, extent, faceDescSet[i], environmentSamplerDescSet, viewInverses[i], standardProjection());
 	}
 }
 
@@ -270,13 +271,13 @@ void BakeProbes::BakePrefiltered(const SceneReflprobe& rp)
 		projInv[3][3] = float(mip) / float(rp.ubo.lodCount - 1);
 
 		for (auto i = 0; i < 6; ++i) {
-			faceDescSet[i] = Layouts->singleStorageImage.AllocDescriptorSet(); // TODO: doesn't release
+			faceDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet(); // TODO: doesn't release
 			rvk::writeDescriptorImages(
 				faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 
-			StaticPipes::Get<CubemapPrefilterPipe>().Draw(cmdBuffer, faceDescSet[i], rp.environmentSamplerDescSet,
-				{ mipResolution, mipResolution, 1 }, viewInverses[i], projInv);
+			StaticPipes::Get<CubemapPrefilterPipe>().RecordCmd(cmdBuffer, { mipResolution, mipResolution, 1 },
+				faceDescSet[i], rp.environmentSamplerDescSet, viewInverses[i], projInv);
 		}
 	}
 }

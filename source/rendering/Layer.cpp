@@ -28,7 +28,8 @@ Layer_::Layer_()
 	CmdPoolManager = new CmdPoolManager_();
 	GpuResources::Init();
 	GpuAssetManager = new GpuAssetManager_();
-	Layouts = new Layouts_();
+	DescriptorLayouts = new DescriptorLayouts_();
+	PassLayouts = new PassLayouts_();
 	rvk::Shapes::InitShapes();
 	StaticPipes::InitRegistered();
 	m_swapOutput = new SwapchainOutputPass();
@@ -64,7 +65,8 @@ Layer_::~Layer_()
 	delete m_swapOutput;
 	delete m_mainScene;
 	StaticPipes::DestroyAll();
-	delete Layouts;
+	delete PassLayouts;
+	delete DescriptorLayouts;
 	delete GpuAssetManager;
 	GpuResources::Destroy();
 
@@ -140,12 +142,11 @@ void Layer_::DrawFrame()
 
 	m_swapOutput->SetOutputImageIndex(imageIndex);
 
-
+#define adfas
 	currentCmdBuffer.begin();
 	{
-		CMDSCOPE_BEGIN(currentCmdBuffer, "Render frame");
-		m_renderer->DrawFrame(currentCmdBuffer, m_mainScene->GetRenderDesc(m_currentFrame), *m_swapOutput);
-		CMDSCOPE_END(currentCmdBuffer);
+		COMMAND_SCOPE(currentCmdBuffer, "Recorded Commands");
+		m_renderer->RecordCmd(currentCmdBuffer, m_mainScene->GetRenderDesc(m_currentFrame), *m_swapOutput);
 	}
 	currentCmdBuffer.end();
 

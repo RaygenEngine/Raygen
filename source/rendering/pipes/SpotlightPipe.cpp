@@ -11,10 +11,10 @@ namespace vl {
 vk::UniquePipelineLayout SpotlightPipe::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->globalDescLayout.handle(),
-		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->singleSamplerDescLayout.handle(),
+		DescriptorLayouts->global.handle(),
+		PassLayouts->main.internalDescLayout.handle(),
+		DescriptorLayouts->_1uniformBuffer.handle(),
+		DescriptorLayouts->_1imageSampler.handle(),
 	});
 }
 
@@ -46,12 +46,14 @@ vk::UniquePipeline SpotlightPipe::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<SpotlightPipe>(),
-		*Layouts->mainPassLayout.compatibleRenderPass, colorBlending, 1u);
+		*PassLayouts->main.compatibleRenderPass, colorBlending, 1u);
 }
 
-void SpotlightPipe::Draw(
+void SpotlightPipe::RecordCmd(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,

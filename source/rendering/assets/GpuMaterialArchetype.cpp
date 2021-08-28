@@ -157,7 +157,7 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 	}
 
 	std::vector descLayouts{
-		Layouts->globalDescLayout.handle(),
+		DescriptorLayouts->global.handle(),
 		descLayout.handle(), // mat
 	};
 
@@ -169,9 +169,9 @@ void GpuMaterialArchetype::Update(const AssetUpdateInfo& updateInfo)
 
 
 	std::vector descLayoutsAnim{
-		Layouts->globalDescLayout.handle(),
+		DescriptorLayouts->global.handle(),
 		descLayout.handle(),
-		Layouts->jointsDescLayout.handle(),
+		DescriptorLayouts->joints.handle(),
 	};
 
 	// GBufferAnim Pass

@@ -12,8 +12,8 @@ ConsoleVariable<float> cons_arealightsScale{ "r.arealights.scale", 1.f, "Set are
 namespace vl {
 RaytraceArealights::RaytraceArealights()
 {
-	imagesDescSet = Layouts->tripleStorageImage.AllocDescriptorSet();
-	DEBUG_NAME_AUTO(imagesDescSet, "ProgArealights storage descriptor set");
+	imagesDescSet = DescriptorLayouts->_3storageImage.AllocDescriptorSet();
+	DEBUG_NAME(imagesDescSet, "ProgArealights storage descriptor set");
 
 	svgfPass.MakeLayout();
 	svgfPass.MakePipeline();
@@ -21,9 +21,10 @@ RaytraceArealights::RaytraceArealights()
 
 void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
 	// CHECK: this should not run if there are no area lights in the scene
 
-	StaticPipes::Get<ArealightsPipe>().Draw(cmdBuffer, sceneDesc, imagesDescSet, progressive.extent, frame++);
+	StaticPipes::Get<ArealightsPipe>().RecordCmd(cmdBuffer, sceneDesc, progressive.extent, imagesDescSet, frame++);
 
 	svgfPass.SvgfDraw(cmdBuffer, sceneDesc, svgfRenderPassInstance);
 }
@@ -38,7 +39,7 @@ void RaytraceArealights::Resize(vk::Extent2D extent)
 
 	momentsBuffer = RImage2D("Moments Buffer", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-	svgfRenderPassInstance = Layouts->svgfPassLayout.CreatePassInstance(extent.width, extent.height);
+	svgfRenderPassInstance = PassLayouts->svgf.CreatePassInstance(extent.width, extent.height);
 
 	svgfPass.OnResize(extent, *this);
 
@@ -102,7 +103,7 @@ void RaytraceArealights::PtSvgf::OnResize(vk::Extent2D extent, RaytraceArealight
 	swappingImages[1] = RImage2D("SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
 	for (size_t j = 0; j < 2; ++j) {
-		descriptorSets[j] = Layouts->quadStorageImage.AllocDescriptorSet();
+		descriptorSets[j] = DescriptorLayouts->_4storageImage.AllocDescriptorSet();
 
 		rvk::writeDescriptorImages(descriptorSets[j], 0u,
 			{
@@ -117,24 +118,12 @@ void RaytraceArealights::PtSvgf::OnResize(vk::Extent2D extent, RaytraceArealight
 
 void RaytraceArealights::PtSvgf::MakeLayout()
 {
-	std::array layouts{
-		Layouts->globalDescLayout.handle(),
-		Layouts->quadStorageImage.handle(),
-	};
-
-	vk::PushConstantRange pcRange;
-	pcRange
-		.setSize(sizeof(SvgfPC)) //
-		.setStageFlags(vk::ShaderStageFlagBits::eFragment)
-		.setOffset(0);
-
-	// pipeline layout
-	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo
-		.setSetLayouts(layouts) //
-		.setPushConstantRanges(pcRange);
-
-	m_pipelineLayout = Device->createPipelineLayoutUnique(pipelineLayoutInfo);
+	m_pipelineLayout = rvk::makePipelineLayoutEx(
+		{
+			DescriptorLayouts->global.handle(),
+			DescriptorLayouts->_4storageImage.handle(),
+		},
+		vk::ShaderStageFlagBits::eFragment, sizeof(SvgfPC));
 }
 
 void RaytraceArealights::PtSvgf::MakePipeline()
@@ -158,7 +147,7 @@ void RaytraceArealights::PtSvgf::MakePipeline()
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
 
-	Utl_CreatePipelineCustomPass(gpuShader, colorBlending, *Layouts->svgfPassLayout.compatibleRenderPass);
+	Utl_CreatePipelineCustomPass(gpuShader, colorBlending, *PassLayouts->svgf.compatibleRenderPass);
 }
 
 } // namespace vl

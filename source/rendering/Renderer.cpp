@@ -35,7 +35,7 @@ Renderer_::Renderer_()
 	Event::OnViewerUpdated.Bind(this, [&]() { m_raytraceArealights.frame = 0; });
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_globalDesc[i] = Layouts->globalDescLayout.AllocDescriptorSet();
+		m_globalDesc[i] = DescriptorLayouts->global.AllocDescriptorSet();
 	}
 
 	// m_postprocCollection.RegisterTechniques();
@@ -55,16 +55,16 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
-		m_mainPassInst[i] = Layouts->mainPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
-		m_secondaryPassInst[i] = Layouts->secondaryPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
-		m_ptPass[i] = Layouts->ptPassLayout.CreatePassInstance(fbSize.width, fbSize.height);
+		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(fbSize.width, fbSize.height);
+		m_secondaryPassInst[i] = PassLayouts->secondary.CreatePassInstance(fbSize.width, fbSize.height);
+		m_ptPass[i] = PassLayouts->pt.CreatePassInstance(fbSize.width, fbSize.height);
 	}
 
 	m_raytraceArealights.Resize(fbSize);
 	m_raytraceMirrorReflections.Resize(fbSize);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_unlitPassInst[i] = Layouts->unlitPassLayout.CreatePassInstance(fbSize.width, fbSize.height,
+		m_unlitPassInst[i] = PassLayouts->unlit.CreatePassInstance(fbSize.width, fbSize.height,
 			{ &m_mainPassInst[i].framebuffer[0], &m_ptPass[i].framebuffer[0] }); // TODO: indices and stuff
 	}
 
@@ -128,90 +128,65 @@ void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDe
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 
-		StaticPipes::Get<SpotlightPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
+		StaticPipes::Get<SpotlightPipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
 
-		StaticPipes::Get<PointlightPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
+		StaticPipes::Get<PointlightPipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
 
-		StaticPipes::Get<DirlightPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
+		StaticPipes::Get<DirlightPipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 
-		StaticPipes::Get<ReflprobePipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
+		StaticPipes::Get<ReflprobePipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
 
-		StaticPipes::Get<IrragridPipe>().Draw(cmdBuffer, sceneDesc, inputDescSet);
+		StaticPipes::Get<IrragridPipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
 	});
 
-	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(
-		cmdBuffer, vk::SubpassContents::eInline, [&]() { StaticPipes::Get<AmbientPipe>().Draw(cmdBuffer, sceneDesc); });
+	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
+		[&]() { StaticPipes::Get<AmbientPipe>().RecordCmd(cmdBuffer, sceneDesc); });
 }
 
-void Renderer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
+void Renderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
 {
 	PROFILE_SCOPE(Renderer);
+	COMMAND_SCOPE_AUTO(cmdBuffer);
 
 	UpdateGlobalDescSet(sceneDesc);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Calculate shadow maps");
 
 	// calculates: shadowmaps, gi maps
 	// requires: -
 	CalculateShadowmaps::RecordCmd(cmdBuffer, sceneDesc);
 
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Bake probes");
-
 	// TODO: Probe baking should be part of the scene maybe - on the other hand real time probes should be here
 	BakeProbes::RecordCmd(sceneDesc); // NOTE: Blocking
-
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Draw geometry and lights");
 
 	// calculates: gbuffer, direct lights, gi, ambient
 	// requires: shadowmaps, gi maps
 	DrawGeometryAndLights(cmdBuffer, sceneDesc);
 
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Raytrace area lights");
-
 	// calculates: total of arealights
 	// requires: -
 	m_raytraceArealights.RecordCmd(cmdBuffer, sceneDesc);
-
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Raytrace mirror reflections");
 
 	// calculates: specular reflections (mirror)
 	// requires: gbuffer, shadowmaps, gi maps
 	m_raytraceMirrorReflections.RecordCmd(cmdBuffer, sceneDesc);
 
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Post process commands");
-
 	// TODO: post process
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
-		m_ptLightBlend.Draw(cmdBuffer, sceneDesc); // fixed
+		m_ptLightBlend.RecordCmd(cmdBuffer, sceneDesc); // fixed
 
 		// TODO: from post proc
-		// m_postprocCollection.Draw(*cmdBuffer, sceneDesc);
+		// m_postprocCollection.RecordCmd(*cmdBuffer, sceneDesc);
 	});
-
-	CMDSCOPE_END(cmdBuffer);
 
 	static ConsoleVariable<bool> cons_drawUnlit{ "r.renderer.drawUnlit", true }; // CHECK: more specific
 
 	if (cons_drawUnlit) [[likely]] {
-		CMDSCOPE_BEGIN(cmdBuffer, "Unlit pass");
 		m_unlitPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {
 			UnlitPipe::RecordCmd(cmdBuffer, sceneDesc);
 			DrawSelectedEntityDebugVolume::RecordCmd(cmdBuffer, sceneDesc);
-			StaticPipes::Get<BillboardPipe>().Draw(cmdBuffer, sceneDesc);
+			StaticPipes::Get<BillboardPipe>().RecordCmd(cmdBuffer, sceneDesc);
 		});
-		CMDSCOPE_END(cmdBuffer);
 	}
 
 

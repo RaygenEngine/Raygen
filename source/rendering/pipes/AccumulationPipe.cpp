@@ -21,7 +21,7 @@ vk::UniquePipelineLayout AccumulationPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
-			Layouts->doubleStorageImage.handle(),
+			DescriptorLayouts->_2storageImage.handle(),
 		},
 		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
 }
@@ -44,9 +44,11 @@ vk::UniquePipeline AccumulationPipe::MakePipeline()
 	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
 }
 
-void AccumulationPipe::Draw(vk::CommandBuffer cmdBuffer, vk::DescriptorSet inputOutputStorageImages,
-	const vk::Extent3D& extent, int32 iteration) const
+void AccumulationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
+	vk::DescriptorSet inputOutputStorageImages, int32 iteration) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, layout(), 0u,

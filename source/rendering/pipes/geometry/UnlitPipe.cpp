@@ -118,7 +118,7 @@ namespace {
 			.setPColorBlendState(&colorBlending)
 			.setPDynamicState(&dynamicStateInfo)
 			.setLayout(pipelineLayout)
-			.setRenderPass(Layouts->unlitPassLayout.compatibleRenderPass.get())
+			.setRenderPass(PassLayouts->unlit.compatibleRenderPass.get())
 			.setSubpass(1u)
 			.setBasePipelineHandle({})
 			.setBasePipelineIndex(-1);
@@ -170,12 +170,20 @@ vk::UniquePipeline UnlitPipe::CreatePipeline(
 
 void UnlitPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
+	COMMAND_SCOPE(cmdBuffer, "UnlitPipe::RecordCmd");
+
 	for (auto geom : sceneDesc->Get<SceneGeometry>()) {
+
+		COMMAND_SCOPE(cmdBuffer, "Model Draw");
+
 		PushConstant pc{ //
 			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
+
+			COMMAND_SCOPE(cmdBuffer, "Geometry Group Draw");
+
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 			if (!arch.isUnlit) [[likely]] {

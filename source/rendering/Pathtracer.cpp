@@ -44,9 +44,9 @@ InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
 	return views;
 }
 
-void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
+void Pathtracer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
 {
-	CMDSCOPE_BEGIN(cmdBuffer, "Progressive Pathtrace");
+	COMMAND_SCOPE_AUTO(cmdBuffer);
 
 	static ConsoleVariable<int32> cons_bounces{ "r.pathtracer.bounces", 1,
 		"Set the number of bounces of the pathtracer." };
@@ -58,8 +58,6 @@ void Pathtracer_::DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scene
 		"Bpdt: Bidirectional:... Work in progress" };
 
 	m_progressivePathtrace.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces, *cons_mode);
-
-	CMDSCOPE_END(cmdBuffer);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

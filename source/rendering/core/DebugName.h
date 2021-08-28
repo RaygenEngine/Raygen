@@ -1,9 +1,15 @@
 #pragma once
 
+#include <source_location>
+
 #include <vulkan/vulkan.hpp>
 
-#define CMDSCOPE_BEGIN(cmdBuffer, name) cmdBuffer.beginDebugUtilsLabelEXT({ name, { 1.f, 1.f, 1.f, 1.f } })
-#define CMDSCOPE_END(cmdBuffer)         cmdBuffer.endDebugUtilsLabelEXT()
+
+#define COMMAND_SCOPE(cmdBuffer, name) const rvk::CmdScopedLabel MACRO_PASTE(z_scope_t, __LINE__){ cmdBuffer, name };
+#define COMMAND_SCOPE_AUTO(cmdBuffer)                                                                                  \
+	const rvk::CmdScopedLabel MACRO_PASTE(z_scope_t, __LINE__){ cmdBuffer,                                             \
+		std::string(typeid(*this).name()) + "::" + std::source_location::current().function_name() };
+
 
 #define DEBUG_NAME(handle, name) rvk::registerDebugName(handle, name)
 #define DEBUG_NAME_AUTO(handle)  DEBUG_NAME(handle, #handle)
@@ -13,6 +19,19 @@ struct RBuffer;
 }
 
 namespace rvk {
+
+struct CmdScopedLabel {
+	vk::CommandBuffer cmdBuffer;
+
+	CmdScopedLabel(vk::CommandBuffer cmdBuffer, const std::string& name)
+		: cmdBuffer(cmdBuffer)
+	{
+		cmdBuffer.beginDebugUtilsLabelEXT({ name.c_str(), { 1.f, 1.f, 1.f, 1.f } });
+	}
+
+	~CmdScopedLabel() { cmdBuffer.endDebugUtilsLabelEXT(); }
+};
+
 void setDebugUtilsObjectName(vk::DebugUtilsObjectNameInfoEXT&&);
 
 template<typename T, typename = void>

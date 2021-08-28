@@ -50,9 +50,9 @@ void Editor::AfterStopWorld(World& world)
 	}
 }
 
-void Editor::RecordCmd(vk::CommandBuffer* drawCommandBuffer)
+void Editor::Draw(vk::CommandBuffer* cmdBuffer)
 {
-	ImguiImpl::RenderVulkan(drawCommandBuffer);
+	ImguiImpl::RenderVulkan(cmdBuffer);
 }
 
 std::pair<glm::vec2, glm::vec2> Editor::GetIconUV(const char* icon)

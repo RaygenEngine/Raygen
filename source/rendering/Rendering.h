@@ -30,7 +30,7 @@ public:
 	static void Imgui_Prepare();
 	static void Imgui_Shutdown();
 	static void Imgui_NewFrame();
-	static void Imgui_DrawFrame(ImDrawData* drawData, vk::CommandBuffer* drawCommandBuffer);
+	static void Imgui_DrawFrame(ImDrawData* drawData, vk::CommandBuffer* cmdBuffer);
 
 	static void SwapRenderingMode();
 };

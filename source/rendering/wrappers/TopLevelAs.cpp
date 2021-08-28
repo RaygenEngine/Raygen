@@ -70,19 +70,19 @@ namespace vl {
 TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vector<SceneQuadlight*>& quadlights,
 	const vl::BottomLevelAs& quadlightBlas, Scene* scene)
 {
-	sceneDesc.descSetSpotlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+	sceneDesc.descSetSpotlights = DescriptorLayouts->_1storageBuffer_1024samplerImage.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneSpotlight>().size()));
-	sceneDesc.descSetDirlights = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+	sceneDesc.descSetDirlights = DescriptorLayouts->_1storageBuffer_1024samplerImage.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneDirlight>().size()));
 
-	sceneDesc.descSetPointlights = Layouts->singleStorageBuffer.AllocDescriptorSet();
-	sceneDesc.descSetReflprobes = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+	sceneDesc.descSetPointlights = DescriptorLayouts->_1storageBuffer.AllocDescriptorSet();
+	sceneDesc.descSetReflprobes = DescriptorLayouts->_1storageBuffer_1024samplerImage.AllocDescriptorSet(
 		static_cast<int32>(2 * scene->Get<SceneReflprobe>().size())); // both irradiance and prefiltered map here
 
-	sceneDesc.descSetIrragrids = Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(
+	sceneDesc.descSetIrragrids = DescriptorLayouts->_1storageBuffer_1024samplerImage.AllocDescriptorSet(
 		static_cast<int32>(scene->Get<SceneIrragrid>().size()));
 
-	sceneDesc.descSetQuadlights = Layouts->singleStorageBuffer.AllocDescriptorSet();
+	sceneDesc.descSetQuadlights = DescriptorLayouts->_1storageBuffer.AllocDescriptorSet();
 
 	int32 totalGroups = 0;
 
@@ -128,7 +128,7 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 
 	auto imgSize = GpuAssetManager->Z_GetSize();
 	sceneDesc.descSetGeometryAndTextures
-		= Layouts->bufferAndSamplersDescLayout.AllocDescriptorSet(static_cast<int32>(imgSize));
+		= DescriptorLayouts->_1storageBuffer_1024samplerImage.AllocDescriptorSet(static_cast<int32>(imgSize));
 
 
 	sceneDesc.WriteImages();

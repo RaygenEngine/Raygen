@@ -18,13 +18,13 @@ struct UBO_viewer {
 namespace vl {
 TestSVGFProgPT::TestSVGFProgPT()
 {
-	pathtracedDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
+	pathtracedDescSet = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(pathtracedDescSet);
 
-	inputOutputsDescSet = Layouts->oneSamplerTwoStorageImages.AllocDescriptorSet();
+	inputOutputsDescSet = DescriptorLayouts->_1imageSampler_2storageImage.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(inputOutputsDescSet);
 
-	viewerDescSet = Layouts->singleUboDescLayout.AllocDescriptorSet();
+	viewerDescSet = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(viewerDescSet);
 
 	auto uboSize = sizeof(UBO_viewer);
@@ -39,6 +39,8 @@ TestSVGFProgPT::TestSVGFProgPT()
 void TestSVGFProgPT::RecordCmd(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces)
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	if (updateViewer.Access()) {
 		UBO_viewer data = {
 			sceneDesc.viewer.ubo.viewInv,
@@ -61,13 +63,13 @@ void TestSVGFProgPT::RecordCmd(
 
 	auto extent = progressiveVariance.extent;
 
-	StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, pathtracedDescSet, viewerDescSet, extent,
-		iteration, std::max(samples, 0), std::max(bounces, 0));
+	StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracedDescSet,
+		viewerDescSet, iteration, std::max(samples, 0), std::max(bounces, 0));
 
 	pathtraced.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
 
-	StaticPipes::Get<MomentsBufferCalculationPipe>().Draw(cmdBuffer, inputOutputsDescSet, sceneDesc, extent);
+	StaticPipes::Get<MomentsBufferCalculationPipe>().RecordCmd(cmdBuffer, extent, inputOutputsDescSet, sceneDesc);
 
 	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);

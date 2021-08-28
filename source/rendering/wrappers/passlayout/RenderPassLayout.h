@@ -4,33 +4,8 @@
 #include "rendering/wrappers/Framebuffer.h"
 
 namespace vl {
-struct RRenderPassLayout;
 
-struct RenderingPassInstance {
-	RFramebuffer framebuffer;
-	vk::DescriptorSet internalDescSet{ nullptr };
-
-
-	RRenderPassLayout* parent{ nullptr };
-
-	// void TransitionFramebufferForFrame(vk::CommandBuffer cmdBuffer);
-	vk::RenderPass GetRenderPass() const;
-
-	template<typename Func>
-	void RecordPass(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents, Func&& contents)
-	{
-		BeginRenderPassCmd(cmdBuffer, subpassContents);
-		contents();
-		EndRenderPassCmd(cmdBuffer);
-	}
-
-private:
-	void BeginRenderPassCmd(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents);
-	void EndRenderPassCmd(vk::CommandBuffer cmdBuffer);
-
-	friend struct RRenderPassLayout;
-	uint32 parentPassIndex{ UINT_MAX };
-};
+struct RenderingPassInstance;
 
 // NOTE: this object is assumed to never move by the generated subobjects (aka RenderingPassInstance).
 struct RRenderPassLayout {
@@ -171,6 +146,33 @@ public:
 
 	[[nodiscard]] RenderingPassInstance CreatePassInstanceHack(
 		uint32 width, uint32 height, std::vector<const RImage2D*> externalAttachmentInstances = {});
+};
+
+struct RenderingPassInstance {
+	RFramebuffer framebuffer;
+	vk::DescriptorSet internalDescSet{ nullptr };
+
+
+	RRenderPassLayout* parent{ nullptr };
+
+	// void TransitionFramebufferForFrame(vk::CommandBuffer cmdBuffer);
+	vk::RenderPass GetRenderPass() const;
+
+	template<typename Func>
+	void RecordPass(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents, Func&& contents)
+	{
+		COMMAND_SCOPE(cmdBuffer, parent->name);
+		BeginRenderPassCmd(cmdBuffer, subpassContents);
+		contents();
+		EndRenderPassCmd(cmdBuffer);
+	}
+
+private:
+	void BeginRenderPassCmd(vk::CommandBuffer cmdBuffer, vk::SubpassContents subpassContents);
+	void EndRenderPassCmd(vk::CommandBuffer cmdBuffer);
+
+	friend struct RRenderPassLayout;
+	uint32 parentPassIndex{ UINT_MAX };
 };
 
 

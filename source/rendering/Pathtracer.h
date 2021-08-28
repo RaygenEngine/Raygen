@@ -14,11 +14,9 @@ public:
 
 	void ResizeBuffers(uint32 width, uint32 height) override;
 
-	void DrawFrame(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) override;
+	void RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass) override;
 
 	InFlightResources<vk::ImageView> GetOutputViews() const override;
-
-	// CHECK: do we want unlit stuff here? - and/or editor stuff like icons etc? - costly (depth, passes)
 
 private:
 	vk::Extent2D m_extent{};

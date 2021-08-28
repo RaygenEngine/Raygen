@@ -30,7 +30,7 @@ void PtCollection::RunPrepares()
 	}
 }
 
-void PtCollection::Draw(vk::CommandBuffer buffers, const SceneRenderDesc& sceneDesc)
+void PtCollection::RecordCmd(vk::CommandBuffer buffers, const SceneRenderDesc& sceneDesc)
 {
 	// Probably pointless to not draw anything, remove when in editor settings are available
 	static ConsoleVariable<bool> cons_drawPostProc{ "r.ppt.draw", true,
@@ -46,7 +46,7 @@ void PtCollection::Draw(vk::CommandBuffer buffers, const SceneRenderDesc& sceneD
 			continue;
 		}
 
-		entry.instance->Draw(buffers, sceneDesc);
+		entry.instance->RecordCmd(buffers, sceneDesc);
 	}
 }
 } // namespace vl

@@ -23,7 +23,7 @@ public:
 	static void BeforePlayWorld(World& world);
 	static void AfterStopWorld(World& world);
 
-	static void RecordCmd(vk::CommandBuffer* drawCommandBuffer);
+	static void Draw(vk::CommandBuffer* cmdBuffer);
 
 	static std::pair<glm::vec2, glm::vec2> GetIconUV(const char* icon);
 	static ImTextureID GetFontIconTexture();

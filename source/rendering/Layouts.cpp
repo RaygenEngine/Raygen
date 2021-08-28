@@ -36,7 +36,7 @@ layout(set = 0, binding = 14) uniform sampler2D mirrorSampler;
 layout(set = 0, binding = 15) uniform sampler2D sceneColorSampler;
 */
 
-void Layouts_::MakeRenderPassLayouts()
+PassLayouts_::PassLayouts_()
 {
 	using Att = RRenderPassLayout::Attachment;
 	using AttRef = RRenderPassLayout::AttachmentRef;
@@ -47,210 +47,123 @@ void Layouts_::MakeRenderPassLayouts()
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = mainPassLayout.CreateAttachment("GDepth", Device->FindDepthFormat());
+		depthBuffer = main.CreateAttachment("GDepth", Device->FindDepthFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
 		for (auto& [name, format] : gBufferColorAttachments) {
-			auto att = mainPassLayout.CreateAttachment(name, format);
-			mainPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+			auto att = main.CreateAttachment(name, format);
+			main.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
 			gbufferAtts.emplace_back(att);
 		}
 
-		AttRef directAtt = mainPassLayout.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
-		AttRef indirectAtt = mainPassLayout.CreateAttachment("IndirectLight", vk::Format::eR32G32B32A32Sfloat);
+		AttRef directAtt = main.CreateAttachment("DirectLight", vk::Format::eR32G32B32A32Sfloat);
+		AttRef indirectAtt = main.CreateAttachment("IndirectLight", vk::Format::eR32G32B32A32Sfloat);
 
-		mainPassLayout.AddSubpass({}, std::vector{ gbufferAtts });              // Write GBuffer
-		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { directAtt });   // Write DirectLights
-		mainPassLayout.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write IndirectLights
+		main.AddSubpass({}, std::vector{ gbufferAtts });              // Write GBuffer
+		main.AddSubpass(std::vector{ gbufferAtts }, { directAtt });   // Write DirectLights
+		main.AddSubpass(std::vector{ gbufferAtts }, { indirectAtt }); // Write IndirectLights
 
-		mainPassLayout.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
-		mainPassLayout.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
-		mainPassLayout.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		main.AttachmentFinalLayout(depthBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+		main.AttachmentFinalLayout(directAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		main.AttachmentFinalLayout(indirectAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		mainPassLayout.Generate();
+		main.Generate();
 	}
 
 	AttRef ptColorAtt;
 	{
-		ptColorAtt = ptPassLayout.CreateAttachment("Pt color", vk::Format::eR32G32B32A32Sfloat);
+		ptColorAtt = pt.CreateAttachment("Pt color", vk::Format::eR32G32B32A32Sfloat);
 
-		ptPassLayout.AddSubpass({}, { ptColorAtt });
+		pt.AddSubpass({}, { ptColorAtt });
 
-		ptPassLayout.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		pt.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		ptPassLayout.Generate();
+		pt.Generate();
 	}
 
 	{
-		unlitPassLayout.AddSubpass({}, { depthBuffer, ptColorAtt }); // Unlit Pass
+		unlit.AddSubpass({}, { depthBuffer, ptColorAtt }); // Unlit Pass
 
-		unlitPassLayout.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		unlit.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		unlitPassLayout.Generate();
+		unlit.Generate();
 	}
 
 	// Shadow Pass
 	{
-		AttRef shadowAtt = shadowPassLayout.CreateAttachment("Shadowmap", Device->FindDepthFormat());
+		AttRef shadowAtt = shadow.CreateAttachment("Shadowmap", Device->FindDepthFormat());
 
-		shadowPassLayout.AddSubpass({}, { shadowAtt });
+		shadow.AddSubpass({}, { shadowAtt });
 
-		shadowPassLayout.AttachmentFinalLayout(shadowAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		shadow.AttachmentFinalLayout(shadowAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		shadowPassLayout.Generate();
+		shadow.Generate();
 	}
 
 	{
-		auto colorAtt = secondaryPassLayout.CreateAttachment("Ambient", vk::Format::eR32G32B32A32Sfloat);
+		auto colorAtt = secondary.CreateAttachment("Ambient", vk::Format::eR32G32B32A32Sfloat);
 
-		secondaryPassLayout.AddSubpass({}, { colorAtt });
+		secondary.AddSubpass({}, { colorAtt });
 
-		secondaryPassLayout.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		secondary.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		secondaryPassLayout.Generate();
+		secondary.Generate();
 	}
 
 	{
-		auto colorAtt
-			= singleFloatColorAttPassLayout.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
+		auto colorAtt = singleFloatColorAtt.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
 
-		singleFloatColorAttPassLayout.AddSubpass({}, { colorAtt });
+		singleFloatColorAtt.AddSubpass({}, { colorAtt });
 
-		singleFloatColorAttPassLayout.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		singleFloatColorAtt.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 
-		singleFloatColorAttPassLayout.Generate();
+		singleFloatColorAtt.Generate();
 	}
 
 
 	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
 	{
-		auto att = svgfPassLayout.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
+		auto att = svgf.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
 
-		svgfPassLayout.AddSubpass({}, std::vector{ att });
-		svgfPassLayout.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
-		svgfPassLayout.Generate();
+		svgf.AddSubpass({}, std::vector{ att });
+		svgf.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+		svgf.Generate();
 	}
 }
 
 
-Layouts_::Layouts_()
+DescriptorLayouts_::DescriptorLayouts_()
 {
-	// TODO: + 8, gDepth + rest
-	for (uint32 i = 0u; i < gBufferColorAttachments.size() + 9; ++i) {
-		globalDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
-			vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
-				| vk::ShaderStageFlagBits::eClosestHitKHR | vk::ShaderStageFlagBits::eCompute);
-	}
-	globalDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer,
-		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eCompute
-			| vk::ShaderStageFlagBits::eRaygenKHR);
-	globalDescLayout.Generate();
-
 	using enum vk::ShaderStageFlagBits;
 	using enum vk::DescriptorType;
 	using enum vk::DescriptorBindingFlagBits;
 
-	// gltf material
-	gltfMaterialDescLayout.AddBinding(vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment);
-	for (uint32 i = 0; i < 5u; ++i) {
-		gltfMaterialDescLayout.AddBinding(
-			vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
+	// TODO: + 8, gDepth + rest
+	for (uint32 i = 0u; i < PassLayouts_::gBufferColorAttachments.size() + 9; ++i) {
+		global.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
 	}
-	gltfMaterialDescLayout.Generate();
+	global.AddBinding(eUniformBuffer, eFragment | eVertex | eCompute | eRaygenKHR);
+	global.Generate();
 
-	// single
-	singleUboDescLayout.AddBinding(
-		vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eAll); // CHECK: fix shader stage flags
-	singleUboDescLayout.Generate();
+	joints.AddBinding(eStorageBuffer, eVertex);
+	joints.Generate();
 
-	// joints
-	jointsDescLayout.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eVertex);
-	jointsDescLayout.Generate();
+	accelerationStructure.AddBinding(eAccelerationStructureKHR, eFragment | eRaygenKHR | eClosestHitKHR);
+	accelerationStructure.Generate();
 
-	// single sampler
-	singleSamplerDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler,
-		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eCompute);
-	singleSamplerDescLayout.Generate();
-
-	singleSamplerFragOnlyLayout.AddBinding(
-		vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	singleSamplerFragOnlyLayout.Generate();
-
-
-	// cubemap
-	cubemapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	cubemapLayout.Generate();
-
-	// evnmap
-	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	envmapLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	envmapLayout.Generate();
-
-	// accel
-	accelLayout.AddBinding(vk::DescriptorType::eAccelerationStructureKHR,
-		vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eRaygenKHR
-			| vk::ShaderStageFlagBits::eClosestHitKHR);
-	accelLayout.Generate();
-
-	// rt
-	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
-	rtTriangleGeometry.AddBinding(vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eClosestHitKHR);
-	rtTriangleGeometry.Generate();
-
-
-	// image debug
-	imageDebugDescLayout.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment);
-	imageDebugDescLayout.Generate();
-
-	oneSamplerTwoStorageImages.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eCompute);
-	oneSamplerTwoStorageImages.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eCompute);
-	oneSamplerTwoStorageImages.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eCompute);
-	oneSamplerTwoStorageImages.Generate();
-
-	singleStorageBuffer.AddBinding(eStorageBuffer, eFragment | eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
-	singleStorageBuffer.Generate();
-
-	bufferAndSamplersDescLayout.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
-
-	bufferAndSamplersDescLayout.AddBinding(
+	_1storageBuffer_1024samplerImage.AddBinding(eStorageBuffer, eRaygenKHR | eClosestHitKHR | eAnyHitKHR);
+	_1storageBuffer_1024samplerImage.AddBinding(
 		eCombinedImageSampler, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
+	_1storageBuffer_1024samplerImage.Generate();
 
-	bufferAndSamplersDescLayout.Generate();
+	_1imageSampler_2storageImage.AddBinding(eCombinedImageSampler, eCompute);
+	_1imageSampler_2storageImage.AddBinding(eStorageImage, eCompute);
+	_1imageSampler_2storageImage.AddBinding(eStorageImage, eCompute);
+	_1imageSampler_2storageImage.Generate();
 
-	storageImageArray6.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 6u);
-	storageImageArray6.Generate();
-
-	storageImageArray10.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll, 10u);
-	storageImageArray10.Generate();
-
-	cubemapArray.AddBinding(eCombinedImageSampler, eFragment | eRaygenKHR | eClosestHitKHR | eCompute);
-	cubemapArray.Generate();
-
-	cubemapArrayStorage.AddBinding(eStorageImage, eRaygenKHR | eCompute);
-	cubemapArrayStorage.Generate();
-
-	cubemapArray6.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 6u);
-	cubemapArray6.Generate();
-
-	cubemapArray64.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 64u);
-	cubemapArray64.Generate();
-
-	cubemapArray1024.AddBinding(vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment, 1024u);
-	cubemapArray1024.Generate();
-
-
-	MakeRenderPassLayouts();
+	_1imageSamplerFragmentOnly.AddBinding(eCombinedImageSampler, eFragment);
+	_1imageSamplerFragmentOnly.Generate();
 }
 
-RDescriptorSetLayout Layouts_::GenerateStorageImageDescSet(size_t Count)
-{
-	RDescriptorSetLayout descLayout;
-	for (size_t i = 0; i < Count; i++) {
-		descLayout.AddBinding(vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eAll);
-	}
-	descLayout.Generate();
-	return descLayout;
-}
 } // namespace vl

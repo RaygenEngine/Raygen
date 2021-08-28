@@ -13,7 +13,7 @@ public:
 	// Runs once after all technique registrations are finished
 	virtual void Prepare(){};
 
-	virtual void Draw(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
+	virtual void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) = 0;
 
 
 	PtBase(const PtBase&) = delete;

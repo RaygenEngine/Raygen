@@ -11,10 +11,10 @@ namespace vl {
 vk::UniquePipelineLayout IrragridPipe::MakePipelineLayout()
 {
 	return rvk::makeLayoutNoPC({
-		Layouts->globalDescLayout.handle(),
-		Layouts->mainPassLayout.internalDescLayout.handle(),
-		Layouts->singleUboDescLayout.handle(),
-		Layouts->cubemapArray.handle(),
+		DescriptorLayouts->global.handle(),
+		PassLayouts->main.internalDescLayout.handle(),
+		DescriptorLayouts->_1uniformBuffer.handle(),
+		DescriptorLayouts->_1imageSampler.handle(),
 	});
 }
 
@@ -118,7 +118,7 @@ vk::UniquePipeline IrragridPipe::MakePipeline()
 		.setPColorBlendState(&colorBlending)
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(layout())
-		.setRenderPass(*Layouts->mainPassLayout.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->main.compatibleRenderPass)
 		.setSubpass(2u)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);
@@ -126,9 +126,11 @@ vk::UniquePipeline IrragridPipe::MakePipeline()
 	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
 }
 
-void IrragridPipe::Draw(
+void IrragridPipe::RecordCmd(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputDescSet) const
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
 	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout(), 0u,

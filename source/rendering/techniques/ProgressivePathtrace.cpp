@@ -23,13 +23,13 @@ namespace vl {
 
 ProgressivePathtrace::ProgressivePathtrace()
 {
-	pathtracedDescSet = Layouts->singleStorageImage.AllocDescriptorSet();
+	pathtracedDescSet = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(pathtracedDescSet);
 
-	inputOutputDescSet = Layouts->doubleStorageImage.AllocDescriptorSet();
+	inputOutputDescSet = DescriptorLayouts->_2storageImage.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(inputOutputDescSet);
 
-	viewerDescSet = Layouts->singleUboDescLayout.AllocDescriptorSet();
+	viewerDescSet = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(viewerDescSet);
 
 	auto uboSize = sizeof(UBO_viewer);
@@ -43,6 +43,8 @@ ProgressivePathtrace::ProgressivePathtrace()
 void ProgressivePathtrace::RecordCmd(
 	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces, PtMode mode)
 {
+	COMMAND_SCOPE_AUTO(cmdBuffer);
+
 	if (updateViewer.Access()) {
 		UBO_viewer data = {
 			sceneDesc.viewer.ubo.viewInv,
@@ -64,30 +66,22 @@ void ProgressivePathtrace::RecordCmd(
 
 	// CHECK: if there is no geometry this is validation error here
 
-	CMDSCOPE_BEGIN(cmdBuffer, "Pathtracer commands");
-
 	switch (mode) {
 		case PtMode::Naive:
-			StaticPipes::Get<NaivePathtracePipe>().Draw(cmdBuffer, sceneDesc, pathtracedDescSet, viewerDescSet, extent,
-				iteration, std::max(samples, 0), std::max(bounces, 0));
+			StaticPipes::Get<NaivePathtracePipe>().RecordCmd(cmdBuffer, extent, sceneDesc, pathtracedDescSet,
+				viewerDescSet, iteration, std::max(samples, 0), std::max(bounces, 0));
 			break;
 		case PtMode::Stochastic:
-			StaticPipes::Get<StochasticPathtracePipe>().Draw(cmdBuffer, sceneDesc, pathtracedDescSet, viewerDescSet,
-				extent, iteration, std::max(samples, 0), std::max(bounces, 0));
+			StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracedDescSet,
+				viewerDescSet, iteration, std::max(samples, 0), std::max(bounces, 0));
 			break;
 		case PtMode::Bdpt:
-			StaticPipes::Get<BdptPipe>().Draw(
-				cmdBuffer, sceneDesc, pathtracedDescSet, extent, iteration, std::max(bounces, 0));
+			StaticPipes::Get<BdptPipe>().RecordCmd(
+				cmdBuffer, sceneDesc, extent, pathtracedDescSet, iteration, std::max(bounces, 0));
 			break;
 	}
 
-	CMDSCOPE_END(cmdBuffer);
-
-	CMDSCOPE_BEGIN(cmdBuffer, "Compute Accumulation");
-
-	StaticPipes::Get<AccumulationPipe>().Draw(cmdBuffer, inputOutputDescSet, extent, iteration);
-
-	CMDSCOPE_END(cmdBuffer);
+	StaticPipes::Get<AccumulationPipe>().RecordCmd(cmdBuffer, extent, inputOutputDescSet, iteration);
 
 	pathtraced.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
