@@ -18,9 +18,9 @@ std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::
 
 	ss << "// Raygen: Auto Generated Shader Code";
 	ss << R"(
-#version 460
-#extension GL_GOOGLE_include_directive : enable
-)";
+	#version 460
+	#extension GL_GOOGLE_include_directive : enable
+	)";
 
 	ss << "\n#line 100001\n";
 	ss << inOutCode;

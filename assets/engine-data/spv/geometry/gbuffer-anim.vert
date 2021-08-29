@@ -1,19 +1,11 @@
-#version 460
-#extension GL_GOOGLE_include_directive : enable
-#include "global.glsl"
-
 #include "global-descset.glsl"
 
-// out
-
-layout(location=0) out Data
+layout(location = 0) out Data
 { 
 	vec2 uv;
 	mat3 TBN;
 	vec3 fragPos;
 };
-
-// in
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
@@ -21,8 +13,6 @@ layout(location = 2) in vec3 tangent;
 layout(location = 3) in vec2 textCoord;
 layout(location = 4) in ivec4 joint;
 layout(location = 5) in vec4 weight;
-
-// uniforms
 
 layout(push_constant) uniform PC {
 	mat4 modelMat;

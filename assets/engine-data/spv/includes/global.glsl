@@ -1,8 +1,6 @@
 #ifndef global_glsl
 #define global_glsl
 
-// TODO: auto include at every shader
-
 #ifndef PI
 #define PI 3.14159265358979323846f
 #endif
@@ -47,7 +45,6 @@
 #ifndef SPEC_THRESHOLD
 #define SPEC_THRESHOLD 0.001
 #endif
-
 
 #define ALPHA_MODE_OPAQUE 0
 #define ALPHA_MODE_MASK 1

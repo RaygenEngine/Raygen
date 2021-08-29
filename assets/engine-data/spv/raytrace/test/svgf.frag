@@ -1,14 +1,6 @@
-#version 460
-#extension GL_GOOGLE_include_directive: enable
-#include "global.glsl"
-
 #include "global-descset.glsl"
 
-// out
-
 layout(location = 0) out vec4 outColor;
-
-// in 
 
 layout(location = 0) in vec2 uv;
 
@@ -17,15 +9,13 @@ layout(set = 1, binding = 1, rgba32f) uniform image2D momentsBuffer;
 layout(set = 1, binding = 2, rgba32f) uniform image2D svgfInput;
 layout(set = 1, binding = 3, rgba32f) uniform image2D svgfOutput;
 
-// uniform
-
 layout(push_constant) uniform PC {
 	int iteration;
 	int totalIter;
 	int progressiveFeedbackIndex;
 };
 
-// TODO: test these (directly from svgf sample implementation)
+// WIP: test these (directly from svgf sample implementation)
 float normalDistanceCos(vec3 n1, vec3 n2, float power)
 {
 	//return pow(max(0.0, dot(n1, n2)), 128.0);

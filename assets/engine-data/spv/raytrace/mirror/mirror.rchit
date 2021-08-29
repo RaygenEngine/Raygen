@@ -1,19 +1,8 @@
-#version 460
-#extension GL_GOOGLE_include_directive : enable
-#extension GL_EXT_ray_tracing : require
-#extension GL_EXT_scalar_block_layout : enable
-#extension GL_EXT_nonuniform_qualifier : enable
-#extension GL_EXT_buffer_reference2 : enable
-#extension GL_EXT_ray_query: require
-// TODO:
-#define RAY
-#include "global.glsl"
-
 #include "global-descset.glsl"
+
 #include "pathtrace/gltf-surface.glsl"
 #include "radiance-rt.glsl"
 #include "radiance.glsl"
-
 
 struct hitPayload
 {

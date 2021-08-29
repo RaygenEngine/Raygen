@@ -1,5 +1,9 @@
 #ifndef pt_surface_glsl
 #define pt_surface_glsl
+
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_buffer_reference2 : enable
+
 // META: set=3 is used for geometry groups
 
 // TODO: this is a temporary boilerplate header for offset 0 rchit shaders because all of them currently use the GltfMaterial

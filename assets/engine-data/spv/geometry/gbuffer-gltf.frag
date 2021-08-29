@@ -1,9 +1,3 @@
-#version 460
-#extension GL_GOOGLE_include_directive: enable
-#include "global.glsl"
-
-// out
-
 layout (location = 0) out vec4 gSNormal;
 
 layout (location = 1) out vec4 gGNormal;
@@ -18,8 +12,6 @@ layout (location = 4) out vec4 gEmissive;
 layout (location = 5) out vec4 gVelocity;
 layout (location = 6) out vec4 gUVDrawIndex;
 
-// in
-
 layout(location=0) in Data
 { 
 	vec2 uv;
@@ -29,8 +21,6 @@ layout(location=0) in Data
 	vec4 prevClipPos;
 	float drawIndex;
 };
-
-// uniforms
 
 layout(set = 1, binding = 0) uniform UBO_Material { GltfMaterial mat; };
 layout(set = 1, binding = 1) uniform sampler2D baseColorSampler;
