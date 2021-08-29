@@ -72,7 +72,7 @@ void MomentsBufferCalculationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const 
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1); // WIP: fix for resolution < 32
+	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1); // TODO: see AccumulationPipe example
 }
 
 } // namespace vl
