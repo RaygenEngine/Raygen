@@ -6,8 +6,7 @@ struct GpuGeometryGroup;
 
 struct BottomLevelAs : public RAccelerationStructure {
 
-	// TODO:
-	bool isMask{ false };
+	bool doubleSided{ false };
 
 	BottomLevelAs() = default;
 	BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexBuffer, const RBuffer& combinedIndexBuffer,

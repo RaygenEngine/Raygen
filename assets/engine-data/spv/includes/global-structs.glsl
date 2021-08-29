@@ -42,9 +42,10 @@ struct GltfMaterial {
 	float occlusionStrength;
 	float baseReflectivity;
 
-	// alpha mask
 	float alphaCutoff;
-	int mask;
+	int alphaMode;
+
+	bool doubleSided;
 };
 
 struct Dirlight {

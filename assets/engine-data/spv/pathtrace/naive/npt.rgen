@@ -52,7 +52,7 @@ void TraceRay() {
 	// trace ray
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFF,           // cullMask - nothing
+				0xFF,           // cullMask - none
 				0,              // sbtRecordOffset
 				0,              // sbtRecordStride
 				0,              // missIndex

@@ -87,6 +87,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 	inst->archetype = gltfArchetypeHandle;
 	inst->descriptorSet.SwapLayout({}, gltfArchetype->descriptorSetLayout);
 
+
 	auto setData = [&](std::string_view prop, const auto& value) {
 		if (!gltfArchetype->descriptorSetLayout.uboClass.SetPropertyValueByName(
 				inst->descriptorSet.uboData, prop, value)) {
@@ -113,10 +114,10 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 	setData("baseReflectivity", 0.04f);
 
 	// alpha
-	setData("mask", int{ GetAlphaMode(data.alphaMode) });
 	setData("alphaCutoff", static_cast<float>(data.alphaCutoff));
+	setData("alphaMode", MaterialAlphaMode{ GetAlphaMode(data.alphaMode) });
 
-	// CHECK: double-sidedness This could be a material archetype boolean value in the future, currently unsupported
+	setData("doubleSided", data.doubleSided);
 
 	// Load Textures into the material
 	{

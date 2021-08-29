@@ -1,8 +1,9 @@
 #include "MaterialArchetype.h"
 
 #include "assets/PodEditor.h"
-#include "assets/util/SpirvCompiler.h"
+#include "assets/shared/MaterialShared.h"
 #include "assets/util/shadergen/ShaderGen.h"
+#include "assets/util/SpirvCompiler.h"
 #include "reflection/ReflectionTools.h"
 
 namespace {
@@ -57,7 +58,8 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 	cl.AddProperty<float>("occlusionStrength");
 	cl.AddProperty<float>("baseReflectivity");
 	cl.AddProperty<float>("alphaCutoff");
-	cl.AddProperty<int>("mask");
+	cl.AddProperty<MaterialAlphaMode>("alphaMode");
+	cl.AddProperty<bool>("doubleSided");
 }
 
 void MaterialArchetype::MakeDefaultInto(MaterialArchetype* mat)

@@ -27,6 +27,8 @@ inline glm::mat4 standardProjection()
 
 } // namespace
 
+// WIP: fix probes
+
 // TODO: this was made in a hurry, many potential gpu mem leaks
 namespace vl {
 void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)

@@ -1,8 +1,8 @@
 #pragma once
 
-enum class MaterialAlphaMode
+enum class MaterialAlphaMode : int32
 {
-	Opaque,
-	Mask,
-	Blend
+	Opaque, // Opaque surface
+	Mask,   // Opaque surface with mask
+	Blend   // transparent surface
 };

@@ -69,11 +69,12 @@ vk::UniquePipeline makePostProcPipeline(const std::vector<vk::PipelineShaderStag
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	vk::DynamicState dynamicStates[] = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates = {
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo
-		.setDynamicStateCount(2u) //
-		.setPDynamicStates(dynamicStates);
+	dynamicStateInfo.setDynamicStates(dynamicStates);
 
 	// depth and stencil state
 	vk::PipelineDepthStencilStateCreateInfo depthStencil{};

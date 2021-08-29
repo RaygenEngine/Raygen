@@ -42,7 +42,6 @@ namespace {
 		std::array dynamicStates{
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor,
-			// WIP: hack, this should be created from the archetype
 			vk::DynamicState::eCullModeEXT,
 		};
 		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
@@ -252,23 +251,9 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 			auto& mat = gg.material.Lock();
 			auto& arch = mat.archetype.Lock();
 
-			{
-				// WIP: hack - this is part of every archetype
-				PodHandle<MaterialArchetype> pod{ arch.podUid };
-				auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
-				auto prp = cl.GetPropertyByName(std::string("mask"));
-				if (prp) {
-					PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
-					auto mati = pod2.Lock();
-					auto mask = mati->descriptorSet.uboData.end() - 4;
-					if (*mask == 1 || *mask == 2) {
-						cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eNone);
-					}
-					else {
-						cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eBack);
-					}
-				}
-			}
+
+			mat.doubleSided ? cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eNone)
+							: cmdBuffer.setCullModeEXT(vk::CullModeFlagBits::eBack);
 
 			if (arch.isUnlit) [[unlikely]] {
 				continue;

@@ -18,6 +18,7 @@ GpuMaterialInstance::GpuMaterialInstance(PodHandle<MaterialInstance> podHandle)
 void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
+
 	ClearDependencies();
 	AddDependency(data->archetype);
 
@@ -37,6 +38,13 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 		descSet = gpuArch.descLayout.AllocDescriptorSet();
 
 
+		auto& cl = data->archetype.Lock()->descriptorSetLayout.uboClass;
+		auto prp = cl.GetPropertyByName(std::string("doubleSided"));
+
+		CLOG_ABORT(!prp, "All custom material archetypes must have a doubleSided property for now TODO: DOC:");
+
+		doubleSided = prp->GetRef<bool>((void*)matInst->descriptorSet.uboData.data());
+
 		size_t uboSize = matInst->descriptorSet.uboData.size();
 		if (gpuArch.descLayout.HasUbo() && uboSize > 0) {
 
@@ -44,6 +52,7 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 				uboBuf = RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 			}
+
 			uboBuf.UploadData(matInst->descriptorSet.uboData);
 
 			rvk::writeDescriptorBuffer(descSet, 0u, uboBuf.handle(), matArch->descriptorSetLayout.SizeOfUbo());
@@ -84,9 +93,10 @@ void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
 		float occlusionStrength;
 		float baseReflectivity;
 
-		// alpha mask
 		float alphaCutoff;
-		int mask;
+		int alphaMode;
+
+		bool doubleSided;
 
 		uint32 baseColor;
 		uint32 metalnessRough;

@@ -51,7 +51,10 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
@@ -135,7 +138,10 @@ void PtBase_SinglePipeline::Utl_CreatePipelineLightPass(
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 
@@ -218,7 +224,10 @@ void PtBase_SinglePipeline::Utl_CreatePipelineCustomPass(GpuAsset<Shader>& shade
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	std::array dynamicStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates{
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 

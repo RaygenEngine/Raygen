@@ -113,7 +113,10 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 		.setAlphaToOneEnable(VK_FALSE);
 
 	// dynamic states
-	std::array dynamicStates = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	std::array dynamicStates = {
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+	};
 	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
 	dynamicStateInfo.setDynamicStates(dynamicStates);
 

@@ -151,4 +151,3 @@ ReprojectionData GetReprojection(vec2 uv) {
 
 	return ReprojSample(posPrev, centerUvDrawIndex, expectedDepth);
 }
-

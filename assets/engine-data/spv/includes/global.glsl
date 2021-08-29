@@ -49,6 +49,10 @@
 #endif
 
 
+#define ALPHA_MODE_OPAQUE 0
+#define ALPHA_MODE_MASK 1
+#define ALPHA_MODE_BLEND 2
+
 float saturate(float v)
 {
 	return clamp(v, 0.0, 1.0);
