@@ -18,6 +18,9 @@ struct GpuMaterialInstance : public GpuAssetTemplate<MaterialInstance> {
 
 	void Update(const AssetUpdateInfo& info) override final;
 
+	// CHECK: currently the cull mode is dynamic state
+	bool doubleSided{ false };
+
 private:
 	void UpdateRtMaterial(const AssetUpdateInfo& info);
 };

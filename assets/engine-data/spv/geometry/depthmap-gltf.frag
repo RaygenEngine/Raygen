@@ -18,8 +18,8 @@ void main() {
 
 	float opacity = sampledBaseColor.a * mat.baseColorFactor.a;
 
-	// mask mode and cutoff
-	if(mat.mask == 1 && opacity < mat.alphaCutoff)
+	if(mat.alphaMode == ALPHA_MODE_MASK && opacity <= mat.alphaCutoff) {
 		discard;
+	}
 }                                                                                        
 

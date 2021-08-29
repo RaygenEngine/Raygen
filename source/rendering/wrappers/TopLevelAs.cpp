@@ -100,8 +100,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 			inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
 			inst.materialId = 0;
 			inst.cullMask = 0x01;
-			inst.flags = !gg.blas.isMask ? vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise
-										 : vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
+			inst.flags = !gg.blas.doubleSided ? vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise
+											  : vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
 
 			AddAsInstance(inst);
 

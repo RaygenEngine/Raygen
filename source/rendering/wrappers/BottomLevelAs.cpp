@@ -40,21 +40,16 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 		.setFlags(vk::GeometryFlagBitsKHR::eOpaque)
 		.geometry.setTriangles(triangles);
 
-	{
-		// TODO: hack - this is part of every archetype
-		auto& arch = gg.material.Lock().archetype.Lock();
-		PodHandle<MaterialArchetype> pod{ arch.podUid };
-		auto& cl = pod.Lock()->descriptorSetLayout.uboClass;
-		auto prp = cl.GetPropertyByName(std::string("mask"));
-		if (prp) {
-			auto& mat = gg.material.Lock();
-			PodHandle<MaterialInstance> pod2{ gg.material.Lock().podUid };
-			auto mati = pod2.Lock();
-			auto mask = mati->descriptorSet.uboData.end() - 4;
-			if (*mask == 1 || *mask == 2) {
-				asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
-				isMask = true;
-			}
+	PodHandle<MaterialInstance> matInst{ gg.material.Lock().podUid };
+	PodHandle<MaterialArchetype> matArch{ gg.material.Lock().archetype.Lock().podUid };
+	auto& cl = matArch.Lock()->descriptorSetLayout.uboClass;
+	auto prp = cl.GetPropertyByName(std::string("doubleSided")); // DOC:
+
+	if (prp) {
+		doubleSided = prp->GetRef<bool>((void*)matInst.Lock()->descriptorSet.uboData.data());
+
+		if (doubleSided) {
+			asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
 		}
 	}
 

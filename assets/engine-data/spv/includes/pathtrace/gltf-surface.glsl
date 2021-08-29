@@ -41,9 +41,10 @@ struct GltfMat {
 	float occlusionStrength;
 	float baseReflectivity;
 
-	// alpha mask
 	float alphaCutoff;
-	int mask;
+	int alphaMode;
+
+	bool doubleSided;
 
 	samplerRef baseColor;
 	samplerRef metalnessRough;
@@ -121,8 +122,8 @@ bool surfaceIgnoreIntersectionTest()
 	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor;
 	
 	float opacity = sampledBaseColor.a;
-	// mask mode and cutoff
-	return mat.mask == 1 && opacity < mat.alphaCutoff;
+
+	return mat.alphaMode == ALPHA_MODE_MASK && opacity <= mat.alphaCutoff;
 }
 
 Surface surfaceFromGeometryGroup() 
@@ -190,7 +191,7 @@ Surface surfaceFromGeometryGroup()
 
 	// Material stuff
 	surface.albedo = mix(baseColor, vec3(0.0), metalness);
-    surface.opacity = mat.mask != 1 ? sampledBaseColor.a : 1.0f; // if mask is discard mode, ignore opacity
+    surface.opacity = mat.alphaMode == ALPHA_MODE_BLEND ? sampledBaseColor.a : 1.0f; // if alphaMode is OPAQUE, ignore opacity
 
 	surface.f0 = mix(vec3(mat.baseReflectivity), baseColor, metalness);
 	surface.a = roughness * roughness;

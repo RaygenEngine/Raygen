@@ -10,9 +10,6 @@ using namespace vl;
 GpuMesh::GpuMesh(PodHandle<Mesh> podHandle)
 	: GpuAssetTemplate(podHandle)
 {
-	auto data = podHandle.Lock();
-
-	UpdateGeometry({});
 	Update({});
 }
 
@@ -21,6 +18,8 @@ GpuMesh::GpuMesh(PodHandle<Mesh> podHandle)
 void GpuMesh::Update(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
+
+	ClearDependencies();
 
 	for (int32 i = 0; auto& gg : geometryGroups) {
 		gg.material = GpuAssetManager->GetGpuHandle(data->materials[i]);
@@ -32,9 +31,12 @@ void GpuMesh::Update(const AssetUpdateInfo& info)
 			return;
 		}
 	}
+
+	// TODO: Binary info.HasFlag(BuildGeometry)
+	UpdateGeometry({});
 }
 
-void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
+void GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 {
 	auto data = podHandle.Lock();
 
@@ -143,6 +145,8 @@ void vl::GpuMesh::UpdateGeometry(const AssetUpdateInfo& info)
 	}
 
 	for (auto& vgg : geometryGroups) {
+		AddDependency(vgg.material);
+
 		vgg.blas = BottomLevelAs(sizeof(Vertex), combinedVertexBuffer, combinedIndexBuffer, vgg,
 			vk::BuildAccelerationStructureFlagBitsKHR::ePreferFastTrace);
 	}
