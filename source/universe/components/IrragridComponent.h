@@ -22,8 +22,8 @@ struct CIrragrid : CSceneBase {
 
 		REFLECT_VAR(irrResolution).Clamp(1.f);
 
-		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 		REFLECT_VAR(hideBillboards, PropertyFlags::Transient);
+		REFLECT_VAR(notifyBuild, PropertyFlags::Transient);
 	}
 
 	int32 width{ 3 };

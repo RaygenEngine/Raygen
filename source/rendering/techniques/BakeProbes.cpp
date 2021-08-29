@@ -25,12 +25,27 @@ inline glm::mat4 standardProjection()
 	return projInverse;
 }
 
+inline std::array<glm::mat4, 6> cubemapViews()
+{
+	// clang-format off
+	return {
+		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // right
+		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // left
+		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))), // up
+		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))), // down
+		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0))), // front
+		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0))), // back
+	};
+	// clang-format on
+}
+
 } // namespace
 
-// WIP: fix probes
-
-// TODO: this was made in a hurry, many potential gpu mem leaks
 namespace vl {
+
+static auto __projInv = standardProjection();
+static auto __viewInvs = cubemapViews();
+
 void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 {
 	for (auto rp : sceneDesc->Get<SceneReflprobe>()) {
@@ -64,6 +79,11 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 				vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eComputeShader,
 				vk::PipelineStageFlagBits::eFragmentShader);
 		}
+	}
+
+	static vk::DescriptorSet environmentCubemapSamplerDescSet;
+	if (!environmentCubemapSamplerDescSet) {
+		environmentCubemapSamplerDescSet = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
 	}
 
 	for (auto ig : sceneDesc->Get<SceneIrragrid>()) {
@@ -107,10 +127,6 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 						i += y * ig->ubo.width;
 						i += z * ig->ubo.width * ig->ubo.height;
 
-						vk::DescriptorSet environmentCubemapSamplerDescSet;
-						environmentCubemapSamplerDescSet
-							= DescriptorLayouts->_1imageSampler.AllocDescriptorSet(); // TODO: doesn't release
-
 						auto cubemapView = ig->environmentCubemaps.GetCubemapView(i);
 
 						rvk::writeDescriptorImages(environmentCubemapSamplerDescSet, 0u, { *cubemapView });
@@ -132,72 +148,55 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::vector<vk::UniqueImageView>& faceViews,
 	const glm::vec3& probePosition, int32 ptSamples, int32 ptBounces, float offset, const vk::Extent3D& extent)
 {
-	struct UBO_viewer {
-		glm::mat4 viewInv;
-		glm::mat4 projInv;
-		float offset;
-	};
-
-	// clang-format off
-
-	glm::mat4 viewInverses[6] = {
-		glm::inverse(glm::lookAt(probePosition, probePosition + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // right
-		glm::inverse(glm::lookAt(probePosition, probePosition + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // left
-		glm::inverse(glm::lookAt(probePosition, probePosition + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))), // up
-		glm::inverse(glm::lookAt(probePosition, probePosition + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))), // down
-		glm::inverse(glm::lookAt(probePosition, probePosition + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0))), // front
-		glm::inverse(glm::lookAt(probePosition, probePosition + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0))), // back
-	};
-
-	// clang-format on
+	static vk::DescriptorSet faceTempDescSet[6];
+	static vk::DescriptorSet faceTraceDescSet[6];
+	static vk::DescriptorSet viewerDescSet[6];
+	if (!faceTempDescSet[0]) {
+		for (auto i = 0; i < 6; ++i) {
+			faceTempDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
+			faceTraceDescSet[i] = DescriptorLayouts->_2storageImage.AllocDescriptorSet();
+			viewerDescSet[i] = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
+		}
+	}
 
 	// TODO: estimate time to complete (roughly)
 	// command buffers shouldn't be divided per face
 	auto iterations = 1 + ptSamples / 128;
 	auto samplesPerIteration = ptSamples / iterations; // samples per iteration must be equal each iteration
 
-	RBuffer viewer[6];
-	RImage2D faceTempImage[6];
-	vk::DescriptorSet faceTempDescSet[6];
-	vk::DescriptorSet faceTraceDescSet[6];
-	vk::DescriptorSet viewerDescSet[6]; // TODO: those leak
 	for (auto i = 0; i < 6; ++i) {
 
-		faceTempImage[i] = RImage2D("Face temp image " + i,
+		auto faceTempImage = RImage2D("Face temp image " + i,
 			vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
 			vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-		faceTempDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(faceTempDescSet[i], 0u,
 			{
-				faceTempImage[i].view(), // pathtrace target
+				faceTempImage.view(), // pathtrace target
 			},
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-		faceTraceDescSet[i] = DescriptorLayouts->_2storageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(faceTraceDescSet[i], 0u,
 			{
-				faceTempImage[i].view(), // input
-				*faceViews[i],           // output
+				faceTempImage.view(), // input
+				*faceViews[i],        // output
 			},
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 
-		viewerDescSet[i] = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet(); // TODO: doesn't release
 		auto uboSize = sizeof(UBO_viewer);
-		viewer[i] = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
+		auto viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
 
-		rvk::writeDescriptorBuffer(viewerDescSet[i], 0u, viewer[i].handle());
+		rvk::writeDescriptorBuffer(viewerDescSet[i], 0u, viewer.handle());
 
 		UBO_viewer data = {
-			viewInverses[i],
-			standardProjection(),
+			__viewInvs[i],
+			__projInv,
 			offset,
 		};
 
-		viewer[i].UploadData(&data, uboSize);
-
+		viewer.UploadData(&data, uboSize);
 
 		for (auto iter = 0; iter < iterations; ++iter) {
 
@@ -206,8 +205,7 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 			StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, faceTempDescSet[i],
 				viewerDescSet[i], iter, samplesPerIteration, ptBounces);
 
-			StaticPipes::Get<AccumulationPipe>().RecordCmd(
-				cmdBuffer, extent, faceTraceDescSet[i], iter); // TODO: debug and deal with leaks
+			StaticPipes::Get<AccumulationPipe>().RecordCmd(cmdBuffer, extent, faceTraceDescSet[i], iter);
 		}
 	}
 }
@@ -215,73 +213,56 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 void BakeProbes::BakeIrradiance(const std::vector<vk::UniqueImageView>& faceViews,
 	vk::DescriptorSet environmentSamplerDescSet, const vk::Extent3D& extent)
 {
-	vk::DescriptorSet faceDescSet[6];
-	vk::DescriptorSet viewerDescSet[6];
-
-	// clang-format off
-
-	glm::mat4 viewInverses[6] = {
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // right
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // left
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))), // up
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))), // down
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0))), // front
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0))), // back
-	};
-	// clang-format on
+	static vk::DescriptorSet faceDescSet[6];
+	if (!faceDescSet[0]) {
+		for (auto i = 0; i < 6; ++i) {
+			faceDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
+		}
+	}
 
 	ScopedOneTimeSubmitCmdBuffer<Compute> cmdBuffer{};
 
 	for (auto i = 0; i < 6; ++i) {
-
-		faceDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet(); // TODO: doesn't release
 		rvk::writeDescriptorImages(
 			faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-
 		StaticPipes::Get<CubemapConvolutionPipe>().RecordCmd(
-			cmdBuffer, extent, faceDescSet[i], environmentSamplerDescSet, viewInverses[i], standardProjection());
+			cmdBuffer, extent, faceDescSet[i], environmentSamplerDescSet, __viewInvs[i], __projInv);
 	}
 }
 
 void BakeProbes::BakePrefiltered(const SceneReflprobe& rp)
 {
-	auto projInv = standardProjection();
+	static vk::DescriptorSet faceDescSet[6];
+	if (!faceDescSet[0]) {
+		for (auto i = 0; i < 6; ++i) {
+			faceDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
+		}
+	}
 
-	// clang-format off
-	glm::mat4 viewInverses[6] = {
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // right
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // left
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))), // up
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))), // down
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0))), // front
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0))), // back
-	};
-	// clang-format on
+	auto tmp = __projInv[3][3];
 
 	for (auto mip = 0; mip < rp.prefiltered.mipLevels; ++mip) {
 		// get mip's faces
 		auto faceViews = rp.prefiltered.GetFaceViews(mip);
 
-		vk::DescriptorSet faceDescSet[6];
-
 		uint32 mipResolution = static_cast<uint32>(rp.prefiltered.extent.width * std::pow(0.5, mip));
 
 		ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
-		// pigy bag roughness inside this matrix to avoid descriptor sets
-		projInv[3][3] = float(mip) / float(rp.ubo.lodCount - 1);
+		// piggy bag roughness inside this matrix to avoid descriptor sets
+		__projInv[3][3] = float(mip) / float(rp.ubo.lodCount - 1);
 
 		for (auto i = 0; i < 6; ++i) {
-			faceDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet(); // TODO: doesn't release
 			rvk::writeDescriptorImages(
 				faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-
 			StaticPipes::Get<CubemapPrefilterPipe>().RecordCmd(cmdBuffer, { mipResolution, mipResolution, 1 },
-				faceDescSet[i], rp.environmentSamplerDescSet, viewInverses[i], projInv);
+				faceDescSet[i], rp.environmentSamplerDescSet, __viewInvs[i], __projInv);
 		}
 	}
+
+	__projInv[3][3] = tmp;
 }
 
 } // namespace vl
