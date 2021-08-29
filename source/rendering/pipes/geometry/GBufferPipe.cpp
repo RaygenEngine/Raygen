@@ -18,7 +18,7 @@ struct PushConstant {
 	float drawIndex;
 };
 
-// WIP:
+// TODO:
 // static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
