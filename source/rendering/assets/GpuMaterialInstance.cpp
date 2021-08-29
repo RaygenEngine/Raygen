@@ -78,7 +78,7 @@ void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
 		// factors
 		glm::vec4 baseColorFactor;
 		glm::vec4 emissiveFactor;
-		float metallicFactor;
+		float metalnessFactor;
 		float roughnessFactor;
 		float normalScale;
 		float occlusionStrength;
@@ -89,7 +89,7 @@ void GpuMaterialInstance::UpdateRtMaterial(const AssetUpdateInfo& info)
 		int mask;
 
 		uint32 baseColor;
-		uint32 metallicRough;
+		uint32 metalnessRough;
 		uint32 occlusion;
 		uint32 normal;
 		uint32 emissive;

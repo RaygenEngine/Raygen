@@ -138,7 +138,7 @@ void main() {
     gNormal = vec4(normalize(TBN * normal.rgb), 1.f);
     gAlbedoOpacity = vec4(0.3f, 0.3f, 0.3f, 1.f);
 	
-	// r: metallic, g: roughness, b: reflectance, a: occlusion strength
+	// r: metalness, g: roughness, b: reflectance, a: occlusion strength
 	gSurface = vec4(0.f, 0.5f, 0.5f, 0.f);
 	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
 }                                                                                        

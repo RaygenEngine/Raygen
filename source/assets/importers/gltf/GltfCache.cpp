@@ -99,7 +99,7 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 	// factors
 	auto bFactor = data.pbrMetallicRoughness.baseColorFactor;
 	setData("baseColorFactor", glm::vec4{ bFactor[0], bFactor[1], bFactor[2], bFactor[3] });
-	setData("metallicFactor", static_cast<float>(data.pbrMetallicRoughness.metallicFactor));
+	setData("metalnessFactor", static_cast<float>(data.pbrMetallicRoughness.metallicFactor));
 	setData("roughnessFactor", static_cast<float>(data.pbrMetallicRoughness.roughnessFactor));
 
 	auto eFactor = data.emissiveFactor;
@@ -147,8 +147,8 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 		auto& baseColorTextureInfo = data.pbrMetallicRoughness.baseColorTexture;
 		fillNextTexture(baseColorTextureInfo, true);
 
-		auto& metallicRougnessTextureInfo = data.pbrMetallicRoughness.metallicRoughnessTexture;
-		fillNextTexture(metallicRougnessTextureInfo);
+		auto& metalnessRougnessTextureInfo = data.pbrMetallicRoughness.metallicRoughnessTexture;
+		fillNextTexture(metalnessRougnessTextureInfo);
 
 		auto& occlusionTextureInfo = data.occlusionTexture;
 		fillNextTexture(occlusionTextureInfo);
@@ -165,8 +165,8 @@ void GltfCache::LoadMaterial(MaterialInstance* inst, size_t index)
 			setData("baseColorFactor", glm::vec4(1.f, 0.f, 1.f, 1.f));
 		}
 
-		if (metallicRougnessTextureInfo.index == -1) {
-			setData("metallicFactor", 0.f);
+		if (metalnessRougnessTextureInfo.index == -1) {
+			setData("metalnessFactor", 0.f);
 			setData("roughnessFactor", 0.45f);
 		}
 	}

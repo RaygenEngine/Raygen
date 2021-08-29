@@ -43,7 +43,7 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 		"Failed to compile gltf archetype shader code.");
 
 	mat->descriptorSetLayout.samplers2d
-		= { "baseColorSampler", "metallicRoughnessSampler", "occlusionSampler", "normalSampler", "emissiveSampler" };
+		= { "baseColorSampler", "metalnessRoughnessSampler", "occlusionSampler", "normalSampler", "emissiveSampler" };
 	mat->descriptorSetLayout.uboName = "material";
 
 
@@ -51,7 +51,7 @@ void MaterialArchetype::MakeGltfArchetypeInto(MaterialArchetype* mat)
 
 	cl.AddProperty<glm::vec4>("baseColorFactor", PropertyFlags::Color);
 	cl.AddProperty<glm::vec4>("emissiveFactor", PropertyFlags::Color);
-	cl.AddProperty<float>("metallicFactor");
+	cl.AddProperty<float>("metalnessFactor");
 	cl.AddProperty<float>("roughnessFactor");
 	cl.AddProperty<float>("normalScale");
 	cl.AddProperty<float>("occlusionStrength");

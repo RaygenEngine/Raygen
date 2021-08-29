@@ -44,7 +44,7 @@ layout (location = 0) out vec4 gSNormal;
 layout (location = 1) out vec4 gGNormal;
 // rgb: albedo, a: opacity
 layout(location = 2) out vec4 gAlbedoOpacity;
-// r: metallic, g: roughness, b: reflectance, a: occlusion strength
+// r: metalness, g: roughness, b: reflectance, a: occlusion strength
 layout(location = 3) out vec4 gSurface;
 layout(location = 4) out vec4 gEmissive;
 
