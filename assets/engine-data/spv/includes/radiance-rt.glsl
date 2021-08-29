@@ -1,6 +1,8 @@
 #ifndef radiance_rt_glsl
 #define radiance_rt_glsl
 
+#extension GL_EXT_ray_query : require
+
 #include "intersection.glsl"
 #include "surface.glsl"
 
@@ -51,7 +53,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 	return Li * explicitBRDFcosTheta(surface);
 }
 
-// TODO:
+// SMATH:
 //vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 //{
 //	if(surface.a < SPEC_THRESHOLD) {
@@ -67,7 +69,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 //	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
 //		return vec3(0);
 //		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
-//		vec3 pointOnPlane = ql.center + perp_r_n * INF; // TODO: something big
+//		vec3 pointOnPlane = ql.center + perp_r_n * INF; // SMATH: something big
 //		L = normalize(pointOnPlane - surface.position);
 //	}
 //
@@ -103,7 +105,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 
 vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface)
 {
-	//TODO:
+	//SMATH:
 	vec3 L = normalize(ql.center - surface.position);
 
 	float cosTheta_o = dot(ql.normal, -L);

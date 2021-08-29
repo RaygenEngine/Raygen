@@ -1,21 +1,12 @@
-#version 460
-#extension GL_GOOGLE_include_directive : enable
 #extension GL_EXT_ray_query: require
-#include "global.glsl"
 
 #include "global-descset.glsl"
 #include "intersection.glsl"
 #include "surface.glsl"
 
-// out
-
 layout(location = 0) out vec4 outColor;
 
-// in
-
 layout(location = 0) in vec2 uv;
-
-// uniform
 
 layout(push_constant) uniform PC
 {
@@ -66,7 +57,7 @@ vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
 		//return vec3(0);
 		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
-		vec3 pointOnPlane = ql.center + perp_r_n * INF; // TODO: something big
+		vec3 pointOnPlane = ql.center + perp_r_n * INF; // SMATH: something big
 		L = normalize(pointOnPlane - surface.position);
 	}
 

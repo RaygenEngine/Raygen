@@ -1,8 +1,4 @@
-#version 460
-#extension GL_GOOGLE_include_directive: enable
-#extension GL_EXT_ray_tracing : require
 #extension GL_EXT_ray_query: require
-#include "global.glsl"
 
 #include "global-descset.glsl"
 
@@ -11,15 +7,9 @@
 #include "sky.glsl"
 #include "surface.glsl"
 
-// out
-
 layout(location = 0) out vec4 outColor;
 
-// in 
-
 layout(location = 0) in vec2 uv;
-
-// uniform
 
 layout(push_constant) uniform PC {
 	float bias;

@@ -1,7 +1,3 @@
-#version 460
-#extension GL_GOOGLE_include_directive : enable
-
-#include "global.glsl"
 #include "onb.glsl"
 #include "sampling.glsl"
 #include "random.glsl"

@@ -172,7 +172,7 @@ vec3 Irragrid_EstimateDirect(Irragrid grid, samplerCubeArray irradianceSamplers,
 	
 	if(any(greaterThan(uvw, 1 + delim)) || 
 	   any(lessThan(uvw, -delim))) {
-		return vec3(0); // TODO: matrix based volume
+		return vec3(0); // PERF: matrix based volume
 	}
 	
 	float attenfactor = 1.f;

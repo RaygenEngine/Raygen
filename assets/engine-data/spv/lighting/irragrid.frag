@@ -1,21 +1,11 @@
-#version 460 
-#extension GL_GOOGLE_include_directive: enable
-#include "global.glsl"
-
 #include "global-descset.glsl"
 
 #include "radiance.glsl"
 #include "surface.glsl"
 
-// out
-
 layout(location = 0) out vec4 outColor;
 
-// in 
-
 layout (location = 0) in vec2 uv;
-
-// uniform
 
 layout (input_attachment_index = 0, set = 1, binding = 0) uniform subpassInput g_DepthInput;
 layout (input_attachment_index = 1, set = 1, binding = 1) uniform subpassInput g_SNormalInput;
@@ -27,8 +17,6 @@ layout (input_attachment_index = 6, set = 1, binding = 6) uniform subpassInput g
 layout (input_attachment_index = 7, set = 1, binding = 7) uniform subpassInput g_UVDrawIndexInput;
 layout(set = 2, binding = 0) uniform UBO_Irragrid { Irragrid grid; };
 layout(set = 3, binding = 0) uniform samplerCubeArray irradianceSamplers;
-
-
 
 void main( ) {
 

@@ -201,8 +201,25 @@ std::vector<uint32> CompileImplStaticLink(
 
 
 std::vector<uint32> CompileImplSelect(
-	const std::string& code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
+	const std::string& _code, const std::string& shadername, TextCompilerErrors* outError, EShLanguage stage)
 {
+	std::string code = "#version 460\n#extension GL_GOOGLE_include_directive : enable\n";
+
+	switch (stage) {
+
+		case EShLangRayGen:
+		case EShLangIntersect:
+		case EShLangAnyHit:
+		case EShLangClosestHit:
+		case EShLangMiss: code += "#extension GL_EXT_ray_tracing : require\n#define RAY\n";
+
+		case EShLangVertex:
+		case EShLangTessControl:
+		case EShLangTessEvaluation:
+		case EShLangGeometry:
+		case EShLangFragment:
+		case EShLangCompute: code += "#include \"global.glsl\"\n" + _code;
+	};
 
 	if (lib.HasLoadedLibrary()) {
 		return CompileImplDLL(code, shadername, outError, stage);
