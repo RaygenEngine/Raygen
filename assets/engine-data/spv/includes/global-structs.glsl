@@ -36,7 +36,7 @@ struct GltfMaterial {
 	// factors
     vec4 baseColorFactor;
 	vec4 emissiveFactor;
-	float metallicFactor;
+	float metalnessFactor;
 	float roughnessFactor;
 	float normalScale;
 	float occlusionStrength;

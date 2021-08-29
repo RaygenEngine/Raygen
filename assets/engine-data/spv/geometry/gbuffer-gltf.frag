@@ -34,7 +34,7 @@ layout(location=0) in Data
 
 layout(set = 1, binding = 0) uniform UBO_Material { GltfMaterial mat; };
 layout(set = 1, binding = 1) uniform sampler2D baseColorSampler;
-layout(set = 1, binding = 2) uniform sampler2D metallicRoughnessSampler;
+layout(set = 1, binding = 2) uniform sampler2D metalnessRoughnessSampler;
 layout(set = 1, binding = 3) uniform sampler2D occlusionSampler;
 layout(set = 1, binding = 4) uniform sampler2D normalSampler;
 layout(set = 1, binding = 5) uniform sampler2D emissiveSampler;
@@ -48,15 +48,15 @@ void main() {
 	if(mat.mask == 1 && opacity < mat.alphaCutoff)
 		discard;
 	
-	vec4 sampledMetallicRoughness = texture(metallicRoughnessSampler, uv); 
+	vec4 sampledMetalnessRoughness = texture(metalnessRoughnessSampler, uv); 
 	vec4 sampledEmissive = texture(emissiveSampler, uv);
 	vec4 sampledNormal = texture(normalSampler, uv);
 	vec4 sampledOcclusion = texture(occlusionSampler, uv);
 	
 	// final material values
 	vec3 baseColor = sampledBaseColor.rgb * mat.baseColorFactor.rgb;
-	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
-	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
+	float metalness = sampledMetalnessRoughness.b * mat.metalnessFactor;
+	float roughness = sampledMetalnessRoughness.g * mat.roughnessFactor;
 	vec3 emissive = sampledEmissive.rgb * mat.emissiveFactor.rgb;
 	float occlusion =  1.0 - mat.occlusionStrength * (1.0 - sampledOcclusion.r);
 	vec3 normal = normalize((sampledNormal.rgb* 2.0 - 1.0) * vec3(mat.normalScale, mat.normalScale, 1.0));
@@ -68,12 +68,12 @@ void main() {
 	// geometric normal
 	gGNormal = vec4(TBN[2], 1.0);
 	
-	// albedo = (1.0 - metallic) * baseColor;
-	gAlbedo = vec4((1.0 - metallic) * baseColor, opacity);
+	// albedo = (1.0 - metalness) * baseColor;
+	gAlbedo = vec4((1.0 - metalness) * baseColor, opacity);
 
 	// CHECK: reflectance
-	// f0 = 0.16 * reflectance * reflectance * (1.0 - metallic) + albedo * metallic;
-	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metallic)) + baseColor * metallic, roughness * roughness);
+	// f0 = 0.16 * reflectance * reflectance * (1.0 - metalness) + albedo * metalness;
+	gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metalness)) + baseColor * metalness, roughness * roughness);
 	
 	gEmissive = vec4(emissive, occlusion);
 	

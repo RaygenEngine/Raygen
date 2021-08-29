@@ -35,7 +35,7 @@ struct GltfMat {
 	// factors
 	vec4 baseColorFactor;
 	vec4 emissiveFactor;
-	float metallicFactor;
+	float metalnessFactor;
 	float roughnessFactor;
 	float normalScale;
 	float occlusionStrength;
@@ -46,7 +46,7 @@ struct GltfMat {
 	int mask;
 
 	samplerRef baseColor;
-	samplerRef metallicRough;
+	samplerRef metalnessRough;
 	samplerRef occlusion;
 	samplerRef normal;
 	samplerRef emissive;
@@ -170,7 +170,7 @@ Surface surfaceFromGeometryGroup()
 	// sample material textures
 	vec4 sampledBaseColor = texture(mat.baseColor, uv) * mat.baseColorFactor; // 
 	vec4 sampledNormal = texture(mat.normal, uv) * mat.normalScale; // 
-	vec4 sampledMetallicRoughness = texture(mat.metallicRough, uv); //
+	vec4 sampledMetalnessRoughness = texture(mat.metalnessRough, uv); //
 	vec4 sampledEmissive = texture(mat.emissive, uv) * mat.emissiveFactor;
 	vec3 N = normalize(TBN * (sampledNormal.rgb * 2.0 - 1.0));
 
@@ -180,8 +180,8 @@ Surface surfaceFromGeometryGroup()
     }
 
 	vec3 baseColor = sampledBaseColor.rgb;
-	float metallic = sampledMetallicRoughness.b * mat.metallicFactor;
-	float roughness = sampledMetallicRoughness.g * mat.roughnessFactor;
+	float metalness = sampledMetalnessRoughness.b * mat.metalnessFactor;
+	float roughness = sampledMetalnessRoughness.g * mat.roughnessFactor;
 
 	vec3 V = normalize(-gl_WorldRayDirectionEXT);
 
@@ -189,10 +189,10 @@ Surface surfaceFromGeometryGroup()
 
 
 	// Material stuff
-	surface.albedo = mix(baseColor, vec3(0.0), metallic);
+	surface.albedo = mix(baseColor, vec3(0.0), metalness);
     surface.opacity = mat.mask != 1 ? sampledBaseColor.a : 1.0f; // if mask is discard mode, ignore opacity
 
-	surface.f0 = mix(vec3(mat.baseReflectivity), baseColor, metallic);
+	surface.f0 = mix(vec3(mat.baseReflectivity), baseColor, metalness);
 	surface.a = roughness * roughness;
 
     surface.emissive = sampledEmissive.rgb;
