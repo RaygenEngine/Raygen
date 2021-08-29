@@ -12,6 +12,7 @@ struct RFramebuffer {
 	std::vector<RImage2D> ownedAttachments{};
 	std::vector<vk::ImageView> attachmentViews{};
 
+
 	void AddAttachment(uint32 width, uint32 height, vk::Format format, vk::ImageTiling tiling,
 		vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, const std::string& name,
 		vk::ImageLayout finalLayout);
@@ -25,6 +26,7 @@ struct RFramebuffer {
 
 	// TODO: differentiate between depth attachments and color attachments
 	[[nodiscard]] const RImage2D& operator[](size_t i) const { return ownedAttachments[i]; }
+	[[nodiscard]] const RImage2D& operator[](std::string_view name) const { return ownedAttachments[indices.at(name)]; }
 
 	// auto begin() { return std::begin(attachments); }
 	// auto begin() const { return std::begin(attachments); }
@@ -34,6 +36,7 @@ struct RFramebuffer {
 private:
 	vk::UniqueFramebuffer uHandle;
 
+	std::unordered_map<std::string_view, size_t> indices{};
 
 	bool hasBeenGenerated{ false };
 };

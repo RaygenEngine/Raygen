@@ -56,7 +56,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		// Generate Passes
 		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(fbSize.width, fbSize.height);
 		m_secondaryPassInst[i] = PassLayouts->secondary.CreatePassInstance(fbSize.width, fbSize.height);
-		m_ptPass[i] = PassLayouts->pt.CreatePassInstance(fbSize.width, fbSize.height);
+		m_ptPass[i] = PassLayouts->postproc.CreatePassInstance(fbSize.width, fbSize.height);
 	}
 
 	m_raytraceArealights.Resize(fbSize);
@@ -64,7 +64,7 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_unlitPassInst[i] = PassLayouts->unlit.CreatePassInstance(fbSize.width, fbSize.height,
-			{ &m_mainPassInst[i].framebuffer[0], &m_ptPass[i].framebuffer[0] }); // WIP: indices and stuff
+			{ &m_mainPassInst[i].framebuffer["G_Depth"], &m_ptPass[i].framebuffer["PostProcColor"] });
 	}
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
@@ -76,14 +76,14 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		}
 
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
-		imageSamplers.emplace_back(m_secondaryPassInst[i].framebuffer[0].view());
+		imageSamplers.emplace_back(m_secondaryPassInst[i].framebuffer["Ambient"].view());
 		imageSamplers.emplace_back(
 			brdfLutImg.Lock().image.view(), brdfLutSampler); // std_BrdfLut <- rewritten below with the correct sampler
 		imageSamplers.emplace_back(
-			m_raytraceArealights.svgfRenderPassInstance.framebuffer[0].view());   // arealightShadowing
-		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());      // reserved1
-		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view()); // mirror
-		imageSamplers.emplace_back(m_ptPass[i].framebuffer[0].view());            // sceneColorSampler
+			m_raytraceArealights.svgfRenderPassInstance.framebuffer["SVGF Result"].view()); // arealightShadowing
+		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());                // reserved1
+		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view());           // mirror
+		imageSamplers.emplace_back(m_ptPass[i].framebuffer["PostProcColor"].view());        // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(imageSamplers));
 	}
@@ -100,7 +100,7 @@ InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_ptPass[i].framebuffer[0].view(); // WIP: [0]
+		views[i] = m_ptPass[i].framebuffer["PostProcColor"].view();
 	}
 	return views;
 }

@@ -23,7 +23,7 @@ inline struct PassLayouts_ {
 	RRenderPassLayout secondary{ "Secondary Pass" };
 	RRenderPassLayout shadow{ "Shadow Pass" };
 	RRenderPassLayout singleFloatColorAtt{ "SingleFloatColor Pass" };
-	RRenderPassLayout pt{ "PostProcess Pass" };
+	RRenderPassLayout postproc{ "PostProcess Pass" };
 	RRenderPassLayout svgf{ "SVGF Pass" };
 	RRenderPassLayout unlit{ "Unlit Pass" };
 

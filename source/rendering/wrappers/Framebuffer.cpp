@@ -24,6 +24,7 @@ void RFramebuffer::AddAttachment(uint32 width, uint32 height, vk::Format format,
 
 	ownedAttachments.emplace_back(name, extent, format, finalLayout, 1u, usage, properties);
 
+	indices[name] = attachmentViews.size();
 	attachmentViews.emplace_back(ownedAttachments.back().view());
 }
 
@@ -36,6 +37,8 @@ void RFramebuffer::AddExistingAttachment(const RImage2D& attachment)
 
 	CLOG_ERROR(!IsEqual(attachment.extent, extent),
 		"Incompatible sizes for attachment to framebuffer: Attachment name: {}", attachment.name);
+
+	indices[attachment.name] = attachmentViews.size();
 	attachmentViews.emplace_back(attachment.view());
 }
 

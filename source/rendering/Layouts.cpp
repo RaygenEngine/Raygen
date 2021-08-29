@@ -14,13 +14,11 @@ PassLayouts_::PassLayouts_()
 	using Att = RRenderPassLayout::Attachment;
 	using AttRef = RRenderPassLayout::AttachmentRef;
 
-	AttRef depthBuffer;
+	auto depthBuffer = main.CreateAttachment("G_Depth", Device->FindDepthFormat());
 
-	// Main Pass
 	{
 		std::vector<AttRef> gbufferAtts;
 
-		depthBuffer = main.CreateAttachment("GDepth", Device->FindDepthFormat());
 		gbufferAtts.emplace_back(depthBuffer);
 
 		for (auto& [name, format] : gBufferColorAttachments) {
@@ -43,31 +41,25 @@ PassLayouts_::PassLayouts_()
 		main.Generate();
 	}
 
-	AttRef ptColorAtt;
+	auto postprocColorAtt = postproc.CreateAttachment("PostProcColor", vk::Format::eR32G32B32A32Sfloat);
 	{
-		ptColorAtt = pt.CreateAttachment("Pt color", vk::Format::eR32G32B32A32Sfloat);
+		postproc.AddSubpass({}, { postprocColorAtt });
+		postproc.AttachmentFinalLayout(postprocColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		pt.AddSubpass({}, { ptColorAtt });
-
-		pt.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-		pt.Generate();
+		postproc.Generate();
 	}
 
 	{
-		unlit.AddSubpass({}, { depthBuffer, ptColorAtt }); // Unlit Pass
-
-		unlit.AttachmentFinalLayout(ptColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
+		unlit.AddSubpass({}, { depthBuffer, postprocColorAtt });
+		unlit.AttachmentFinalLayout(postprocColorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		unlit.Generate();
 	}
 
-	// Shadow Pass
 	{
-		AttRef shadowAtt = shadow.CreateAttachment("Shadowmap", Device->FindDepthFormat());
+		auto shadowAtt = shadow.CreateAttachment("Shadowmap", Device->FindDepthFormat());
 
 		shadow.AddSubpass({}, { shadowAtt });
-
 		shadow.AttachmentFinalLayout(shadowAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		shadow.Generate();
@@ -77,7 +69,6 @@ PassLayouts_::PassLayouts_()
 		auto colorAtt = secondary.CreateAttachment("Ambient", vk::Format::eR32G32B32A32Sfloat);
 
 		secondary.AddSubpass({}, { colorAtt });
-
 		secondary.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		secondary.Generate();
@@ -87,13 +78,10 @@ PassLayouts_::PassLayouts_()
 		auto colorAtt = singleFloatColorAtt.CreateAttachment("FloatColorAtt", vk::Format::eR32G32B32A32Sfloat);
 
 		singleFloatColorAtt.AddSubpass({}, { colorAtt });
-
 		singleFloatColorAtt.AttachmentFinalLayout(colorAtt, vk::ImageLayout::eShaderReadOnlyOptimal);
-
 
 		singleFloatColorAtt.Generate();
 	}
-
 
 	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
 	{
@@ -101,6 +89,7 @@ PassLayouts_::PassLayouts_()
 
 		svgf.AddSubpass({}, std::vector{ att });
 		svgf.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+
 		svgf.Generate();
 	}
 }
