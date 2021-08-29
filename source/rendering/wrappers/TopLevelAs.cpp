@@ -251,7 +251,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 
 		for (auto spotlight : spotlights) {
 			viewInfoDefault //
-				.setImageView(spotlight->shadowmapPass[i].framebuffer[0].view())
+				.setImageView(spotlight->shadowmapPass[i].framebuffer["Shadowmap"].view())
 				.setSampler(spotlight->depthSampler);
 
 			depthImages.emplace_back(viewInfoDefault);
@@ -321,7 +321,7 @@ void RtSceneDescriptor::WriteDirlights(const std::vector<SceneDirlight*>& dirlig
 
 		for (auto dirlight : dirlights) {
 			viewInfoDefault //
-				.setImageView(dirlight->shadowmapPass[i].framebuffer[0].view())
+				.setImageView(dirlight->shadowmapPass[i].framebuffer["Shadowmap"].view())
 				.setSampler(dirlight->depthSampler);
 
 			depthImages.emplace_back(viewInfoDefault);

@@ -81,7 +81,7 @@ void PtBase_SinglePipeline::Utl_CreatePipeline(
 		.setPDynamicState(&dynamicStateInfo)
 		.setLayout(m_pipelineLayout.get())
 		// TODO: POSTPROC
-		.setRenderPass(*PassLayouts->pt.compatibleRenderPass)
+		.setRenderPass(*PassLayouts->postproc.compatibleRenderPass)
 		.setSubpass(subpassIndex)
 		.setBasePipelineHandle({})
 		.setBasePipelineIndex(-1);

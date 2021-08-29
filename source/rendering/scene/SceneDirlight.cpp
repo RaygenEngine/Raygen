@@ -18,7 +18,7 @@ void SceneDirlight::MaybeResizeShadowmap(uint32 width, uint32 height)
 			depthSampler = vl::GpuAssetManager->GetShadow2dSampler();
 
 			rvk::writeDescriptorImages(
-				shadowmapDescSet[i], 0u, { shadowmapPass[i].framebuffer[0].view() }, depthSampler);
+				shadowmapDescSet[i], 0u, { shadowmapPass[i].framebuffer["Shadowmap"].view() }, depthSampler);
 		}
 	}
 }

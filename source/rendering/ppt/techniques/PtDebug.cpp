@@ -8,7 +8,7 @@ namespace vl {
 void PtDebug::MakeLayout()
 {
 	m_pipelineLayout = rvk::makeLayoutNoPC({
-		PassLayouts->pt.internalDescLayout.handle(),
+		PassLayouts->postproc.internalDescLayout.handle(),
 	});
 }
 
