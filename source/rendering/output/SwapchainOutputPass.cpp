@@ -31,7 +31,7 @@ namespace vl {
 
 SwapchainOutputPass::SwapchainOutputPass()
 {
-	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		m_descSet[i] = DescriptorLayouts->_1imageSampler.AllocDescriptorSet();
 	}
 
@@ -65,7 +65,7 @@ void SwapchainOutputPass::RecompileCpyShader()
 
 void SwapchainOutputPass::OnViewsUpdated(InFlightResources<vk::ImageView> renderResultViews)
 {
-	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		rvk::writeDescriptorImages(m_descSet[i], 0, { renderResultViews[i] });
 	}
 }

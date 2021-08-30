@@ -38,7 +38,7 @@ void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
 InFlightResources<vk::ImageView> Pathtracer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
-	for (uint32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		views[i] = m_progressivePathtrace.progressive.view();
 	}
 	return views;

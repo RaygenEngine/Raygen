@@ -33,7 +33,7 @@ void RaytraceMirrorReflections::RecordCmd(vk::CommandBuffer cmdBuffer, const Sce
 
 void RaytraceMirrorReflections::Resize(vk::Extent2D extent)
 {
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		result[i] = RImage2D("MirrorBuffer",
 			vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
 			vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);

@@ -85,7 +85,7 @@ PassLayouts_::PassLayouts_()
 
 	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
 	{
-		auto att = svgf.CreateAttachment("SVGF Result", vk::Format::eR32G32B32A32Sfloat);
+		auto att = svgf.CreateAttachment("SvgfResult", vk::Format::eR32G32B32A32Sfloat);
 
 		svgf.AddSubpass({}, std::vector{ att });
 		svgf.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);

@@ -41,7 +41,7 @@ Layer_::Layer_()
 	m_currentRasterizer = m_renderer = RtxRenderer;
 	m_swapOutput->SetAttachedRenderer(m_renderer);
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		m_renderFinishedSem[i] = Device->createSemaphoreUnique({});
 		m_imageAvailSem[i] = Device->createSemaphoreUnique({});
 		m_frameFence[i] = Device->createFenceUnique({ vk::FenceCreateFlagBits::eSignaled });
