@@ -6,6 +6,7 @@ namespace vl {
 class OutputPassBase;
 struct RImage;
 struct RFramebuffer;
+struct RenderingPassInstance;
 } // namespace vl
 
 namespace vk {
@@ -32,6 +33,7 @@ protected:
 	// renderer is active
 	void RegisterDebugAttachment(RImage& attachment);
 	void RegisterDebugAttachment(RFramebuffer& attachment);
+	void RegisterDebugAttachment(RenderingPassInstance& attachment);
 	void ClearDebugAttachments() { m_debugAttachments.clear(); }
 
 public:

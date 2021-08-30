@@ -227,7 +227,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		.setBuffer(spotlightsBuffer.handle());
 
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
@@ -243,7 +243,7 @@ void RtSceneDescriptor::WriteSpotlights(const std::vector<SceneSpotlight*>& spot
 		return;
 	}
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		std::vector<vk::DescriptorImageInfo> depthImages;
 		vk::DescriptorImageInfo viewInfoDefault;
 
@@ -297,7 +297,7 @@ void RtSceneDescriptor::WriteDirlights(const std::vector<SceneDirlight*>& dirlig
 		.setRange(VK_WHOLE_SIZE)
 		.setBuffer(dirlightsBuffer.handle());
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
@@ -313,7 +313,7 @@ void RtSceneDescriptor::WriteDirlights(const std::vector<SceneDirlight*>& dirlig
 		return;
 	}
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		std::vector<vk::DescriptorImageInfo> depthImages;
 		vk::DescriptorImageInfo viewInfoDefault;
 
@@ -369,7 +369,7 @@ void RtSceneDescriptor::WritePointlights(const std::vector<ScenePointlight*>& po
 		.setBuffer(pointlightsBuffer.handle());
 
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
@@ -416,7 +416,7 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 		.setBuffer(reflprobesBuffer.handle());
 
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
@@ -434,7 +434,7 @@ void RtSceneDescriptor::WriteReflprobes(const std::vector<SceneReflprobe*>& refl
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		std::vector<vk::DescriptorImageInfo> cubeImages;
 		vk::DescriptorImageInfo viewInfoDefault;
 
@@ -493,7 +493,7 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragr
 		.setBuffer(irragridsBuffer.handle());
 
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
@@ -512,7 +512,7 @@ void RtSceneDescriptor::WriteIrragrids(const std::vector<SceneIrragrid*>& irragr
 
 	auto quadSampler = GpuAssetManager->GetDefaultSampler();
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		std::vector<vk::DescriptorImageInfo> cubeArrayImages;
 		vk::DescriptorImageInfo viewInfoDefault;
 
@@ -569,7 +569,7 @@ void RtSceneDescriptor::WriteQuadlights(const std::vector<SceneQuadlight*>& quad
 		.setBuffer(quadlightsBuffer.handle());
 
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWriteSet{};
 		bufWriteSet
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //
@@ -604,7 +604,7 @@ void RtSceneDescriptor::WriteGeomGroups()
 		.setRange(VK_WHOLE_SIZE)
 		.setBuffer(geomGroupsBuffer.handle());
 
-	for (int32 i = 0; i < c_framesInFlight; ++i) {
+	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		vk::WriteDescriptorSet bufWrite{};
 		bufWrite
 			.setDescriptorType(vk::DescriptorType::eStorageBuffer) //

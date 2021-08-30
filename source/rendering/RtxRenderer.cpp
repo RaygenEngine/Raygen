@@ -63,8 +63,7 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 	}
 
 	ClearDebugAttachments();
-	RegisterDebugAttachment(m_mainPassInst.at(0).framebuffer);
-	RegisterDebugAttachment(m_testTech.pathtraced);
+	RegisterDebugAttachment(m_mainPassInst.at(0));
 	RegisterDebugAttachment(m_testTech.progressiveVariance);
 	RegisterDebugAttachment(m_testTech.momentsHistory);
 }
@@ -73,7 +72,7 @@ InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_testTech.progressiveVariance.view();
+		views[i] = m_testTech.svgfRenderPassInstance[i].framebuffer["SvgfResult"].view();
 	}
 	return views;
 }

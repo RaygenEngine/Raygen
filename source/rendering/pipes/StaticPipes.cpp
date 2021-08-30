@@ -18,6 +18,7 @@
 #include "rendering/pipes/VolumePipe.h"
 #include "rendering/pipes/MomentsBufferCalculationPipe.h"
 #include "rendering/pipes/AccumulationPipe.h"
+#include "rendering/pipes/SvgfAtrousPipe.h"
 
 
 namespace vl {
@@ -43,5 +44,6 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<NaivePathtracePipe>();
 	StaticPipes::Init<AccumulationPipe>();
 	StaticPipes::Init<MomentsBufferCalculationPipe>();
+	StaticPipes::Init<SvgfAtrousPipe>();
 }
 } // namespace vl

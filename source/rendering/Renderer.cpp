@@ -31,7 +31,7 @@ namespace vl {
 
 Renderer_::Renderer_()
 {
-	Event::OnViewerUpdated.Bind(this, [&]() { m_raytraceArealights.frame = 0; });
+	// Event::OnViewerUpdated.Bind(this, [&]() { m_raytraceArealights.itera = 0; });
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		m_globalDesc[i] = DescriptorLayouts->global.AllocDescriptorSet();
@@ -77,23 +77,21 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		imageSamplers.emplace_back(m_secondaryPassInst[i].framebuffer["Ambient"].view());
+		imageSamplers.emplace_back(brdfLutImg.Lock().image.view(), brdfLutSampler);
 		imageSamplers.emplace_back(
-			brdfLutImg.Lock().image.view(), brdfLutSampler); // std_BrdfLut <- rewritten below with the correct sampler
-		imageSamplers.emplace_back(
-			m_raytraceArealights.svgfRenderPassInstance.framebuffer["SVGF Result"].view()); // arealightShadowing
-		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());                // reserved1
-		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view());           // mirror
-		imageSamplers.emplace_back(m_ptPass[i].framebuffer["PostProcColor"].view());        // sceneColorSampler
+			m_raytraceArealights.svgfRenderPassInstance[i].framebuffer["SvgfResult"].view()); // arealightShadowing
+		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());                  // reserved1
+		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view());             // mirror
+		imageSamplers.emplace_back(m_ptPass[i].framebuffer["PostProcColor"].view());          // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(imageSamplers));
 	}
 
 	ClearDebugAttachments();
-	RegisterDebugAttachment(m_mainPassInst.at(0).framebuffer);
-	RegisterDebugAttachment(m_secondaryPassInst.at(0).framebuffer);
-	RegisterDebugAttachment(m_ptPass.at(0).framebuffer);
+	RegisterDebugAttachment(m_mainPassInst.at(0));
+	RegisterDebugAttachment(m_secondaryPassInst.at(0));
+	RegisterDebugAttachment(m_ptPass.at(0));
 	RegisterDebugAttachment(m_raytraceMirrorReflections.result.at(0));
-	RegisterDebugAttachment(m_raytraceArealights.svgfRenderPassInstance.framebuffer);
 }
 
 InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
