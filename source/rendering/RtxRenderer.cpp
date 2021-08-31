@@ -67,13 +67,14 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 	RegisterDebugAttachment(m_testTech.pathtracedResult);
 	RegisterDebugAttachment(m_testTech.progressive);
 	RegisterDebugAttachment(m_testTech.momentsHistory);
+	RegisterDebugAttachment(m_testTech.svgfRenderPassInstance.at(0));
 }
 
 InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_testTech.svgfRenderPassInstance[i].framebuffer["SvgfResult"].view();
+		views[i] = m_testTech.svgfRenderPassInstance[i].framebuffer["SvgfFinalModulated"].view();
 	}
 	return views;
 }

@@ -1,10 +1,11 @@
 #include "TestSVGFProgPT.h"
 
 #include "rendering/Layouts.h"
-#include "rendering/pipes/MomentsBufferCalculationPipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/pipes/SvgfAtrousPipe.h"
+#include "rendering/pipes/SvgfMomentsPipe.h"
+#include "rendering/pipes/SvgfModulatePipe.h"
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
@@ -78,16 +79,23 @@ void TestSVGFProgPT::RecordCmd(
 	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-	StaticPipes::Get<MomentsBufferCalculationPipe>().RecordCmd(
-		cmdBuffer, extent, sceneDesc, inputOutputsDescSet, iteration == 0);
+	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(cmdBuffer, extent, sceneDesc, inputOutputsDescSet, iteration == 0);
 
 	// Atrous filter
 	auto times = std::max(*cons_iters, 1);
-	for (int32 i = 0; i < times; ++i) {
-		svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+
+	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		for (int32 i = 0; i < times; ++i) {
 			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times);
-		});
-	}
+		}
+
+		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
+
+		auto inputDescSet = svgfRenderPassInstance[sceneDesc.frameIndex].internalDescSet;
+
+		StaticPipes::Get<SvgfModulatePipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
+	});
+
 
 	progressive.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);

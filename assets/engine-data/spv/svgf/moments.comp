@@ -20,6 +20,11 @@ struct ReprojectionData {
 
 ReprojectionData GetReprojection(vec2 uv);
 
+vec3 demodulate(vec3 c, vec3 albedo)
+{
+    return c / max(albedo, vec3(0.001, 0.001, 0.001));
+}
+
 void main() 
 {
 	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
@@ -27,6 +32,13 @@ void main()
 
 	vec3 color = texture(inputImage, uv).xyz;
 	float depth = texture(g_DepthSampler, uv).r;
+
+//	if(depth != 1.0f) {
+//		color = demodulate(color - texture(g_EmissiveSampler, uv).xyz, texture(g_AlbedoSampler, uv).xyz);
+//		if (isVectorNan(color)) {
+//			color = vec3(0);
+//		}
+//	}
 
 	ReprojectionData reproj = GetReprojection(uv);
 	bool success = reproj.historyLength > 0;

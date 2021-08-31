@@ -24,7 +24,7 @@ void AttachmentDebuggerWindow::ImguiDraw()
 		ImGui::Checkbox(att.name, &isOpen);
 		if (isOpen) {
 			std::string name = fmt::format("Att {}", att.name);
-			ImGui::SetNextWindowSize(ImVec2(500, 500), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowSize(ImVec2(att.extent.x / 4.f, att.extent.y / 4.f), ImGuiCond_FirstUseEver);
 			if (ImGui::Begin(name.c_str(), &isOpen)) {
 				auto descrSet = att.descSet;
 

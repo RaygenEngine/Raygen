@@ -15,6 +15,11 @@ RaytraceArealights::RaytraceArealights()
 {
 	imagesDescSet = DescriptorLayouts->_3storageImage.AllocDescriptorSet();
 	DEBUG_NAME(imagesDescSet, "ProgArealights storage descriptor set");
+
+	for (size_t j = 0; j < 2; ++j) {
+		descriptorSets[j] = DescriptorLayouts->_3storageImage.AllocDescriptorSet();
+		DEBUG_NAME(descriptorSets[j], "SvgfAtrousDescSet" + j);
+	}
 }
 
 void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
@@ -57,12 +62,9 @@ void RaytraceArealights::Resize(vk::Extent2D extent)
 	swappingImages[1] = RImage2D("SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
 	for (size_t j = 0; j < 2; ++j) {
-		descriptorSets[j] = DescriptorLayouts->_4storageImage.AllocDescriptorSet();
-
 		rvk::writeDescriptorImages(descriptorSets[j], 0u,
 			{
 				progressive.view(),
-				momentsBuffer.view(),
 				swappingImages[(j + 0) % 2].view(),
 				swappingImages[(j + 1) % 2].view(),
 			},

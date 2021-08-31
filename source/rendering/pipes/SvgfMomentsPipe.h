@@ -5,7 +5,7 @@ struct SceneReflprobe;
 
 namespace vl {
 
-struct MomentsBufferCalculationPipe : public StaticPipeBase {
+struct SvgfMomentsPipe : public StaticPipeBase {
 	vk::UniquePipelineLayout MakePipelineLayout() override;
 	vk::UniquePipeline MakePipeline() override;
 
