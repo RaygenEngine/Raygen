@@ -60,31 +60,15 @@ vk::UniquePipeline BillboardPipe::MakePipeline()
 
 
 	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo
+	vk::PipelineVertexInputStateCreateInfo vertexInputState{};
+	vertexInputState
 		.setVertexBindingDescriptions(bindingDescription) //
 		.setVertexAttributeDescriptions(attributeDescription);
 
-	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly
+	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState{};
+	inputAssemblyState
 		.setTopology(vk::PrimitiveTopology::eTriangleStrip) //
 		.setPrimitiveRestartEnable(VK_FALSE);
-
-	// Dynamic vieport
-	std::array dynamicStates{
-		vk::DynamicState::eViewport,
-		vk::DynamicState::eScissor,
-	};
-	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo.setDynamicStates(dynamicStates);
-
-	// those are dynamic so they will be updated when needed
-	vk::Viewport viewport{};
-	vk::Rect2D scissor{};
-	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState
-		.setViewports(viewport) //
-		.setScissors(scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -99,37 +83,9 @@ vk::UniquePipeline BillboardPipe::MakePipeline()
 		.setDepthBiasClamp(0.f)
 		.setDepthBiasSlopeFactor(0.f);
 
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling
-		.setSampleShadingEnable(VK_FALSE) //
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-		.setMinSampleShading(1.f)
-		.setPSampleMask(nullptr)
-		.setAlphaToCoverageEnable(VK_FALSE)
-		.setAlphaToOneEnable(VK_FALSE);
-
-	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment
-		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_FALSE)
-		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
-		.setDstColorBlendFactor(vk::BlendFactor::eOne)
-		.setColorBlendOp(vk::BlendOp::eAdd)
-		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-		.setDstAlphaBlendFactor(vk::BlendFactor::eOne)
-		.setAlphaBlendOp(vk::BlendOp::eAdd);
-
-	vk::PipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending
-		.setLogicOpEnable(VK_FALSE) //
-		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachments(colorBlendAttachment)
-		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
-
 	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil
+	vk::PipelineDepthStencilStateCreateInfo depthStencilState{};
+	depthStencilState
 		.setDepthTestEnable(VK_TRUE)  //
 		.setDepthWriteEnable(VK_TRUE) // CHECK: write to depth, this is probably the last pass so we don't care for the
 									  // state of the depth buffer
@@ -141,24 +97,9 @@ vk::UniquePipeline BillboardPipe::MakePipeline()
 		.setFront({}) // Optional
 		.setBack({}); // Optional
 
-	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStages(gpuShader.shaderStages) //
-		.setPVertexInputState(&vertexInputInfo)
-		.setPInputAssemblyState(&inputAssembly)
-		.setPViewportState(&viewportState)
-		.setPRasterizationState(&rasterizer)
-		.setPMultisampleState(&multisampling)
-		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(layout())
-		.setRenderPass(PassLayouts->unlit.compatibleRenderPass.get())
-		.setSubpass(0u)
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
-
-	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	return rvk::makeGraphicsPipeline(gpuShader.shaderStages, &vertexInputState, &inputAssemblyState, nullptr, nullptr,
+		&rasterizer, nullptr, &depthStencilState, nullptr, nullptr, layout(),
+		PassLayouts->unlit.compatibleRenderPass.get(), 0u);
 }
 
 namespace {

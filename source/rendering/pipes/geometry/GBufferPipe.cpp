@@ -31,30 +31,15 @@ size_t GbufferPipe::GetPushConstantSize()
 namespace {
 	vk::UniquePipeline CreatePipelineFromVtxInfo(vk::PipelineLayout pipelineLayout,
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
-		vk::PipelineVertexInputStateCreateInfo vertexInputInfo)
+		vk::PipelineVertexInputStateCreateInfo vertexInputState)
 	{
-		vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-		inputAssembly
-			.setTopology(vk::PrimitiveTopology::eTriangleList) //
-			.setPrimitiveRestartEnable(VK_FALSE);
-
-		// Dynamic vieport
 		std::array dynamicStates{
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor,
 			vk::DynamicState::eCullModeEXT,
 		};
-		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-		dynamicStateInfo.setDynamicStates(dynamicStates);
-
-		// those are dynamic so they will be updated when needed
-		vk::Viewport viewport{};
-		vk::Rect2D scissor{};
-
-		vk::PipelineViewportStateCreateInfo viewportState{};
-		viewportState
-			.setViewports(viewport) //
-			.setScissors(scissor);
+		vk::PipelineDynamicStateCreateInfo dynamicState{};
+		dynamicState.setDynamicStates(dynamicStates);
 
 		vk::PipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer
@@ -69,15 +54,6 @@ namespace {
 			.setDepthBiasConstantFactor(0.f)
 			.setDepthBiasClamp(0.f)
 			.setDepthBiasSlopeFactor(0.f);
-
-		vk::PipelineMultisampleStateCreateInfo multisampling{};
-		multisampling
-			.setSampleShadingEnable(VK_FALSE) //
-			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-			.setMinSampleShading(1.f)
-			.setPSampleMask(nullptr)
-			.setAlphaToCoverageEnable(VK_FALSE)
-			.setAlphaToOneEnable(VK_FALSE);
 
 		auto colorAttCount = PassLayouts->gBufferColorAttachments.size();
 
@@ -117,24 +93,10 @@ namespace {
 			.setFront({}) // Optional
 			.setBack({}); // Optional
 
-		vk::GraphicsPipelineCreateInfo pipelineInfo{};
-		pipelineInfo
-			.setStages(shaderStages) //
-			.setPVertexInputState(&vertexInputInfo)
-			.setPInputAssemblyState(&inputAssembly)
-			.setPViewportState(&viewportState)
-			.setPRasterizationState(&rasterizer)
-			.setPMultisampleState(&multisampling)
-			.setPDepthStencilState(&depthStencil)
-			.setPColorBlendState(&colorBlending)
-			.setPDynamicState(&dynamicStateInfo)
-			.setLayout(pipelineLayout)
-			.setRenderPass(*PassLayouts->main.compatibleRenderPass)
-			.setSubpass(0u)
-			.setBasePipelineHandle({})
-			.setBasePipelineIndex(-1);
 
-		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+		return rvk::makeGraphicsPipeline(shaderStages, &vertexInputState, nullptr, nullptr, nullptr, &rasterizer,
+			nullptr, &depthStencil, &colorBlending, &dynamicState, pipelineLayout,
+			PassLayouts->main.compatibleRenderPass.get(), 0u);
 	}
 } // namespace
 

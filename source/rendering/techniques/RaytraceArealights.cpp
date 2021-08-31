@@ -37,6 +37,8 @@ void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRende
 		svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 			//
 			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times);
+
+			cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 		});
 	}
 

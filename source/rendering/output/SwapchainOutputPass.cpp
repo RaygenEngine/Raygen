@@ -58,9 +58,11 @@ void SwapchainOutputPass::RecompileCpyShader()
 		RecompileCpyShader();
 	};
 
-	m_pipelineLayout = rvk::makePipelineLayoutEx(
-		{ DescriptorLayouts->_1imageSampler.handle() }, vk::ShaderStageFlagBits::eFragment, sizeof(PushConstant));
-	m_pipeline = rvk::makePostProcPipeline(gpuShader.shaderStages, *m_pipelineLayout, m_swapchain->renderPass());
+	m_pipelineLayout = rvk::makePipelineLayout<PushConstant>(
+		{ DescriptorLayouts->_1imageSampler.handle() }, vk::ShaderStageFlagBits::eFragment);
+
+	m_pipeline = rvk::makeGraphicsPipeline(gpuShader.shaderStages, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		nullptr, nullptr, nullptr, m_pipelineLayout.get(), m_swapchain->renderPass(), 0u);
 }
 
 void SwapchainOutputPass::OnViewsUpdated(InFlightResources<vk::ImageView> renderResultViews)

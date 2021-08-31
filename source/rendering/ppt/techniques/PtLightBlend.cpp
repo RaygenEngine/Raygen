@@ -16,13 +16,13 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 void PtLightBlend::MakeLayout()
 {
-	m_pipelineLayout = rvk::makePipelineLayoutEx(
+	m_pipelineLayout = rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->global.handle(),
 			DescriptorLayouts->_1storageBuffer.handle(), // quadlights
 			DescriptorLayouts->accelerationStructure.handle(),
 		},
-		vk::ShaderStageFlagBits::eFragment, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eFragment);
 }
 
 void PtLightBlend::MakePipeline()

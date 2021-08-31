@@ -23,7 +23,7 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout BdptPipe::MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx(
+	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->_1storageImage.handle(),                   // images
 			DescriptorLayouts->_1uniformBuffer.handle(),                  // camera
@@ -34,7 +34,7 @@ vk::UniquePipelineLayout BdptPipe::MakePipelineLayout()
 			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // dirlights
 			DescriptorLayouts->_1storageBuffer.handle()                   // quadlights
 		},
-		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR);
 }
 
 vk::UniquePipeline BdptPipe::MakePipeline()

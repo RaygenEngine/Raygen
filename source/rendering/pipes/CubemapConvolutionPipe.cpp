@@ -19,12 +19,12 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout CubemapConvolutionPipe::MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx(
+	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->_1storageImage.handle(),
 			DescriptorLayouts->_1imageSampler.handle(),
 		},
-		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eCompute);
 }
 
 vk::UniquePipeline CubemapConvolutionPipe::MakePipeline()
@@ -34,14 +34,7 @@ vk::UniquePipeline CubemapConvolutionPipe::MakePipeline()
 		StaticPipes::Recompile<CubemapConvolutionPipe>();
 	};
 
-	vk::ComputePipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStage(gpuShader.compute.Lock().shaderStageCreateInfo) //
-		.setLayout(layout())
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
-
-	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
+	return rvk::makeComputePipeline(gpuShader.compute.Lock().shaderStageCreateInfo, layout());
 }
 
 void CubemapConvolutionPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,

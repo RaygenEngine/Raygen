@@ -10,7 +10,7 @@ namespace vl {
 
 vk::UniquePipelineLayout IrragridPipe::MakePipelineLayout()
 {
-	return rvk::makeLayoutNoPC({
+	return rvk::makePipelineLayoutNoPC({
 		DescriptorLayouts->global.handle(),
 		PassLayouts->main.internalDescLayout.handle(),
 		DescriptorLayouts->_1uniformBuffer.handle(),
@@ -44,87 +44,9 @@ vk::UniquePipeline IrragridPipe::MakePipeline()
 		.setAttachments(colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
 
-	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
-		.setPrimitiveRestartEnable(VK_FALSE);
-
-	// those are dynamic so they will be updated when needed
-	vk::Viewport viewport{};
-	vk::Rect2D scissor{};
-
-	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState
-		.setViewportCount(1u) //
-		.setPViewports(&viewport)
-		.setScissorCount(1u)
-		.setPScissors(&scissor);
-
-	vk::PipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer
-		.setDepthClampEnable(VK_FALSE) //
-		.setRasterizerDiscardEnable(VK_FALSE)
-		.setPolygonMode(vk::PolygonMode::eFill)
-		.setLineWidth(1.f)
-		.setCullMode(vk::CullModeFlagBits::eBack)
-		.setFrontFace(vk::FrontFace::eClockwise)
-		.setDepthBiasEnable(VK_FALSE)
-		.setDepthBiasConstantFactor(0.f)
-		.setDepthBiasClamp(0.f)
-		.setDepthBiasSlopeFactor(0.f);
-
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling
-		.setSampleShadingEnable(VK_FALSE) //
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-		.setMinSampleShading(1.f)
-		.setPSampleMask(nullptr)
-		.setAlphaToCoverageEnable(VK_FALSE)
-		.setAlphaToOneEnable(VK_FALSE);
-
-	// dynamic states
-	std::array dynamicStates = {
-		vk::DynamicState::eViewport,
-		vk::DynamicState::eScissor,
-	};
-	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo.setDynamicStates(dynamicStates);
-
-	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil
-		.setDepthTestEnable(VK_FALSE) //
-		.setDepthWriteEnable(VK_FALSE)
-		.setDepthCompareOp(vk::CompareOp::eLess)
-		.setDepthBoundsTestEnable(VK_FALSE)
-		.setMinDepthBounds(0.0f) // Optional
-		.setMaxDepthBounds(1.0f) // Optional
-		.setStencilTestEnable(VK_FALSE)
-		.setFront({}) // Optional
-		.setBack({}); // Optional
-
-	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStageCount(static_cast<uint32>(gpuShader.shaderStages.size())) //
-		.setPStages(gpuShader.shaderStages.data())
-		.setPVertexInputState(&vertexInputInfo)
-		.setPInputAssemblyState(&inputAssembly)
-		.setPViewportState(&viewportState)
-		.setPRasterizationState(&rasterizer)
-		.setPMultisampleState(&multisampling)
-		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(layout())
-		.setRenderPass(*PassLayouts->main.compatibleRenderPass)
-		.setSubpass(2u)
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
-
-	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	return rvk::makeGraphicsPipeline(gpuShader.shaderStages, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		nullptr, &colorBlending, nullptr, layout(), PassLayouts->main.compatibleRenderPass.get(), 2u);
 }
 
 void IrragridPipe::RecordCmd(
