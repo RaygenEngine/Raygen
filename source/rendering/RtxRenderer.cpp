@@ -64,7 +64,7 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	ClearDebugAttachments();
 	RegisterDebugAttachment(m_mainPassInst.at(0));
-	RegisterDebugAttachment(m_testTech.progressiveVariance);
+	RegisterDebugAttachment(m_testTech.pathtraced);
 	RegisterDebugAttachment(m_testTech.momentsHistory);
 }
 

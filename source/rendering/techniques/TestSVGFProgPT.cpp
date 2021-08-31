@@ -28,6 +28,11 @@ TestSVGFProgPT::TestSVGFProgPT()
 	viewerDescSet = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(viewerDescSet);
 
+	for (size_t j = 0; j < 2; ++j) {
+		descriptorSets[j] = DescriptorLayouts->_2storageImage.AllocDescriptorSet();
+		DEBUG_NAME(descriptorSets[j], "SvgfAtrousDescSet" + j);
+	}
+
 	auto uboSize = sizeof(UBO_viewer);
 
 	viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
@@ -42,6 +47,9 @@ void TestSVGFProgPT::RecordCmd(
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
+	static ConsoleVariable<int32> cons_iters{ "r.rtxRenderer.svgf.iterations", 4,
+		"Controls how many times to apply svgf atrous filter." };
+
 	if (updateViewer.Access()) {
 		UBO_viewer data = {
 			sceneDesc.viewer.ubo.viewInv,
@@ -52,26 +60,27 @@ void TestSVGFProgPT::RecordCmd(
 		viewer.UploadData(&data, sizeof(UBO_viewer));
 	}
 
-	auto extent = progressiveVariance.extent;
+	auto extent = pathtraced.extent;
 
-	progressiveVariance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
-		vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits::eFragmentShader,
-		vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+	pathtraced.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 	StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracedDescSet,
 		viewerDescSet, iteration, std::max(samples, 0), std::max(bounces, 0));
 
-	swappingImages[0].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	pathtraced.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
 
 	StaticPipes::Get<MomentsBufferCalculationPipe>().RecordCmd(cmdBuffer, extent, inputOutputsDescSet, sceneDesc);
 
-	swappingImages[0].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral);
+	// swappingImages[0].TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal,
+	// vk::ImageLayout::eGeneral);
 
-	static ConsoleVariable<int32> cons_iters{ "r.rtxRenderer.svgf.iterations", 4,
-		"Controls how many times to apply svgf atrous filter." };
 
 	// Atrous filter
 	auto times = std::max(*cons_iters, 1);
@@ -81,9 +90,9 @@ void TestSVGFProgPT::RecordCmd(
 		});
 	}
 
-	progressiveVariance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
+	/*progressiveVariance.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,
-		vk::PipelineStageFlagBits::eFragmentShader);
+		vk::PipelineStageFlagBits::eFragmentShader);*/
 
 	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
@@ -94,12 +103,10 @@ void TestSVGFProgPT::RecordCmd(
 
 void TestSVGFProgPT::Resize(vk::Extent2D extent)
 {
-	progressiveVariance = RImage2D("progressiveVariance",
-		vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
-		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
+	pathtraced = RImage2D("Pathtraced", vk::Extent2D{ extent.width, extent.height }, vk::Format::eR32G32B32A32Sfloat,
+		vk::ImageLayout::eShaderReadOnlyOptimal);
 
-	momentsHistory = RImage2D("momentsHistory",
-		vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
+	momentsHistory = RImage2D("MomentsHistory", vk::Extent2D{ extent.width, extent.height },
 		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	for (size_t i = 0; i < c_framesInFlight; ++i) {
@@ -109,15 +116,15 @@ void TestSVGFProgPT::Resize(vk::Extent2D extent)
 	swappingImages[0] = RImage2D("Svgf0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 	swappingImages[1] = RImage2D("Svgf1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-	rvk::writeDescriptorImages(pathtracedDescSet, 0u, { swappingImages[0].view() }, vk::DescriptorType::eStorageImage,
-		vk::ImageLayout::eGeneral);
+	rvk::writeDescriptorImages(
+		pathtracedDescSet, 0u, { pathtraced.view() }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-	rvk::writeDescriptorImages(inputOutputsDescSet, 0u, { swappingImages[0].view() },
+	rvk::writeDescriptorImages(inputOutputsDescSet, 0u, { pathtraced.view() },
 		vk::DescriptorType::eCombinedImageSampler, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	rvk::writeDescriptorImages(inputOutputsDescSet, 1u,
 		{
-			progressiveVariance.view(),
+			swappingImages[0].view(),
 			momentsHistory.view(),
 		},
 		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
@@ -128,8 +135,6 @@ void TestSVGFProgPT::Resize(vk::Extent2D extent)
 
 		rvk::writeDescriptorImages(descriptorSets[j], 0u,
 			{
-				progressiveVariance.view(),
-				momentsHistory.view(),
 				swappingImages[(j + 0) % 2].view(),
 				swappingImages[(j + 1) % 2].view(),
 			},
