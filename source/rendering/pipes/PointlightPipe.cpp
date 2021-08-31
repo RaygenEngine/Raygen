@@ -20,14 +20,14 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout PointlightPipe::MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx(
+	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->global.handle(),
 			PassLayouts->main.internalDescLayout.handle(),
 			DescriptorLayouts->_1uniformBuffer.handle(),
 			DescriptorLayouts->accelerationStructure.handle(),
 		},
-		vk::ShaderStageFlagBits::eVertex, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eVertex);
 }
 
 vk::UniquePipeline PointlightPipe::MakePipeline()
@@ -70,25 +70,10 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 	attributeDescription.format = vk::Format::eR32G32B32Sfloat;
 	attributeDescription.offset = 0u;
 
-	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo
+	vk::PipelineVertexInputStateCreateInfo vertexInputState{};
+	vertexInputState
 		.setVertexBindingDescriptions(bindingDescription) //
 		.setVertexAttributeDescriptions(attributeDescription);
-
-	vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly
-		.setTopology(vk::PrimitiveTopology::eTriangleList) //
-		.setPrimitiveRestartEnable(VK_FALSE);
-
-	// those are dynamic so they will be updated when needed
-	vk::Viewport viewport{};
-	vk::Rect2D scissor{};
-
-	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState
-		.setViewports(viewport) //
-		.setScissors(scissor);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -103,54 +88,9 @@ vk::UniquePipeline PointlightPipe::MakePipeline()
 		.setDepthBiasClamp(0.f)
 		.setDepthBiasSlopeFactor(0.f);
 
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling
-		.setSampleShadingEnable(VK_FALSE) //
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-		.setMinSampleShading(1.f)
-		.setPSampleMask(nullptr)
-		.setAlphaToCoverageEnable(VK_FALSE)
-		.setAlphaToOneEnable(VK_FALSE);
 
-	// dynamic states
-	std::array dynamicStates = {
-		vk::DynamicState::eViewport,
-		vk::DynamicState::eScissor,
-	};
-	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo.setDynamicStates(dynamicStates);
-
-	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil
-		.setDepthTestEnable(VK_FALSE) //
-		.setDepthWriteEnable(VK_FALSE)
-		.setDepthCompareOp(vk::CompareOp::eLess)
-		.setDepthBoundsTestEnable(VK_FALSE)
-		.setMinDepthBounds(0.0f) // Optional
-		.setMaxDepthBounds(1.0f) // Optional
-		.setStencilTestEnable(VK_FALSE)
-		.setFront({}) // Optional
-		.setBack({}); // Optional
-
-	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo //
-		.setStages(gpuShader.shaderStages)
-		.setPVertexInputState(&vertexInputInfo)
-		.setPInputAssemblyState(&inputAssembly)
-		.setPViewportState(&viewportState)
-		.setPRasterizationState(&rasterizer)
-		.setPMultisampleState(&multisampling)
-		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(layout())
-		.setRenderPass(*PassLayouts->main.compatibleRenderPass)
-		.setSubpass(1u)
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
-
-	return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	return rvk::makeGraphicsPipeline(gpuShader.shaderStages, &vertexInputState, nullptr, nullptr, nullptr, &rasterizer,
+		nullptr, nullptr, &colorBlending, nullptr, layout(), PassLayouts->main.compatibleRenderPass.get(), 1u);
 }
 
 void PointlightPipe::RecordCmd(

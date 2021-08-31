@@ -21,7 +21,7 @@ static_assert(sizeof(PushConstant) <= 128);
 namespace vl {
 vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx(
+	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->global.handle(),                           // gbuffer and stuff
 			DescriptorLayouts->_3storageImage.handle(),                   // image result
@@ -29,7 +29,7 @@ vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // geometry and texture
 			DescriptorLayouts->_1storageBuffer.handle(),                  // quadlights
 		},
-		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR);
 }
 
 vk::UniquePipeline ArealightsPipe::MakePipeline()

@@ -25,7 +25,7 @@ static_assert(sizeof(PushConstant) <= 128);
 
 vk::UniquePipelineLayout MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx({}, vk::ShaderStageFlagBits::eVertex, sizeof(PushConstant));
+	return rvk::makePipelineLayout<PushConstant>({}, vk::ShaderStageFlagBits::eVertex);
 }
 
 template<typename PipeType>
@@ -51,8 +51,8 @@ vk::UniquePipeline MakePipeline(vk::PipelineLayout layout)
 
 
 	// fixed-function stage
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo
+	vk::PipelineVertexInputStateCreateInfo vertexInputState{};
+	vertexInputState
 		.setVertexBindingDescriptions(bindingDescription) //
 		.setVertexAttributeDescriptions(attributeDescription);
 
@@ -76,16 +76,8 @@ vk::UniquePipeline MakePipeline(vk::PipelineLayout layout)
 		vk::DynamicState::eDepthTestEnableEXT,
 	};
 
-	vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-	dynamicStateInfo.setDynamicStates(dynamicStates);
-
-	// those are dynamic so they will be updated when needed
-	vk::Viewport viewport{};
-	vk::Rect2D scissor{};
-	vk::PipelineViewportStateCreateInfo viewportState{};
-	viewportState
-		.setViewports(viewport) //
-		.setScissors(scissor);
+	vk::PipelineDynamicStateCreateInfo dynamicStateState{};
+	dynamicStateState.setDynamicStates(dynamicStates);
 
 	vk::PipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer
@@ -100,65 +92,10 @@ vk::UniquePipeline MakePipeline(vk::PipelineLayout layout)
 		.setDepthBiasClamp(0.f)
 		.setDepthBiasSlopeFactor(0.f);
 
-	vk::PipelineMultisampleStateCreateInfo multisampling{};
-	multisampling
-		.setSampleShadingEnable(VK_FALSE) //
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-		.setMinSampleShading(1.f)
-		.setPSampleMask(nullptr)
-		.setAlphaToCoverageEnable(VK_FALSE)
-		.setAlphaToOneEnable(VK_FALSE);
 
-	vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment
-		.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG
-						   | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA) //
-		.setBlendEnable(VK_FALSE)
-		.setSrcColorBlendFactor(vk::BlendFactor::eOne)
-		.setDstColorBlendFactor(vk::BlendFactor::eZero)
-		.setColorBlendOp(vk::BlendOp::eAdd)
-		.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-		.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-		.setAlphaBlendOp(vk::BlendOp::eAdd);
-
-	vk::PipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending
-		.setLogicOpEnable(VK_FALSE) //
-		.setLogicOp(vk::LogicOp::eCopy)
-		.setAttachments(colorBlendAttachment)
-		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
-
-	// depth and stencil state
-	vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil
-		.setDepthTestEnable(VK_TRUE) //
-		.setDepthWriteEnable(VK_FALSE)
-		.setDepthCompareOp(vk::CompareOp::eLess)
-		.setDepthBoundsTestEnable(VK_FALSE)
-		.setMinDepthBounds(0.0f) // Optional
-		.setMaxDepthBounds(1.0f) // Optional
-		.setStencilTestEnable(VK_FALSE)
-		.setFront({}) // Optional
-		.setBack({}); // Optional
-
-	vk::GraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStages(gpuShader.shaderStages) //
-		.setPVertexInputState(&vertexInputInfo)
-		.setPInputAssemblyState(&inputAssembly)
-		.setPViewportState(&viewportState)
-		.setPRasterizationState(&rasterizer)
-		.setPMultisampleState(&multisampling)
-		.setPDepthStencilState(&depthStencil)
-		.setPColorBlendState(&colorBlending)
-		.setPDynamicState(&dynamicStateInfo)
-		.setLayout(layout)
-		.setRenderPass(vl::PassLayouts->unlit.compatibleRenderPass.get())
-		.setSubpass(0u)
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
-
-	return vl::Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+	return rvk::makeGraphicsPipeline(gpuShader.shaderStages, &vertexInputState, &inputAssembly, nullptr, nullptr,
+		&rasterizer, nullptr, nullptr, nullptr, &dynamicStateState, layout,
+		vl::PassLayouts->unlit.compatibleRenderPass.get(), 0u);
 }
 
 } // namespace

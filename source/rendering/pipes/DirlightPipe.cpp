@@ -9,7 +9,7 @@
 namespace vl {
 vk::UniquePipelineLayout DirlightPipe::MakePipelineLayout()
 {
-	return rvk::makeLayoutNoPC({
+	return rvk::makePipelineLayoutNoPC({
 		DescriptorLayouts->global.handle(),
 		PassLayouts->main.internalDescLayout.handle(),
 		DescriptorLayouts->_1uniformBuffer.handle(),
@@ -44,8 +44,8 @@ vk::UniquePipeline DirlightPipe::MakePipeline()
 		.setPAttachments(&colorBlendAttachment)
 		.setBlendConstants({ 0.f, 0.f, 0.f, 0.f });
 
-	return rvk::makePostProcPipeline(gpuShader.shaderStages, StaticPipes::GetLayout<DirlightPipe>(),
-		*PassLayouts->main.compatibleRenderPass, colorBlending, 1u);
+	return rvk::makeGraphicsPipeline(gpuShader.shaderStages, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+		nullptr, &colorBlending, nullptr, layout(), PassLayouts->main.compatibleRenderPass.get(), 1u);
 }
 
 void DirlightPipe::RecordCmd(

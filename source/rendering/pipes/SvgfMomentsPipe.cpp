@@ -21,12 +21,12 @@ namespace vl {
 
 vk::UniquePipelineLayout SvgfMomentsPipe::MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx(
+	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->global.handle(),
 			DescriptorLayouts->_1imageSampler_3storageImage.handle(),
 		},
-		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eCompute);
 }
 
 vk::UniquePipeline SvgfMomentsPipe::MakePipeline()

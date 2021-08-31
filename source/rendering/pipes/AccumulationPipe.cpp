@@ -23,11 +23,11 @@ ConsoleFunction<> cons_refitAccumulation{ "r.accumulation.recompile",
 
 vk::UniquePipelineLayout AccumulationPipe::MakePipelineLayout()
 {
-	return rvk::makePipelineLayoutEx(
+	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->_2storageImage.handle(),
 		},
-		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
+		vk::ShaderStageFlagBits::eCompute);
 }
 
 vk::UniquePipeline AccumulationPipe::MakePipeline()
@@ -69,7 +69,7 @@ vk::UniquePipeline AccumulationPipe::MakePipeline()
 
 	specializationData.sizeX = res.first;
 	specializationData.sizeY = res.second;
-	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
+	return rvk::makeComputePipeline(shaderStageCreateInfo, layout());
 }
 
 void AccumulationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,

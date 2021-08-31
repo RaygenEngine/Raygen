@@ -25,21 +25,16 @@ size_t DepthmapPipe::GetPushConstantSize()
 namespace {
 	vk::UniquePipeline CreatePipelineFromVtxInfo(vk::PipelineLayout pipelineLayout,
 		std::vector<vk::PipelineShaderStageCreateInfo>& shaderStages,
-		vk::PipelineVertexInputStateCreateInfo vertexInputInfo)
+		vk::PipelineVertexInputStateCreateInfo vertexInputState)
 	{
-		vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-		inputAssembly
-			.setTopology(vk::PrimitiveTopology::eTriangleList) //
-			.setPrimitiveRestartEnable(VK_FALSE);
-
-		// those are dynamic so they will be updated when needed
-		vk::Viewport viewport{};
-		vk::Rect2D scissor{};
-
-		vk::PipelineViewportStateCreateInfo viewportState{};
-		viewportState
-			.setViewports(viewport) //
-			.setScissors(scissor);
+		// Dynamic vieport
+		std::array dynamicStates{
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor,
+			vk::DynamicState::eCullModeEXT,
+		};
+		vk::PipelineDynamicStateCreateInfo dynamicState{};
+		dynamicState.setDynamicStates(dynamicStates);
 
 		vk::PipelineRasterizationStateCreateInfo rasterizer{};
 		rasterizer
@@ -54,27 +49,9 @@ namespace {
 			.setDepthBiasClamp(0.f)
 			.setDepthBiasSlopeFactor(0.f);
 
-		vk::PipelineMultisampleStateCreateInfo multisampling{};
-		multisampling
-			.setSampleShadingEnable(VK_FALSE) //
-			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
-			.setMinSampleShading(1.f)
-			.setPSampleMask(nullptr)
-			.setAlphaToCoverageEnable(VK_FALSE)
-			.setAlphaToOneEnable(VK_FALSE);
-
-		// Dynamic vieport
-		std::array dynamicStates{
-			vk::DynamicState::eViewport,
-			vk::DynamicState::eScissor,
-			vk::DynamicState::eCullModeEXT,
-		};
-		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{};
-		dynamicStateInfo.setDynamicStates(dynamicStates);
-
 		// depth and stencil state
-		vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-		depthStencil
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState{};
+		depthStencilState
 			.setDepthTestEnable(VK_TRUE) //
 			.setDepthWriteEnable(VK_TRUE)
 			.setDepthCompareOp(vk::CompareOp::eLess)
@@ -85,25 +62,9 @@ namespace {
 			.setFront({}) // Optional
 			.setBack({}); // Optional
 
-		vk::GraphicsPipelineCreateInfo pipelineInfo{};
-		pipelineInfo
-			.setStageCount(static_cast<uint32>(shaderStages.size())) //
-			.setPStages(shaderStages.data())
-			.setPVertexInputState(&vertexInputInfo)
-			.setPInputAssemblyState(&inputAssembly)
-			.setPViewportState(&viewportState)
-			.setPRasterizationState(&rasterizer)
-			.setPMultisampleState(&multisampling)
-			.setPDepthStencilState(&depthStencil)
-			.setPColorBlendState(nullptr)
-			.setPDynamicState(&dynamicStateInfo)
-			.setLayout(pipelineLayout)
-			.setRenderPass(*PassLayouts->shadow.compatibleRenderPass)
-			.setSubpass(0u)
-			.setBasePipelineHandle({})
-			.setBasePipelineIndex(-1);
-
-		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
+		return rvk::makeGraphicsPipeline(shaderStages, &vertexInputState, nullptr, nullptr, nullptr, &rasterizer,
+			nullptr, &depthStencilState, nullptr, &dynamicState, pipelineLayout,
+			PassLayouts->shadow.compatibleRenderPass.get(), 0u);
 	}
 } // namespace
 vk::UniquePipeline DepthmapPipe::CreatePipeline(vk::PipelineLayout pipelineLayout, //
