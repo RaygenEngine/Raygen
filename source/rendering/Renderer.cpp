@@ -78,11 +78,12 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 		auto [brdfLutImg, brdfLutSampler] = GpuAssetManager->GetBrdfLutImageSampler();
 		imageSamplers.emplace_back(m_secondaryPassInst[i].framebuffer["Ambient"].view());
 		imageSamplers.emplace_back(brdfLutImg.Lock().image.view(), brdfLutSampler);
-		imageSamplers.emplace_back(
-			m_raytraceArealights.svgfRenderPassInstance[i].framebuffer["SvgfResult"].view()); // arealightShadowing
-		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());                  // reserved1
-		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view());             // mirror
-		imageSamplers.emplace_back(m_ptPass[i].framebuffer["PostProcColor"].view());          // sceneColorSampler
+		imageSamplers.emplace_back(m_raytraceArealights.svgfRenderPassInstance[i]
+									   .framebuffer["SvgfFinalModulated"]
+									   .view());                                     // arealightShadowing
+		imageSamplers.emplace_back(m_raytraceArealights.progressive.view());         // reserved1
+		imageSamplers.emplace_back(m_raytraceMirrorReflections.result[i].view());    // mirror
+		imageSamplers.emplace_back(m_ptPass[i].framebuffer["PostProcColor"].view()); // sceneColorSampler
 
 		rvk::writeDescriptorImages(m_globalDesc[i], 0u, std::move(imageSamplers));
 	}
@@ -121,6 +122,7 @@ void Renderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
 {
 	m_mainPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		//
 		GbufferPipe::RecordCmd(cmdBuffer, sceneDesc);
 
 		auto inputDescSet = m_mainPassInst[sceneDesc.frameIndex].internalDescSet;

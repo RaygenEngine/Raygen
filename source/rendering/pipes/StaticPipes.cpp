@@ -16,9 +16,10 @@
 #include "rendering/pipes/SpotlightPipe.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/pipes/VolumePipe.h"
-#include "rendering/pipes/MomentsBufferCalculationPipe.h"
 #include "rendering/pipes/AccumulationPipe.h"
+#include "rendering/pipes/SvgfMomentsPipe.h"
 #include "rendering/pipes/SvgfAtrousPipe.h"
+#include "rendering/pipes/SvgfModulatePipe.h"
 
 
 namespace vl {
@@ -43,7 +44,8 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<BdptPipe>();
 	StaticPipes::Init<NaivePathtracePipe>();
 	StaticPipes::Init<AccumulationPipe>();
-	StaticPipes::Init<MomentsBufferCalculationPipe>();
+	StaticPipes::Init<SvgfMomentsPipe>();
 	StaticPipes::Init<SvgfAtrousPipe>();
+	StaticPipes::Init<SvgfModulatePipe>();
 }
 } // namespace vl

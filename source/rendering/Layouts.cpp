@@ -85,10 +85,14 @@ PassLayouts_::PassLayouts_()
 
 	// Svgf Pass. Semi special case as we constantly swap 2 "framebuffers" internally.
 	{
-		auto att = svgf.CreateAttachment("SvgfResult", vk::Format::eR32G32B32A32Sfloat);
+		auto att = svgf.CreateAttachment("SvgfAtrousFiltered", vk::Format::eR32G32B32A32Sfloat);
+		auto fin = svgf.CreateAttachment("SvgfFinalModulated", vk::Format::eR32G32B32A32Sfloat);
 
 		svgf.AddSubpass({}, std::vector{ att });
+		svgf.AddSubpass(std::vector{ att }, { fin }); // Modulated
+
 		svgf.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);
+		svgf.AttachmentFinalLayout(fin, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		svgf.Generate();
 	}

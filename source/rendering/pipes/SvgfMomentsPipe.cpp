@@ -1,4 +1,4 @@
-#include "MomentsBufferCalculationPipe.h"
+#include "SvgfMomentsPipe.h"
 
 #include "rendering/Renderer.h"
 #include "rendering/assets/GpuAssetManager.h"
@@ -19,7 +19,7 @@ static_assert(sizeof(PushConstant) <= 128);
 
 namespace vl {
 
-vk::UniquePipelineLayout MomentsBufferCalculationPipe::MakePipelineLayout()
+vk::UniquePipelineLayout SvgfMomentsPipe::MakePipelineLayout()
 {
 	return rvk::makePipelineLayoutEx(
 		{
@@ -29,11 +29,11 @@ vk::UniquePipelineLayout MomentsBufferCalculationPipe::MakePipelineLayout()
 		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
 }
 
-vk::UniquePipeline MomentsBufferCalculationPipe::MakePipeline()
+vk::UniquePipeline SvgfMomentsPipe::MakePipeline()
 {
-	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/compute/moments.shader");
+	GpuAsset<Shader>& gpuShader = GpuAssetManager->CompileShader("engine-data/spv/svgf/moments.shader");
 	gpuShader.onCompileRayTracing = [&]() {
-		StaticPipes::Recompile<MomentsBufferCalculationPipe>();
+		StaticPipes::Recompile<SvgfMomentsPipe>();
 	};
 
 
@@ -47,7 +47,7 @@ vk::UniquePipeline MomentsBufferCalculationPipe::MakePipeline()
 	return Device->createComputePipelineUnique(nullptr, pipelineInfo);
 }
 
-void MomentsBufferCalculationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
+void SvgfMomentsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
 	const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputOutputsImageDescSet, bool firstIter) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);

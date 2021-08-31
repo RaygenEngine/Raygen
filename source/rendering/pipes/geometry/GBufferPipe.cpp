@@ -135,7 +135,7 @@ namespace {
 			.setBasePipelineIndex(-1);
 
 		return Device->createGraphicsPipelineUnique(nullptr, pipelineInfo);
-	} // namespace
+	}
 } // namespace
 
 vk::UniquePipeline GbufferPipe::CreatePipeline(
