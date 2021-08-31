@@ -78,7 +78,7 @@ inline struct DescriptorLayouts_ {
 	RDescriptorSetLayout joints;
 	RDescriptorSetLayout accelerationStructure;
 	RDescriptorSetLayout _1storageBuffer_1024samplerImage;
-	RDescriptorSetLayout _1imageSampler_2storageImage;
+	RDescriptorSetLayout _1imageSampler_3storageImage;
 	RDescriptorSetLayout _1imageSamplerFragmentOnly;
 
 

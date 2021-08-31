@@ -4,21 +4,21 @@ layout(location = 0) out vec4 outColor;
 
 layout(location = 0) in vec2 uv;
 
-layout(set = 1, binding = 0, rgba32f) uniform image2D svgfInput;
-layout(set = 1, binding = 1, rgba32f) uniform image2D svgfOutput;
+layout(set = 1, binding = 0, rgba32f) uniform image2D progressive;
+layout(set = 1, binding = 1, rgba32f) uniform image2D svgfInput;
+layout(set = 1, binding = 2, rgba32f) uniform image2D svgfOutput;
 
 layout(push_constant) uniform PC {
 	int iteration;
 	int totalIter;
 	int progressiveFeedbackIndex;
+	float phiColor;
+	float phiNormal;
 };
 
-// WIP: test these (directly from svgf sample implementation)
 float normalDistanceCos(vec3 n1, vec3 n2, float power)
 {
-	//return pow(max(0.0, dot(n1, n2)), 128.0);
-	//return pow( saturate(dot(n1,n2)), power);
-	return 1.0f;
+	return pow(saturate(dot(n1,n2)), power);
 }
 
 float computeWeight(
@@ -26,12 +26,13 @@ float computeWeight(
 	vec3 normalCenter, vec3 normalPixel, float normPower, 
 	float luminanceCenter, float luminancePixel, float phi){
 
-	const float wNormal    = normalDistanceCos(normalCenter, normalPixel, normPower);
+	const float wNormal    = pow(saturate(dot(normalCenter,normalPixel)), normPower);
 	const float wZ         = (phiDepth == 0) ? 0.0f : abs(depthCenter - depthPixel) / phiDepth;
 	const float wLuminance = abs(luminanceCenter - luminancePixel) / phi;
 
 	return exp(0.0 - max(wLuminance, 0.0) - max(wZ, 0.0)) * wNormal;
 }
+
 
 // computes a 3x3 gaussian blur of the variance, centered around
 // the current pixel
@@ -123,12 +124,8 @@ void main() {
 		return;
     }
 
-	// phiColor: 10.0 default value
-	const float phiColor            = 10.;
-	const float phiNormal           = 128.;
     const float phiLIndirect = phiColor * sqrt(max(0.0, epsVariance + var));
     const float phiDepth     = max(center.depth, 1e-8) * stepSize;
-
 
  	// explicitly store/accumulate center pixel with weight 1 to prevent issues
     // with the edge-stopping functions
@@ -183,7 +180,7 @@ void OutputColor(vec4 color) {
 		imageStore(svgfOutput, iuv, color);
 	}
 
-	//if (iteration == progressiveFeedbackIndex) {
-	//	imageStore(progressiveResult, iuv, color);
-	//}
+	if (iteration == progressiveFeedbackIndex) {
+		imageStore(progressive, iuv, color);
+	}
 }

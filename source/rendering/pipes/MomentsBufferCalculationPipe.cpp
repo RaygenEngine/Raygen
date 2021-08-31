@@ -11,6 +11,7 @@ namespace {
 struct PushConstant {
 	float minColorAlpha;
 	float minMomentsAlpha;
+	bool firstIter;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -23,7 +24,7 @@ vk::UniquePipelineLayout MomentsBufferCalculationPipe::MakePipelineLayout()
 	return rvk::makePipelineLayoutEx(
 		{
 			DescriptorLayouts->global.handle(),
-			DescriptorLayouts->_1imageSampler_2storageImage.handle(),
+			DescriptorLayouts->_1imageSampler_3storageImage.handle(),
 		},
 		vk::ShaderStageFlagBits::eCompute, sizeof(PushConstant));
 }
@@ -47,7 +48,7 @@ vk::UniquePipeline MomentsBufferCalculationPipe::MakePipeline()
 }
 
 void MomentsBufferCalculationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
-	vk::DescriptorSet inputOutputsImageDescSet, const SceneRenderDesc& sceneDesc) const
+	const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputOutputsImageDescSet, bool firstIter) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -68,6 +69,7 @@ void MomentsBufferCalculationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const 
 	PushConstant pc{
 		*cons_minColorAlpha,
 		*cons_minMomentsAlpha,
+		firstIter,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);

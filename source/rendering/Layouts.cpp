@@ -144,10 +144,11 @@ DescriptorLayouts_::DescriptorLayouts_()
 		eCombinedImageSampler, eRaygenKHR | eClosestHitKHR | eAnyHitKHR, 1024u, eVariableDescriptorCount);
 	_1storageBuffer_1024samplerImage.Generate();
 
-	_1imageSampler_2storageImage.AddBinding(eCombinedImageSampler, eCompute);
-	_1imageSampler_2storageImage.AddBinding(eStorageImage, eCompute);
-	_1imageSampler_2storageImage.AddBinding(eStorageImage, eCompute);
-	_1imageSampler_2storageImage.Generate();
+	_1imageSampler_3storageImage.AddBinding(eCombinedImageSampler, eCompute);
+	_1imageSampler_3storageImage.AddBinding(eStorageImage, eCompute);
+	_1imageSampler_3storageImage.AddBinding(eStorageImage, eCompute);
+	_1imageSampler_3storageImage.AddBinding(eStorageImage, eCompute);
+	_1imageSampler_3storageImage.Generate();
 
 	_1imageSamplerFragmentOnly.AddBinding(eCombinedImageSampler, eFragment);
 	_1imageSamplerFragmentOnly.Generate();
