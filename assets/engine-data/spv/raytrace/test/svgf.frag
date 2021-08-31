@@ -4,10 +4,8 @@ layout(location = 0) out vec4 outColor;
 
 layout(location = 0) in vec2 uv;
 
-layout(set = 1, binding = 0, rgba32f) uniform image2D progressiveResult;
-layout(set = 1, binding = 1, rgba32f) uniform image2D momentsBuffer;
-layout(set = 1, binding = 2, rgba32f) uniform image2D svgfInput;
-layout(set = 1, binding = 3, rgba32f) uniform image2D svgfOutput;
+layout(set = 1, binding = 0, rgba32f) uniform image2D svgfInput;
+layout(set = 1, binding = 1, rgba32f) uniform image2D svgfOutput;
 
 layout(push_constant) uniform PC {
 	int iteration;
@@ -185,7 +183,7 @@ void OutputColor(vec4 color) {
 		imageStore(svgfOutput, iuv, color);
 	}
 
-	if (iteration == progressiveFeedbackIndex) {
-		imageStore(progressiveResult, iuv, color);
-	}
+	//if (iteration == progressiveFeedbackIndex) {
+	//	imageStore(progressiveResult, iuv, color);
+	//}
 }
