@@ -2,9 +2,10 @@
 
 layout (local_size_x = 32, local_size_y = 32) in;
 
-layout(set = 1, binding = 0) uniform sampler2D inputImage; 
-layout(set = 1, binding = 1, rgba32f) uniform image2D progressiveImage;
-layout(set = 1, binding = 2, rgba32f) uniform image2D momentsImage; 
+layout(set = 1, binding = 0) uniform sampler2D inputImage;
+layout(set = 1, binding = 1, rgba32f) uniform image2D svgf0;
+layout(set = 1, binding = 2, rgba32f) uniform image2D progressive;
+layout(set = 1, binding = 3, rgba32f) uniform image2D momentsImage; 
 
 layout(push_constant) uniform PC {
 	float minColorAlpha;
@@ -25,7 +26,6 @@ void main()
 	const vec2 uv        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
 
 	vec3 color = texture(inputImage, uv).xyz;
-
 	float depth = texture(g_DepthSampler, uv).r;
 
 	ReprojectionData reproj = GetReprojection(uv);
@@ -51,8 +51,11 @@ void main()
 		variance += 0.2;
 	}
 
+
+	imageStore(svgf0, ivec2(gl_GlobalInvocationID.xy), vec4(color, variance));
+	imageStore(progressive, ivec2(gl_GlobalInvocationID.xy), vec4(color, variance));
+
 	imageStore(momentsImage, ivec2(gl_GlobalInvocationID.xy), vec4(moments, depth, historyLength));
-	imageStore(progressiveImage, ivec2(gl_GlobalInvocationID.xy), vec4(color, variance));
 }
 
 bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
@@ -101,7 +104,7 @@ ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expec
 		ivec2 loc = pixelPos + offset[sampleIdx];
 		vec4 momentsSample;
 		if (IsReprojValid(loc, expectedPrevDepth, centerUvDrawIndex, momentsSample)) {
-			color += w[sampleIdx] * imageLoad(progressiveImage, loc);
+			color += w[sampleIdx] * imageLoad(progressive, loc);
 			moments += w[sampleIdx] * momentsSample;
 			sumW += w[sampleIdx];
 		}
@@ -122,15 +125,6 @@ ReprojectionData ReprojSample(vec2 sampleUv, vec4 centerUvDrawIndex, float expec
 }
 
 ReprojectionData GetReprojection(vec2 uv) {
-	// PERF:
-	//if (frame < 1) { WIP: check paper math again
-	//	ReprojectionData repr;
-	//	repr.color = vec3(0);
-	//	repr.moments = vec2(0);
-	//	repr.historyLength = 0;
-	//	return repr;
-	//} 
-
 	// xy: ScreenSpace (uv) motion vector
 	// z: expected previous depth
 	const vec4 motionSample = texture(g_VelocitySampler, uv);

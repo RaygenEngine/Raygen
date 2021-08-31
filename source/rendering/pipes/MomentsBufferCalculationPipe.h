@@ -10,7 +10,7 @@ struct MomentsBufferCalculationPipe : public StaticPipeBase {
 	vk::UniquePipeline MakePipeline() override;
 
 	// DOC: parameters
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent, vk::DescriptorSet inputOutputsImageDescSet,
-		const SceneRenderDesc& sceneDesc) const;
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent, const SceneRenderDesc& sceneDesc,
+		vk::DescriptorSet inputOutputsImageDescSet, bool firstIter) const;
 };
 } // namespace vl

@@ -9,8 +9,10 @@ namespace vl {
 struct TestSVGFProgPT {
 	TestSVGFProgPT();
 
-	RImage2D pathtraced;
-	vk::DescriptorSet pathtracedDescSet;
+	RImage2D pathtracedResult;
+	vk::DescriptorSet pathtracingInputDescSet;
+
+	RImage2D progressive;
 
 	RImage2D momentsHistory;
 	vk::DescriptorSet inputOutputsDescSet;
