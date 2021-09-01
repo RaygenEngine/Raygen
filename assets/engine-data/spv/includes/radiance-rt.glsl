@@ -13,8 +13,8 @@ float ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direc
 	rayQueryEXT rayQuery;
 	rayQueryInitializeEXT(rayQuery, 
 						  topLevelAs, 
-						  gl_RayFlagsTerminateOnFirstHitEXT, 
-						  0xFD, 
+		                  gl_RayFlagsCullFrontFacingTrianglesEXT,
+						  0xFF, // cullMask - none
 						  origin, 
 						  tMin,
 						  direction, 
@@ -53,7 +53,7 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 	return Li * explicitBRDFcosTheta(surface);
 }
 
-// SMATH:
+// WIP:
 //vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
 //{
 //	if(surface.a < SPEC_THRESHOLD) {

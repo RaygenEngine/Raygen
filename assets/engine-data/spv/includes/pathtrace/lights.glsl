@@ -30,7 +30,7 @@ bool PtLights_ShadowRayTest(accelerationStructureEXT topLevelAs, int id, vec3 or
 	// trace ray
 	traceRayEXT(topLevelAs,     // acceleration structure
 				rayFlags,       // rayFlags
-				0xFF,           // cullMask - quadlights
+				0xFF,           // cullMask - none
 				2,              // sbtRecordOffset - shadow shaders offset
 				0,              // sbtRecordStride
 				1,              // shadow missIndex
