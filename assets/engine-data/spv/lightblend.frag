@@ -21,13 +21,13 @@ bool VisibilityOfRay(vec3 origin, vec3 direction, float tMin, float tMax) {
 	// Initializes a ray query object but does not start traversal
 	rayQueryEXT rayQuery;
 	rayQueryInitializeEXT(rayQuery, 
-							topLevelAs, 
-							gl_RayFlagsTerminateOnFirstHitEXT, 
-							0xFD, 
-							origin, 
-							tMin,
-							direction, 
-							tMax);
+						  topLevelAs, 
+						  gl_RayFlagsTerminateOnFirstHitEXT, 
+						  0xFD, 
+						  origin, 
+						  tMin,
+						  direction, 
+						  tMax);
 
 	// Start traversal: return false if traversal is complete
 	while(rayQueryProceedEXT(rayQuery)) {

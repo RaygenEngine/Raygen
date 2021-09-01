@@ -1,10 +1,11 @@
 #include "BottomLevelAs.h"
 
 #include "assets/pods/MaterialArchetype.h"
-#include "rendering/Device.h"
+#include "assets/shared/MaterialShared.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
 #include "rendering/assets/GpuMesh.h"
+#include "rendering/Device.h"
 #include "rendering/wrappers/CmdBuffer.h"
 
 namespace vl {
@@ -47,11 +48,16 @@ BottomLevelAs::BottomLevelAs(size_t vertexStride, const RBuffer& combinedVertexB
 
 	if (prp) {
 		doubleSided = prp->GetRef<bool>((void*)matInst.Lock()->descriptorSet.uboData.data());
-
-		if (doubleSided) {
-			asGeom.setFlags(vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation);
-		}
 	}
+
+	prp = cl.GetPropertyByName(std::string("alphaMode"));
+	if (prp) {
+
+		auto alphaMode = prp->GetRef<MaterialAlphaMode>((void*)matInst.Lock()->descriptorSet.uboData.data());
+		asGeom.setFlags(alphaMode == MaterialAlphaMode::Mask ? vk::GeometryFlagBitsKHR::eNoDuplicateAnyHitInvocation
+															 : vk::GeometryFlagBitsKHR::eOpaque);
+	}
+
 
 	const auto maxPrimitiveCount = gg.indexCount / 3;
 
