@@ -10,7 +10,7 @@ enum class PtMode
 {
 	Naive,
 	Stochastic,
-	Bdpt,
+	Bdpt, // CHECK:
 };
 
 struct ProgressivePathtrace {
