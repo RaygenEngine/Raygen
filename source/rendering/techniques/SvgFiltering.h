@@ -29,7 +29,7 @@ struct SvgFiltering {
 	int32 iteration{ 0 };
 
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, float minColorAlpha,
-		float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal);
+		float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal, bool luminanceMode);
 	void AttachInputImage(const RImage2D& inputImage);
 	vk::ImageView GetFilteredImageView(size_t frameIndex) const
 	{

@@ -88,7 +88,7 @@ PassLayouts_::PassLayouts_()
 		auto att = svgf.CreateAttachment("SvgfAtrousFiltered", vk::Format::eR32G32B32A32Sfloat);
 		auto fin = svgf.CreateAttachment("SvgfFinalModulated", vk::Format::eR32G32B32A32Sfloat);
 
-		svgf.AddSubpass({}, std::vector{ att });
+		svgf.AddSubpass({}, std::vector{ att });      // Atrous Filter
 		svgf.AddSubpass(std::vector{ att }, { fin }); // Modulated
 
 		svgf.AttachmentFinalLayout(att, vk::ImageLayout::eShaderReadOnlyOptimal);

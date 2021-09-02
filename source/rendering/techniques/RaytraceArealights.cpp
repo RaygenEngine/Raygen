@@ -34,7 +34,8 @@ void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRende
 	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
 
-	svgFiltering.RecordCmd(cmdBuffer, sceneDesc, minColorAlpha, minMomentsAlpha, totalIterations, phiColor, phiNormal);
+	svgFiltering.RecordCmd(
+		cmdBuffer, sceneDesc, minColorAlpha, minMomentsAlpha, totalIterations, phiColor, phiNormal, false);
 }
 
 void RaytraceArealights::Resize(vk::Extent2D extent)
