@@ -36,7 +36,7 @@ void main() {
 
 	Surface surface = surfaceFromGeometryGroup();
 
-	// DIRECT // TODO: when we'll use a non uniform pdf for picking, use it for delta lights too
+	// DIRECT // SMATH: when we'll use a non uniform pdf for picking, use it for delta lights too
 
 	vec3 radiance = vec3(0.f);
 	
