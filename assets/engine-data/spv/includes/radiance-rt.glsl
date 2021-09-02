@@ -6,7 +6,7 @@
 #include "intersection.glsl"
 #include "surface.glsl"
 
-// TODO: this can't handle alpha mask
+// TODO: this can't handle alpha mask - i.e. it does not know the surface - those types should better use a raytracing pipeline?
 float ShadowRayTest(accelerationStructureEXT topLevelAs, vec3 origin, vec3 direction, float tMin, float tMax)
 { 
 	// Initializes a ray query object but does not start traversal

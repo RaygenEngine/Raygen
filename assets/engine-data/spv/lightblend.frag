@@ -147,7 +147,7 @@ void main()
 
     vec3 arealights = vec3(0);
 
-	// TODO: max 3 quadlights atm
+	// WIP: max 3 quadlights atm
     for (int i = 0; i < quadlightCount; ++i) {
 		if(i > 2) break;
 		Quadlight ql = quadlights.light[i];

@@ -64,7 +64,7 @@ bool sampleBSDF(inout Surface surface, out vec3 bsdf, out float pdf, out bool is
 	if(rand(seed) > p_reflect) {	
 		pdf *= 1 - p_reflect;
 		
-		float p_transparency = 1.0 - surface.opacity; // TODO: trans material
+		float p_transparency = 1.0 - surface.opacity;
 
 		// diffuse - light entered and diffusely scattered from the same spot on surface
 		if(rand(seed) > p_transparency) {
