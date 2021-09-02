@@ -53,56 +53,6 @@ vec3 Pointlight_EstimateDirect(accelerationStructureEXT topLevelAs, Pointlight p
 	return Li * explicitBRDFcosTheta(surface);
 }
 
-// WIP:
-//vec3 Quadlight_SpecularContribution(Quadlight ql, Surface surface)
-//{
-//	if(surface.a < SPEC_THRESHOLD) {
-//		return vec3(0);
-//	}
-//
-//	vec3 V = getIncomingDir(surface);
-//
-//	vec3 L = reflect(-V, surface.basis.normal);
-//
-//	// we need to rotate the reflection ray to force intersection with quad's plane
-//	float t;
-//	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) { 
-//		return vec3(0);
-//		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
-//		vec3 pointOnPlane = ql.center + perp_r_n * INF; // SMATH: something big
-//		L = normalize(pointOnPlane - surface.position);
-//	}
-//
-//	vec3 p = surface.position + t * L; // intersection point with rect's plane 
-//
-//	// if point isn't in rectangle, choose the closest that is
-//	if(!PointInsideRectangle(p, ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height)) {
-//		p = PointRectangleNearestPoint(p, ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height);
-//	}
-//
-//	L = normalize(p - surface.position);
-//
-//	float cosTheta_o = dot(ql.normal, -L);
-//
-//	if (cosTheta_o < BIAS) {
-//		return vec3(0);
-//	}
-//
-//	addOutgoingDir(surface, L);
-//	if(isOutgoingDirPassingThrough(surface)) { 
-//		return vec3(0);
-//	}
-//
-//	float dist = distance(p, surface.position);
-//
-//	return microfacetBRDF(surface);
-//}
-//
-//vec3 Quadlight_DiffuseContribution(Quadlight ql, Surface surface) 
-//{
-//	return diffuseBRDF(surface);
-//}
-
 vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, Surface surface)
 {
 	//SMATH:

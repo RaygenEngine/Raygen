@@ -37,9 +37,12 @@
 #define BIAS 1e-4
 #endif
 
-// CHECK:
 #ifndef INF
-#define INF 1e+6
+#define INF uintBitsToFloat(0x7F800000)
+#endif
+
+#ifndef INF_NEG
+#define INF_NEG uintBitsToFloat(0xFF800000)
 #endif
 
 #ifndef SPEC_THRESHOLD

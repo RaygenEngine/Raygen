@@ -8,7 +8,7 @@ struct SvgfAtrousPipe : public StaticPipeBase {
 	vk::UniquePipeline MakePipeline() override;
 
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-		vk::DescriptorSet inputOutputStorageImages, int32 iteration, int32 totalIter) const;
+		vk::DescriptorSet inputOutputStorageImages, int32 iteration, int32 totalIter, bool luminanceMode) const;
 };
 
 } // namespace vl

@@ -14,6 +14,7 @@ layout(push_constant) uniform PC {
 	int progressiveFeedbackIndex;
 	float phiColor;
 	float phiNormal;
+	bool luminanceMode;
 };
 
 float normalDistanceCos(vec3 n1, vec3 n2, float power)
@@ -89,7 +90,7 @@ PixelData LoadPixelData(ivec2 iuv, ivec2 screenSize) {
 		return data;
 	}
 	data.color = imageLoad(svgfInput, iuv);
-	data.luminance = luminance(data.color.rgb);
+	data.luminance = luminanceMode ? luminance(data.color.rgb) : sum(data.color.rgb) / 3.f;
 	
 	vec2 uv = iuv / screenSize; 
 	data.normal = texture(g_SNormalSampler, uv).rgb;
