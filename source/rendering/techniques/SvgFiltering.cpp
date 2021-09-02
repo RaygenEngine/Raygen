@@ -23,7 +23,7 @@ SvgFiltering::SvgFiltering()
 }
 
 void SvgFiltering::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, float minColorAlpha,
-	float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal)
+	float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal, bool luminanceMode)
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -41,7 +41,7 @@ void SvgFiltering::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc&
 	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		for (int32 i = 0; i < totalIterations; ++i) {
 			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(
-				cmdBuffer, sceneDesc, descriptorSets[i % 2], i, totalIterations, phiColor, phiNormal, true);
+				cmdBuffer, sceneDesc, descriptorSets[i % 2], i, totalIterations, phiColor, phiNormal, luminanceMode);
 		}
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);

@@ -125,11 +125,7 @@ void RtxRenderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRende
 {
 	m_mainPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		GbufferPipe::RecordCmd(cmdBuffer, sceneDesc);
-
-		auto inputDescSet = m_mainPassInst[sceneDesc.frameIndex].internalDescSet;
-
-		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
-
+		cmdBuffer.nextSubpass(vk::SubpassContents::eInline); // TODO:
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
 	});
 }
@@ -138,12 +134,6 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 {
 	PROFILE_SCOPE(Renderer);
 	COMMAND_SCOPE_AUTO(cmdBuffer);
-
-	UpdateGlobalDescSet(sceneDesc);
-
-	// calculates: gbuffer, direct lights, gi, ambient
-	// requires: shadowmaps, gi maps
-	DrawGeometryAndLights(cmdBuffer, sceneDesc);
 
 	if (updateViewer.Access()) {
 		UBO_viewer data = {
@@ -157,7 +147,7 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 
 	auto extent = pathtracedResult.extent;
 
-
+	// Pathtracing
 	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
@@ -173,6 +163,13 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
 
+	// SVGF
+	UpdateGlobalDescSet(sceneDesc);
+
+	// calculates: gbuffer, direct lights, gi, ambient
+	// requires: shadowmaps, gi maps
+	DrawGeometryAndLights(cmdBuffer, sceneDesc);
+
 	static ConsoleVariable<float> cons_minColorAlpha{ "r.rtxRenderer.svgf.minColorAlpha", 0.05f,
 		"Set SVGF color alpha for reprojection mix." };
 	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.rtxRenderer.svgf.minMomentsAlpha", 0.05f,
@@ -183,8 +180,8 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 	static ConsoleVariable<float> cons_phiNormal{ "r.rtxRenderer.svgf.phiNormal", 0.2f,
 		"Set atrous filter phiNormal." };
 
-	m_svgFiltering.RecordCmd(
-		cmdBuffer, sceneDesc, *cons_minColorAlpha, *cons_minMomentsAlpha, *cons_iters, *cons_phiColor, *cons_phiNormal);
+	m_svgFiltering.RecordCmd(cmdBuffer, sceneDesc, *cons_minColorAlpha, *cons_minMomentsAlpha, *cons_iters,
+		*cons_phiColor, *cons_phiNormal, true);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }
