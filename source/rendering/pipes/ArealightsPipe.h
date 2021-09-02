@@ -8,6 +8,6 @@ struct ArealightsPipe : public StaticRaytracingPipeBase {
 
 	// DOC: parameters
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const vk::Extent3D& extent,
-		vk::DescriptorSet storageImagesDescSet, int32 samples, int32 iteration) const;
+		vk::DescriptorSet storageImagesDescSet, int32 samples, int32 seed) const;
 };
 } // namespace vl

@@ -1,26 +1,18 @@
 #pragma once
 
-#include "rendering/techniques/ProgressivePathtrace.h"
+#include "rendering/wrappers/Buffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 struct SceneRenderDesc;
 
 namespace vl {
-struct TestSVGFProgPT {
-	TestSVGFProgPT();
-
-	RImage2D pathtracedResult;
-	vk::DescriptorSet pathtracingInputDescSet;
+struct SvgFiltering {
+	SvgFiltering();
 
 	RImage2D progressive;
 
 	RImage2D momentsHistory;
 	vk::DescriptorSet inputOutputsDescSet;
-
-	// use for compatibility with other callers of pathtracing
-	RBuffer viewer;
-	vk::DescriptorSet viewerDescSet;
-	BoolFlag updateViewer{ true };
 
 	InFlightResources<RenderingPassInstance> svgfRenderPassInstance;
 
@@ -36,9 +28,13 @@ struct TestSVGFProgPT {
 
 	int32 iteration{ 0 };
 
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces,
-		float minColorAlpha, float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal);
-	void Resize(vk::Extent2D extent);
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, float minColorAlpha,
+		float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal);
+	void AttachInputImage(const RImage2D& inputImage);
+	vk::ImageView GetFilteredImageView(size_t frameIndex) const
+	{
+		return svgfRenderPassInstance.at(frameIndex).framebuffer["SvgfFinalModulated"].view();
+	}
 };
 
 } // namespace vl

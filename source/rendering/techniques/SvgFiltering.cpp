@@ -1,4 +1,4 @@
-#include "TestSVGFProgPT.h"
+#include "SvgFiltering.h"
 
 #include "rendering/Layouts.h"
 #include "rendering/pipes/StaticPipes.h"
@@ -9,65 +9,25 @@
 #include "rendering/scene/Scene.h"
 #include "rendering/scene/SceneCamera.h"
 
-namespace {
-struct UBO_viewer {
-	glm::mat4 viewInv;
-	glm::mat4 projInv;
-	float offset;
-};
-}; // namespace
 
 namespace vl {
-TestSVGFProgPT::TestSVGFProgPT()
+SvgFiltering::SvgFiltering()
 {
-	pathtracingInputDescSet = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
-	DEBUG_NAME_AUTO(pathtracingInputDescSet);
-
 	inputOutputsDescSet = DescriptorLayouts->_1imageSampler_3storageImage.AllocDescriptorSet();
 	DEBUG_NAME_AUTO(inputOutputsDescSet);
-
-	viewerDescSet = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
-	DEBUG_NAME_AUTO(viewerDescSet);
 
 	for (size_t j = 0; j < 2; ++j) {
 		descriptorSets[j] = DescriptorLayouts->_3storageImage.AllocDescriptorSet();
 		DEBUG_NAME(descriptorSets[j], "SvgfAtrousDescSet" + j);
 	}
-
-	auto uboSize = sizeof(UBO_viewer);
-
-	viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-	rvk::writeDescriptorBuffer(viewerDescSet, 0u, viewer.handle());
 }
 
-void TestSVGFProgPT::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples,
-	int32 bounces, float minColorAlpha, float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal)
+void SvgFiltering::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, float minColorAlpha,
+	float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal)
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
-	if (updateViewer.Access()) {
-		UBO_viewer data = {
-			sceneDesc.viewer.ubo.viewInv,
-			sceneDesc.viewer.ubo.projInv,
-			0,
-		};
-
-		viewer.UploadData(&data, sizeof(UBO_viewer));
-	}
-
-	auto extent = pathtracedResult.extent;
-
-
-	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
-		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
-
-	StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracingInputDescSet,
-		viewerDescSet, iteration, std::max(samples, 0), std::max(bounces, 0));
-
-	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
-		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+	auto extent = progressive.extent;
 
 	progressive.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
@@ -101,10 +61,9 @@ void TestSVGFProgPT::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 	iteration += 1;
 }
 
-void TestSVGFProgPT::Resize(vk::Extent2D extent)
+void SvgFiltering::AttachInputImage(const RImage2D& inputImage)
 {
-	pathtracedResult = RImage2D("Pathtraced (per iteration)", vk::Extent2D{ extent.width, extent.height },
-		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
+	auto extent = vk::Extent2D(inputImage.extent.width, inputImage.extent.height);
 
 	progressive = RImage2D("ProgressiveVariance", vk::Extent2D{ extent.width, extent.height },
 		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -119,10 +78,7 @@ void TestSVGFProgPT::Resize(vk::Extent2D extent)
 	swappingImages[0] = RImage2D("Svgf0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 	swappingImages[1] = RImage2D("Svgf1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-	rvk::writeDescriptorImages(pathtracingInputDescSet, 0u, { pathtracedResult.view() },
-		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-
-	rvk::writeDescriptorImages(inputOutputsDescSet, 0u, { pathtracedResult.view() },
+	rvk::writeDescriptorImages(inputOutputsDescSet, 0u, { inputImage.view() },
 		vk::DescriptorType::eCombinedImageSampler, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	rvk::writeDescriptorImages(inputOutputsDescSet, 1u,

@@ -1,5 +1,6 @@
 #include "RtxRenderer.h"
 
+#include "engine/Events.h"
 #include "engine/profiler/ProfileScope.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
@@ -8,9 +9,9 @@
 #include "rendering/pipes/geometry/GBufferPipe.h"
 #include "rendering/pipes/geometry/UnlitPipe.h"
 #include "rendering/pipes/StaticPipes.h"
+#include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
-#include "engine/Events.h"
 
 
 namespace {
@@ -18,6 +19,13 @@ vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
 {
 	return viewportSize;
 }
+
+struct UBO_viewer {
+	glm::mat4 viewInv;
+	glm::mat4 projInv;
+	float offset;
+};
+
 } // namespace
 
 namespace vl {
@@ -28,7 +36,20 @@ RtxRenderer_::RtxRenderer_()
 		m_globalDesc[i] = DescriptorLayouts->global.AllocDescriptorSet();
 	}
 
-	Event::OnViewerUpdated.Bind(this, [&]() { m_testTech.updateViewer.Set(); });
+	pathtracingInputDescSet = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
+	DEBUG_NAME_AUTO(pathtracingInputDescSet);
+
+	viewerDescSet = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
+	DEBUG_NAME_AUTO(viewerDescSet);
+
+	auto uboSize = sizeof(UBO_viewer);
+
+	viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	rvk::writeDescriptorBuffer(viewerDescSet, 0u, viewer.handle());
+
+	Event::OnViewerUpdated.Bind(this, [&]() { updateViewer.Set(); });
 }
 
 void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
@@ -45,7 +66,13 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(fbSize.width, fbSize.height);
 	}
 
-	m_testTech.Resize(fbSize);
+	pathtracedResult = RImage2D("Pathtraced (per iteration)", vk::Extent2D{ fbSize.width, fbSize.height },
+		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	m_svgFiltering.AttachInputImage(pathtracedResult);
+
+	rvk::writeDescriptorImages(pathtracingInputDescSet, 0u, { pathtracedResult.view() },
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 
@@ -64,17 +91,17 @@ void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 
 	ClearDebugAttachments();
 	RegisterDebugAttachment(m_mainPassInst.at(0));
-	RegisterDebugAttachment(m_testTech.pathtracedResult);
-	RegisterDebugAttachment(m_testTech.progressive);
-	RegisterDebugAttachment(m_testTech.momentsHistory);
-	RegisterDebugAttachment(m_testTech.svgfRenderPassInstance.at(0));
+	RegisterDebugAttachment(pathtracedResult);
+	RegisterDebugAttachment(m_svgFiltering.progressive);
+	RegisterDebugAttachment(m_svgFiltering.momentsHistory);
+	RegisterDebugAttachment(m_svgFiltering.svgfRenderPassInstance.at(0));
 }
 
 InFlightResources<vk::ImageView> RtxRenderer_::GetOutputViews() const
 {
 	InFlightResources<vk::ImageView> views;
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		views[i] = m_testTech.svgfRenderPassInstance[i].framebuffer["SvgfFinalModulated"].view();
+		views[i] = m_svgFiltering.GetFilteredImageView(i);
 	}
 	return views;
 }
@@ -118,10 +145,34 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 	// requires: shadowmaps, gi maps
 	DrawGeometryAndLights(cmdBuffer, sceneDesc);
 
+	if (updateViewer.Access()) {
+		UBO_viewer data = {
+			sceneDesc.viewer.ubo.viewInv,
+			sceneDesc.viewer.ubo.projInv,
+			0,
+		};
+
+		viewer.UploadData(&data, sizeof(UBO_viewer));
+	}
+
+	auto extent = pathtracedResult.extent;
+
+
+	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	static int32 seed = 0;
 	static ConsoleVariable<int32> cons_bounces{ "r.rtxRenderer.bounces", 1,
 		"Set the number of bounces of the RTX Renderer." };
 	static ConsoleVariable<int32> cons_samples{ "r.rtxRenderer.samples", 1,
 		"Set the number of samples of the RTX Renderer." };
+
+	StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(
+		cmdBuffer, sceneDesc, extent, pathtracingInputDescSet, viewerDescSet, seed++, *cons_samples, *cons_bounces);
+
+	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+
 	static ConsoleVariable<float> cons_minColorAlpha{ "r.rtxRenderer.svgf.minColorAlpha", 0.05f,
 		"Set SVGF color alpha for reprojection mix." };
 	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.rtxRenderer.svgf.minMomentsAlpha", 0.05f,
@@ -132,9 +183,8 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 	static ConsoleVariable<float> cons_phiNormal{ "r.rtxRenderer.svgf.phiNormal", 0.2f,
 		"Set atrous filter phiNormal." };
 
-
-	m_testTech.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces, *cons_minColorAlpha, *cons_minMomentsAlpha,
-		*cons_iters, *cons_phiColor, *cons_phiNormal);
+	m_svgFiltering.RecordCmd(
+		cmdBuffer, sceneDesc, *cons_minColorAlpha, *cons_minMomentsAlpha, *cons_iters, *cons_phiColor, *cons_phiNormal);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

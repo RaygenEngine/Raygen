@@ -66,7 +66,7 @@ vk::UniquePipeline ArealightsPipe::MakePipeline()
 }
 
 void ArealightsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	const vk::Extent3D& extent, vk::DescriptorSet storageImagesDescSet, int32 samples, int32 iteration) const
+	const vk::Extent3D& extent, vk::DescriptorSet storageImagesDescSet, int32 samples, int32 seed) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -87,7 +87,7 @@ void ArealightsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		nullptr);
 
 	PushConstant pc{
-		iteration,
+		seed,
 		samples,
 		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
