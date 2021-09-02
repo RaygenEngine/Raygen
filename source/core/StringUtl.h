@@ -6,6 +6,11 @@ namespace str {
 // Using this will also add support for C++20 heterogenous lookup: https://wg21.link/P0919R3
 // (only MSVC > 19.23 at: 23/2/2020)
 
+constexpr char toLower(const char c)
+{
+	return (c >= 'A' && c <= 'Z') ? c + ('a' - 'A') : c;
+}
+
 namespace detail {
 	enum class CaseSensitivity
 	{
@@ -24,9 +29,7 @@ namespace detail {
 		static constexpr bool compareChar(char c1, char c2) noexcept
 		{
 			if constexpr (isInsensitive) {
-				return c1 == c2
-					   || std::tolower(c1)
-							  == std::tolower(c2); // CHECK: Not constexpr. Use char 'math' to make this constexpr
+				return toLower(c1) == toLower(c2);
 			}
 			return c1 == c2;
 		}
@@ -44,7 +47,7 @@ namespace detail {
 		struct LessComp {
 			bool operator()(const unsigned char& c1, const unsigned char& c2) const
 			{
-				return tolower(c1) < tolower(c2);
+				return toLower(c1) < toLower(c2);
 			}
 		};
 		bool operator()(std::string_view s1, std::string_view s2) const noexcept
@@ -70,7 +73,7 @@ namespace detail {
 			size_t result = 0xcbf29ce484222325; // FNV offset basis
 			for (char c : view) {
 				if constexpr (isInsensitive) {
-					result ^= static_cast<char>(std::tolower(c));
+					result ^= static_cast<char>(toLower(c));
 				}
 				else {
 					result ^= c;

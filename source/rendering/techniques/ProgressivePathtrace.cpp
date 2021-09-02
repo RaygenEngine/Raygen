@@ -63,7 +63,7 @@ void ProgressivePathtrace::RecordCmd(
 
 	auto extent = progressive.extent;
 
-	// WIP: if there is no geometry this is validation error here
+	// TODO: if there is no geometry this is validation error here
 
 	switch (mode) {
 		case PtMode::Naive:

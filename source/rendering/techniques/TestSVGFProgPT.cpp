@@ -86,7 +86,7 @@ void TestSVGFProgPT::RecordCmd(
 
 	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		for (int32 i = 0; i < times; ++i) {
-			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times);
+			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times, true);
 		}
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);

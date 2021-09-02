@@ -98,8 +98,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 			inst.transform = transform;    // Position of the instance
 			inst.instanceId = totalGroups; // gl_InstanceCustomIndexEXT
 			inst.blas = Device->getAccelerationStructureAddressKHR(gg.blas.handle());
-			inst.materialId = 0;
-			inst.cullMask = 0x01;
+			inst.materialId = 0;  // TODO: material id system
+			inst.cullMask = 0x01; // TODO: culling mask system
 			inst.flags = !gg.blas.doubleSided ? vk::GeometryInstanceFlagBitsKHR::eTriangleFrontCounterclockwise
 											  : vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
 
@@ -119,8 +119,8 @@ TopLevelAs::TopLevelAs(const std::vector<SceneGeometry*>& geoms, const std::vect
 		inst.transform = transform; // Position of the instance
 		inst.instanceId = k++;      // gl_InstanceCustomIndexEXT
 		inst.blas = Device->getAccelerationStructureAddressKHR(quadlightBlas.handle());
-		inst.materialId = 1;  // WIP:
-		inst.cullMask = 0x02; // WIP: cull system, lights, geom etc
+		inst.materialId = 1;  // TODO: material id system
+		inst.cullMask = 0x02; // TODO: culling mask system
 		inst.flags = vk::GeometryInstanceFlagBitsKHR::eTriangleFacingCullDisable;
 
 		AddAsInstance(inst);

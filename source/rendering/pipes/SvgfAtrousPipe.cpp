@@ -12,6 +12,7 @@ struct PushConstant {
 	int32 progressiveFeedbackIndex;
 	float phiColor;
 	float phiNormal;
+	bool luminanceMode;
 };
 static_assert(sizeof(PushConstant) <= 128);
 } // namespace
@@ -39,7 +40,7 @@ vk::UniquePipeline SvgfAtrousPipe::MakePipeline()
 }
 
 void SvgfAtrousPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet inputOutputStorageImages, int32 iteration, int32 totalIter) const
+	vk::DescriptorSet inputOutputStorageImages, int32 iteration, int32 totalIter, bool luminanceMode) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -69,6 +70,7 @@ void SvgfAtrousPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		.progressiveFeedbackIndex = cons_progressiveFeedback,
 		.phiColor = *cons_phiColor,
 		.phiNormal = *cons_phiNormal,
+		.luminanceMode = luminanceMode,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);

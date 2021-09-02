@@ -76,8 +76,8 @@ void main()
 
 	Onb view = branchlessOnb(N.xyz);
 	
-	// WIP: get res from global desc set -> render scale also should be factored here
-	uint seed = tea16(uint(uv.y * 2160 * 4096 + uv.x * 4096), samples);
+	ivec2 size = textureSize(g_DepthSampler, 0);
+	uint seed = tea16(uint(uv.y * size.y * size.x + uv.x * size.x), samples);
 
 	float occlusion = 0;
 	for(uint smpl = 0; smpl < samples; ++smpl){
@@ -89,7 +89,7 @@ void main()
 		// sample random direction, random magnitude (for screen space)
 		vec3 L = uniformSampleHemisphere(u) * m; 
 
-		occlusion += VisibilityOfRay(surface.position, normalize(outOnbSpace(surface.basis, L)), bias, radius); // WIP: radius
+		occlusion += VisibilityOfRay(surface.position, normalize(outOnbSpace(surface.basis, L)), bias, radius);
 	}
 
 	// object occlusion
