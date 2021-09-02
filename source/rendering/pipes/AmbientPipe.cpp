@@ -40,7 +40,8 @@ vk::UniquePipeline AmbientPipe::MakePipeline()
 		nullptr, nullptr, nullptr, layout(), PassLayouts->secondary.compatibleRenderPass.get(), 0u);
 }
 
-void AmbientPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void AmbientPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, float bias,
+	float strength, float radius) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -53,16 +54,11 @@ void AmbientPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		},
 		nullptr);
 
-	static ConsoleVariable<float> cons_bias{ "r.ao.bias", 0.001f, "Set the ambient occlusion bias." };
-	static ConsoleVariable<float> cons_strength{ "r.ao.strength", 1.0f, "Set the ambient occlusion strength." };
-	static ConsoleVariable<float> cons_radius{ "r.ao.radius", .2f, "Set the ambient occlusion radius." };
-	static ConsoleVariable<int32> cons_samples{ "r.ao.samples", 4, "Set the ambient occlusion samples." };
-
 	PushConstant pc{
-		cons_bias,
-		cons_strength,
-		cons_radius,
-		cons_samples,
+		bias,
+		strength,
+		radius,
+		samples,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);

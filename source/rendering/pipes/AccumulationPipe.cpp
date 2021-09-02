@@ -18,7 +18,7 @@ static_assert(sizeof(PushConstant) <= 128);
 
 namespace vl {
 
-ConsoleFunction<> cons_refitAccumulation{ "r.accumulation.recompile",
+ConsoleFunction<> cons_refitAccumulation{ "r.pipes.accumulation.recompile",
 	[]() { StaticPipes::Recompile<AccumulationPipe>(); }, "Recompiles accumulation compute shader." };
 
 vk::UniquePipelineLayout AccumulationPipe::MakePipelineLayout()

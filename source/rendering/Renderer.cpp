@@ -146,8 +146,16 @@ void Renderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDe
 		StaticPipes::Get<IrragridPipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
 	});
 
-	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline,
-		[&]() { StaticPipes::Get<AmbientPipe>().RecordCmd(cmdBuffer, sceneDesc); });
+	static ConsoleVariable<float> cons_bias{ "r.renderer.ao.bias", 0.001f, "Set the ambient occlusion bias." };
+	static ConsoleVariable<float> cons_strength{ "r.renderer.ao.strength", 1.0f,
+		"Set the ambient occlusion strength." };
+	static ConsoleVariable<float> cons_radius{ "r.renderer.ao.radius", .2f, "Set the ambient occlusion radius." };
+	static ConsoleVariable<int32> cons_samples{ "r.renderer.ao.samples", 4, "Set the ambient occlusion samples." };
+
+	m_secondaryPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		StaticPipes::Get<AmbientPipe>().RecordCmd(
+			cmdBuffer, sceneDesc, *cons_samples, *cons_bias, *cons_strength, cons_radius);
+	});
 }
 
 void Renderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDesc, OutputPassBase& outputPass)
@@ -165,13 +173,29 @@ void Renderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 	// requires: shadowmaps, gi maps
 	DrawGeometryAndLights(cmdBuffer, sceneDesc);
 
+	static ConsoleVariable<int32> cons_samples{ "r.renderer.arealights.samples", 1,
+		"Set the sample count of arealights." };
+	static ConsoleVariable<float> cons_minColorAlpha{ "r.renderer.arealights.svgf.minColorAlpha", 0.05f,
+		"Set SVGF color alpha for reprojection mix." };
+	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.renderer.arealight.svgf.minMomentsAlpha", 0.05f,
+		"Set SVGF moments alpha for reprojection mix." };
+	static ConsoleVariable<int32> cons_iters{ "r.renderer.arealights.svgf.iterations", 4,
+		"Controls how many times to apply svgf atrous filter." };
+	static ConsoleVariable<float> cons_phiColor{ "r.renderer.arealights.svgf.phiColor", 1.f,
+		"Set atrous filter phiColor." };
+	static ConsoleVariable<float> cons_phiNormal{ "r.renderer.arealights.svgf.phiNormal", 0.2f,
+		"Set atrous filter phiNormal." };
 	// calculates: total of arealights
 	// requires: -
-	m_raytraceArealights.RecordCmd(cmdBuffer, sceneDesc);
+	m_raytraceArealights.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_minColorAlpha, *cons_minMomentsAlpha,
+		*cons_iters, *cons_phiColor, *cons_phiNormal);
+
+	static ConsoleVariable<int32> cons_bounces{ "r.renderer.mirror.bounces", 1,
+		"Set the number of bounces of mirror reflections." };
 
 	// calculates: specular reflections (mirror)
 	// requires: gbuffer, shadowmaps, gi maps
-	m_raytraceMirrorReflections.RecordCmd(cmdBuffer, sceneDesc);
+	m_raytraceMirrorReflections.RecordCmd(cmdBuffer, sceneDesc, *cons_bounces);
 
 	// TODO: post process
 	m_ptPass[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&] {

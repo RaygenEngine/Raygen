@@ -42,14 +42,10 @@ TestSVGFProgPT::TestSVGFProgPT()
 	rvk::writeDescriptorBuffer(viewerDescSet, 0u, viewer.handle());
 }
 
-
-void TestSVGFProgPT::RecordCmd(
-	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces)
+void TestSVGFProgPT::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples,
+	int32 bounces, float minColorAlpha, float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal)
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
-
-	static ConsoleVariable<int32> cons_iters{ "r.rtxRenderer.svgf.iterations", 4,
-		"Controls how many times to apply svgf atrous filter." };
 
 	if (updateViewer.Access()) {
 		UBO_viewer data = {
@@ -79,14 +75,13 @@ void TestSVGFProgPT::RecordCmd(
 	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(cmdBuffer, extent, sceneDesc, inputOutputsDescSet, iteration == 0);
-
-	// Atrous filter
-	auto times = std::max(*cons_iters, 1);
+	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(
+		cmdBuffer, extent, sceneDesc, inputOutputsDescSet, minColorAlpha, minMomentsAlpha);
 
 	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-		for (int32 i = 0; i < times; ++i) {
-			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times, true);
+		for (int32 i = 0; i < totalIterations; ++i) {
+			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(
+				cmdBuffer, sceneDesc, descriptorSets[i % 2], i, totalIterations, phiColor, phiNormal, true);
 		}
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);

@@ -75,7 +75,7 @@ vk::UniquePipeline MirrorPipe::MakePipeline()
 }
 
 void MirrorPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const vk::Extent3D& extent,
-	vk::DescriptorSet mirrorImageStorageDescSet) const
+	vk::DescriptorSet mirrorImageStorageDescSet, int32 bounces) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -96,10 +96,8 @@ void MirrorPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		},
 		nullptr);
 
-	static ConsoleVariable<int32> cons_depth{ "r.mirror.depth", 1, "Set the depth of mirror reflections." };
-
 	PushConstant pc{
-		std::max(0, *cons_depth),
+		bounces,
 		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
 		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
 		sceneDesc.scene->tlas.sceneDesc.dirlightCount,

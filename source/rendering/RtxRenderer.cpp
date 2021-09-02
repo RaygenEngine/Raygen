@@ -122,8 +122,19 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 		"Set the number of bounces of the RTX Renderer." };
 	static ConsoleVariable<int32> cons_samples{ "r.rtxRenderer.samples", 1,
 		"Set the number of samples of the RTX Renderer." };
+	static ConsoleVariable<float> cons_minColorAlpha{ "r.rtxRenderer.svgf.minColorAlpha", 0.05f,
+		"Set SVGF color alpha for reprojection mix." };
+	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.rtxRenderer.svgf.minMomentsAlpha", 0.05f,
+		"Set SVGF moments alpha for reprojection mix." };
+	static ConsoleVariable<int32> cons_iters{ "r.rtxRenderer.svgf.iterations", 4,
+		"Controls how many times to apply svgf atrous filter." };
+	static ConsoleVariable<float> cons_phiColor{ "r.rtxRenderer.svgf.phiColor", 1.f, "Set atrous filter phiColor." };
+	static ConsoleVariable<float> cons_phiNormal{ "r.rtxRenderer.svgf.phiNormal", 0.2f,
+		"Set atrous filter phiNormal." };
 
-	m_testTech.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces);
+
+	m_testTech.RecordCmd(cmdBuffer, sceneDesc, *cons_samples, *cons_bounces, *cons_minColorAlpha, *cons_minMomentsAlpha,
+		*cons_iters, *cons_phiColor, *cons_phiNormal);
 
 	outputPass.RecordOutPass(cmdBuffer, sceneDesc.frameIndex);
 }

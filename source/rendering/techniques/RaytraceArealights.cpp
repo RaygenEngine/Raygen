@@ -24,19 +24,18 @@ RaytraceArealights::RaytraceArealights()
 	}
 }
 
-void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
+void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples,
+	float minColorAlpha, float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal)
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
-
-	static ConsoleVariable<int32> cons_iters{ "r.arealights.svgf.iterations", 4,
-		"Controls how many times to apply svgf atrous filter." };
 
 	auto extent = pathtracedResult.extent;
 
 	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-	StaticPipes::Get<ArealightsPipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracingInputDescSet, iteration);
+	StaticPipes::Get<ArealightsPipe>().RecordCmd(
+		cmdBuffer, sceneDesc, extent, pathtracingInputDescSet, samples, iteration);
 
 	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
 		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
@@ -47,14 +46,13 @@ void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRende
 	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
-	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(cmdBuffer, extent, sceneDesc, inputOutputsDescSet, iteration == 0);
-
-	// Atrous filter
-	auto times = std::max(*cons_iters, 1);
+	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(
+		cmdBuffer, extent, sceneDesc, inputOutputsDescSet, minColorAlpha, minMomentsAlpha);
 
 	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-		for (int32 i = 0; i < times; ++i) {
-			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times, false);
+		for (int32 i = 0; i < totalIterations; ++i) {
+			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(
+				cmdBuffer, sceneDesc, descriptorSets[i % 2], i, totalIterations, phiColor, phiNormal, false);
 		}
 
 		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);

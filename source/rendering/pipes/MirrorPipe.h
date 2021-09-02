@@ -10,6 +10,6 @@ struct MirrorPipe : public StaticRaytracingPipeBase {
 
 	// DOC: parameters
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, const vk::Extent3D& extent,
-		vk::DescriptorSet mirrorImageStorageDescSet) const;
+		vk::DescriptorSet mirrorImageStorageDescSet, int32 bounces) const;
 };
 } // namespace vl
