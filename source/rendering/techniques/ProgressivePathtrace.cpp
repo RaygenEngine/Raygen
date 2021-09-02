@@ -2,7 +2,6 @@
 
 #include "rendering/Layouts.h"
 #include "rendering/pipes/AccumulationPipe.h"
-#include "rendering/pipes/BdptPipe.h"
 #include "rendering/pipes/NaivePathtracePipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
@@ -64,7 +63,7 @@ void ProgressivePathtrace::RecordCmd(
 
 	auto extent = progressive.extent;
 
-	// CHECK: if there is no geometry this is validation error here
+	// WIP: if there is no geometry this is validation error here
 
 	switch (mode) {
 		case PtMode::Naive:
@@ -74,10 +73,6 @@ void ProgressivePathtrace::RecordCmd(
 		case PtMode::Stochastic:
 			StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracedDescSet,
 				viewerDescSet, iteration, std::max(samples, 0), std::max(bounces, 0));
-			break;
-		case PtMode::Bdpt:
-			StaticPipes::Get<BdptPipe>().RecordCmd(
-				cmdBuffer, sceneDesc, extent, pathtracedDescSet, iteration, std::max(bounces, 0));
 			break;
 	}
 

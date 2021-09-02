@@ -2,7 +2,6 @@
 
 #include "rendering/pipes/AmbientPipe.h"
 #include "rendering/pipes/ArealightsPipe.h"
-#include "rendering/pipes/BdptPipe.h"
 #include "rendering/pipes/BillboardPipe.h"
 #include "rendering/pipes/CubemapConvolutionPipe.h"
 #include "rendering/pipes/CubemapPrefilterPipe.h"
@@ -36,12 +35,10 @@ void StaticPipes::InternalInitRegistered()
 	StaticPipes::Init<ReflprobePipe>();
 	StaticPipes::Init<SelectionStencilPipe>();
 	StaticPipes::Init<SpotlightPipe>();
-	// StaticPipes::Init<VolumePointsPipe>();
 	StaticPipes::Init<VolumeLinesPipe>();
 	StaticPipes::Init<VolumeTrianglesPipe>();
 	StaticPipes::Init<ArealightsPipe>();
 	StaticPipes::Init<StochasticPathtracePipe>();
-	StaticPipes::Init<BdptPipe>();
 	StaticPipes::Init<NaivePathtracePipe>();
 	StaticPipes::Init<AccumulationPipe>();
 	StaticPipes::Init<SvgfMomentsPipe>();
