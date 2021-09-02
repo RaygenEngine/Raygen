@@ -113,7 +113,7 @@ void main() {
 		}
 	}
 
-	vec3 curColor = accumColor / float(samples);
+	vec3 color = accumColor / float(samples);
 	
-	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(curColor, 1.f));
+	imageStore(image, ivec2(gl_LaunchIDEXT.xy), vec4(color, 1.f));
 }

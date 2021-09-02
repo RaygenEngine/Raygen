@@ -7,12 +7,15 @@ struct SceneRenderDesc;
 
 namespace vl {
 struct RaytraceArealights {
-
 	RaytraceArealights();
 
-	RImage2D progressive;
-	RImage2D momentsBuffer;
+	RImage2D pathtracedResult;
+	vk::DescriptorSet pathtracingInputDescSet;
 
+	RImage2D progressive;
+
+	RImage2D momentsHistory;
+	vk::DescriptorSet inputOutputsDescSet;
 	InFlightResources<RenderingPassInstance> svgfRenderPassInstance;
 
 	// DescSet 0:
@@ -24,8 +27,6 @@ struct RaytraceArealights {
 	//    Img 0 is write (index: 3)
 	std::array<vk::DescriptorSet, 2> descriptorSets;
 	std::array<RImage2D, 2> swappingImages;
-
-	vk::DescriptorSet imagesDescSet;
 
 	int32 iteration{ 0 };
 

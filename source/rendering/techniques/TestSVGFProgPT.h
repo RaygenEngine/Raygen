@@ -34,8 +34,7 @@ struct TestSVGFProgPT {
 	std::array<vk::DescriptorSet, 2> descriptorSets;
 	std::array<RImage2D, 2> swappingImages;
 
-
-	int32 iteration{};
+	int32 iteration{ 0 };
 
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces);
 	void Resize(vk::Extent2D extent);

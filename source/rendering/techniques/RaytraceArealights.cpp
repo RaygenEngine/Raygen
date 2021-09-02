@@ -6,15 +6,17 @@
 #include "rendering/pipes/ArealightsPipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/SvgfAtrousPipe.h"
-
-// TODO: use specific for each technique instance and waitIdle() resize
-ConsoleVariable<float> cons_arealightsScale{ "r.arealights.scale", 1.f, "Set arealights scale" };
+#include "rendering/pipes/SvgfMomentsPipe.h"
+#include "rendering/pipes/SvgfModulatePipe.h"
 
 namespace vl {
 RaytraceArealights::RaytraceArealights()
 {
-	imagesDescSet = DescriptorLayouts->_3storageImage.AllocDescriptorSet();
-	DEBUG_NAME(imagesDescSet, "ProgArealights storage descriptor set");
+	pathtracingInputDescSet = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
+	DEBUG_NAME_AUTO(pathtracingInputDescSet);
+
+	inputOutputsDescSet = DescriptorLayouts->_1imageSampler_3storageImage.AllocDescriptorSet();
+	DEBUG_NAME_AUTO(inputOutputsDescSet);
 
 	for (size_t j = 0; j < 2; ++j) {
 		descriptorSets[j] = DescriptorLayouts->_3storageImage.AllocDescriptorSet();
@@ -25,43 +27,85 @@ RaytraceArealights::RaytraceArealights()
 void RaytraceArealights::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc)
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
-	// CHECK: this should not run if there are no area lights in the scene
-
-	StaticPipes::Get<ArealightsPipe>().RecordCmd(cmdBuffer, sceneDesc, progressive.extent, imagesDescSet, iteration);
 
 	static ConsoleVariable<int32> cons_iters{ "r.arealights.svgf.iterations", 4,
 		"Controls how many times to apply svgf atrous filter." };
 
-	auto times = *cons_iters;
-	for (int32 i = 0; i < times; ++i) {
-		svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
-			//
-			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times);
+	auto extent = pathtracedResult.extent;
 
-			cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
-		});
-	}
+	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	StaticPipes::Get<ArealightsPipe>().RecordCmd(cmdBuffer, sceneDesc, extent, pathtracingInputDescSet, iteration);
+
+	pathtracedResult.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+
+	progressive.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral,
+		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
+
+	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(cmdBuffer, extent, sceneDesc, inputOutputsDescSet, iteration == 0);
+
+	// Atrous filter
+	auto times = std::max(*cons_iters, 1);
+
+	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
+		for (int32 i = 0; i < times; ++i) {
+			StaticPipes::Get<SvgfAtrousPipe>().RecordCmd(cmdBuffer, sceneDesc, descriptorSets[i % 2], i, times);
+		}
+
+		cmdBuffer.nextSubpass(vk::SubpassContents::eInline);
+
+		auto inputDescSet = svgfRenderPassInstance[sceneDesc.frameIndex].internalDescSet;
+
+		StaticPipes::Get<SvgfModulatePipe>().RecordCmd(cmdBuffer, sceneDesc, inputDescSet);
+	});
+
+
+	progressive.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
+
+	momentsHistory.TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal,
+		vk::PipelineStageFlagBits::eRayTracingShaderKHR, vk::PipelineStageFlagBits::eFragmentShader);
 
 	iteration += 1;
 }
 
 void RaytraceArealights::Resize(vk::Extent2D extent)
 {
-	progressive = RImage2D("ArealightProg",
-		vk::Extent2D{ static_cast<uint32>(extent.width * cons_arealightsScale),
-			static_cast<uint32>(extent.height * cons_arealightsScale) },
-		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+	pathtracedResult = RImage2D("Pathtraced (per iteration)", vk::Extent2D{ extent.width, extent.height },
+		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
 
+	progressive = RImage2D("ProgressiveVariance", vk::Extent2D{ extent.width, extent.height },
+		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-	momentsBuffer = RImage2D("Moments Buffer", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+	momentsHistory = RImage2D("MomentsHistory", vk::Extent2D{ extent.width, extent.height },
+		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	for (size_t i = 0; i < c_framesInFlight; ++i) {
 		svgfRenderPassInstance[i] = PassLayouts->svgf.CreatePassInstance(extent.width, extent.height);
 	}
 
-	swappingImages[0] = RImage2D("SVGF 0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+	swappingImages[0] = RImage2D("Svgf0", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+	swappingImages[1] = RImage2D("Svgf1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
 
-	swappingImages[1] = RImage2D("SVGF 1", extent, vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+	rvk::writeDescriptorImages(pathtracingInputDescSet, 0u, { pathtracedResult.view() },
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
+	rvk::writeDescriptorImages(inputOutputsDescSet, 0u, { pathtracedResult.view() },
+		vk::DescriptorType::eCombinedImageSampler, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	rvk::writeDescriptorImages(inputOutputsDescSet, 1u,
+		{
+			swappingImages[0].view(),
+			progressive.view(),
+			momentsHistory.view(),
+		},
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
 
 	for (size_t j = 0; j < 2; ++j) {
 		rvk::writeDescriptorImages(descriptorSets[j], 0u,
@@ -72,14 +116,6 @@ void RaytraceArealights::Resize(vk::Extent2D extent)
 			},
 			nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 	}
-
-	rvk::writeDescriptorImages(imagesDescSet, 0u,
-		{
-			swappingImages[0].view(),
-			progressive.view(),
-			momentsBuffer.view(),
-		},
-		nullptr, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 	iteration = 0;
 }

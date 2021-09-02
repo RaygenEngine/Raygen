@@ -24,7 +24,7 @@ vk::UniquePipelineLayout ArealightsPipe::MakePipelineLayout()
 	return rvk::makePipelineLayout<PushConstant>(
 		{
 			DescriptorLayouts->global.handle(),                           // gbuffer and stuff
-			DescriptorLayouts->_3storageImage.handle(),                   // image result
+			DescriptorLayouts->_1storageImage.handle(),                   // image result
 			DescriptorLayouts->accelerationStructure.handle(),            // accel structure
 			DescriptorLayouts->_1storageBuffer_1024samplerImage.handle(), // geometry and texture
 			DescriptorLayouts->_1storageBuffer.handle(),                  // quadlights
