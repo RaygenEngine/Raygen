@@ -36,7 +36,7 @@ void SvgFiltering::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc&
 		vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eRayTracingShaderKHR);
 
 	StaticPipes::Get<SvgfMomentsPipe>().RecordCmd(
-		cmdBuffer, extent, sceneDesc, inputOutputsDescSet, minColorAlpha, minMomentsAlpha);
+		cmdBuffer, extent, sceneDesc, inputOutputsDescSet, minColorAlpha, minMomentsAlpha, luminanceMode);
 
 	svgfRenderPassInstance[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		for (int32 i = 0; i < totalIterations; ++i) {

@@ -133,9 +133,11 @@ void main() {
     float sumWIndirect = centerMultiplier;
     vec4  sumIndirect  = centerMultiplier * vec4(saturate(center.color.xyz), center.color.w);
 
-    for (int yy = -2; yy <= 2; yy++)
+	const int radius = 2;
+
+    for (int yy = -radius; yy <= radius; yy++)
     {
-        for (int xx = -2; xx <= 2; xx++)
+        for (int xx = -radius; xx <= radius; xx++)
         {
             const ivec2 sampleIuv = iuv + ivec2(xx, yy) * stepSize;
             const bool inside = IsInside(sampleIuv, screenSize);

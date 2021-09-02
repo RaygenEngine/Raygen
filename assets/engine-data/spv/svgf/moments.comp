@@ -10,6 +10,7 @@ layout(set = 1, binding = 3, rgba32f) uniform image2D momentsImage;
 layout(push_constant) uniform PC {
 	float minColorAlpha;
 	float minMomentsAlpha;
+	bool luminanceMode;
 };
       
 struct ReprojectionData {
@@ -25,6 +26,10 @@ vec3 demodulate(vec3 c, vec3 albedo)
     return c / max(albedo, vec3(0.001, 0.001, 0.001));
 }
 
+bool IsInside(ivec2 p, ivec2 screenSize) {
+	return p.x >= 0 && p.y >= 0 && p.x < screenSize.x && p.y < screenSize.y;
+}
+
 void main() 
 {
 	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
@@ -33,24 +38,24 @@ void main()
 	vec3 color = texture(inputImage, uv).xyz;
 	float depth = texture(g_DepthSampler, uv).r;
 
-//	if(depth != 1.0f) {
-//		color = demodulate(color - texture(g_EmissiveSampler, uv).xyz, texture(g_AlbedoSampler, uv).xyz);
-//		if (isVectorNan(color)) {
-//			color = vec3(0);
-//		}
-//	}
+	//if(depth != 1.0f) {
+	//color = demodulate(color - texture(g_EmissiveSampler, uv).xyz, texture(g_AlbedoSampler, uv).xyz);
+	if (isVectorNan(color)) {
+		color = vec3(0);
+	}
+	//}
 
 	ReprojectionData reproj = GetReprojection(uv);
 	bool success = reproj.historyLength > 0;
 	float historyLength = min(32.0f, success ? reproj.historyLength + 1.0f : 1.0f);
 
-	vec2 moments;
-	moments.r = luminance(color);
-	moments.g = moments.r * moments.r;
-
 	// Mix reprojection
 	const float colorAlpha = success ? max(1.0 / historyLength, minColorAlpha) : 1.0;
 	const float momentsAlpha = success ? max(1.0 / historyLength, minMomentsAlpha) : 1.0;
+
+	vec2 moments;
+	moments.r = luminanceMode ? luminance(color.rgb) : sum(color.rgb) / 3.f;
+	moments.g = moments.r * moments.r;
 
 	moments = mix(reproj.moments, moments, momentsAlpha);
 	color = mix(reproj.color, color, colorAlpha);
@@ -59,6 +64,7 @@ void main()
 	// from SVGF paper:
 	float variance = max(0., moments.g - moments.r * moments.r);
 
+	// TODO: extra pass cross-bilateral filtering of the illumination and estimate its variance
 	if (historyLength < 2) {
 		variance += 0.2;
 	}
@@ -75,7 +81,7 @@ bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex,
 	vec2 size = vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
 
 	if (coord.x < 0 || coord.y < 0 || 
-	    coord.x >= size.x || coord.y > size.y) {
+	    coord.x > size.x || coord.y > size.y) {
 		return false;
 	}
 
