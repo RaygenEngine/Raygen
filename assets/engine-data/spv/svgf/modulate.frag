@@ -8,6 +8,7 @@ layout (input_attachment_index = 0, set = 1, binding = 0) uniform subpassInput s
 
 void main() {
 	
+	// TODO: add albedo / emissive demodulation during pathtracing first bounce direct, and modulate here
 	outColor = subpassLoad(svgfAtrousFiltered);
 	return;
 
