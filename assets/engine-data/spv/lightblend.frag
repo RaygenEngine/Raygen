@@ -143,19 +143,14 @@ void main()
     vec4 arealightShadowing = texture(_reserved0_, uv);
     vec3 mirror = texture(_reserved2_, uv).rgb;
 
-	// ...
-
     vec3 arealights = vec3(0);
 
-	// WIP: max 3 quadlights atm
-    for (int i = 0; i < quadlightCount; ++i) {
-		if(i > 2) break;
+    for (int i = 0; i < min(3, quadlightCount); ++i) {
+
 		Quadlight ql = quadlights.light[i];
 
 		vec3 L = normalize(ql.center - surface.position);
 		addOutgoingDir(surface, L);
-
-		//arealights += ql.color * ql.intensity * explicitBRDF(surface) * arealightShadowing[i];
 
 		vec3 ks = interfaceFresnel(surface);
 		vec3 kd = (1.0 - ks) * surface.opacity;

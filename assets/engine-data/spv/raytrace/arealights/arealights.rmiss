@@ -7,5 +7,5 @@ struct ShadowPayload {
 layout(location = 0) rayPayloadInEXT ShadowPayload prd;
 
 void main() {
-	prd.hit = false;
+	prd.hit = false; // in shadow
 }

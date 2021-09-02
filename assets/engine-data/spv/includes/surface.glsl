@@ -131,6 +131,32 @@ Surface surfaceFromGBuffer(
     return surface;
 }
 
+Surface surfaceFromGBufferNoMaterial(
+    Camera cam,
+    float depth,
+    sampler2D snormalsSampler,
+    sampler2D gnormalsSampler,
+    vec2 uv)
+{
+    Surface surface;
+
+    surface.position = reconstructWorldPosition(depth, uv, cam.viewProjInv);
+
+    vec3 N = texture(snormalsSampler, uv).rgb;
+    vec3 Ng = texture(gnormalsSampler, uv).rgb;
+    vec3 V = normalize(cam.position - surface.position);
+
+    // from the inside of object - if not culled
+    if (dot(V, Ng) < 0) {
+        Ng = -Ng;
+        N = -N;
+    }
+
+    addInitialVectors(surface, Ng, N, V);
+
+    return surface;
+}
+
 #ifndef RAY
 Surface surfaceFromGBuffer(
     Camera cam,

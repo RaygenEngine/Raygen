@@ -93,6 +93,10 @@ void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 	RegisterDebugAttachment(m_secondaryPassInst.at(0));
 	RegisterDebugAttachment(m_ptPass.at(0));
 	RegisterDebugAttachment(m_raytraceMirrorReflections.result.at(0));
+	RegisterDebugAttachment(m_raytraceArealights.pathtracedResult);
+	RegisterDebugAttachment(m_raytraceArealights.progressive);
+	RegisterDebugAttachment(m_raytraceArealights.momentsHistory);
+	RegisterDebugAttachment(m_raytraceArealights.svgfRenderPassInstance.at(0));
 }
 
 InFlightResources<vk::ImageView> Renderer_::GetOutputViews() const
