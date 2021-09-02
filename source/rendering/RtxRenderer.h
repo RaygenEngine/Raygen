@@ -4,7 +4,7 @@
 #include "rendering/RendererBase.h"
 #include "rendering/wrappers/CmdBuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
-#include "rendering/techniques/TestSVGFProgPT.h"
+#include "rendering/techniques/SvgFiltering.h"
 
 namespace vl {
 
@@ -21,9 +21,17 @@ public:
 
 
 private:
+	// use for compatibility with other callers of pathtracing
+	RBuffer viewer;
+	vk::DescriptorSet viewerDescSet;
+	BoolFlag updateViewer{ true };
+
+	RImage2D pathtracedResult;
+	vk::DescriptorSet pathtracingInputDescSet;
+
 	InFlightResources<RenderingPassInstance> m_mainPassInst;
 
-	TestSVGFProgPT m_testTech;
+	SvgFiltering m_svgFiltering;
 
 	vk::Extent2D m_extent{};
 
