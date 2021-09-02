@@ -11,6 +11,7 @@ struct SvgfMomentsPipe : public StaticPipeBase {
 
 	// DOC: parameters
 	void RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent, const SceneRenderDesc& sceneDesc,
-		vk::DescriptorSet inputOutputsImageDescSet, float minColorAlpha, float minMomentsAlpha) const;
+		vk::DescriptorSet inputOutputsImageDescSet, float minColorAlpha, float minMomentsAlpha,
+		bool luminanceMode) const;
 };
 } // namespace vl

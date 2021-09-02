@@ -11,6 +11,7 @@ namespace {
 struct PushConstant {
 	float minColorAlpha;
 	float minMomentsAlpha;
+	bool luminanceMode;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -48,7 +49,7 @@ vk::UniquePipeline SvgfMomentsPipe::MakePipeline()
 
 void SvgfMomentsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
 	const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputOutputsImageDescSet, float minColorAlpha,
-	float minMomentsAlpha) const
+	float minMomentsAlpha, bool luminanceMode) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -64,6 +65,7 @@ void SvgfMomentsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D&
 	PushConstant pc{
 		minColorAlpha,
 		minMomentsAlpha,
+		luminanceMode,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
