@@ -21,11 +21,6 @@ struct ReprojectionData {
 
 ReprojectionData GetReprojection(vec2 uv);
 
-vec3 demodulate(vec3 c, vec3 albedo)
-{
-    return c / max(albedo, vec3(0.001, 0.001, 0.001));
-}
-
 bool IsInside(ivec2 p, ivec2 screenSize) {
 	return p.x >= 0 && p.y >= 0 && p.x < screenSize.x && p.y < screenSize.y;
 }
@@ -38,12 +33,9 @@ void main()
 	vec3 color = texture(inputImage, uv).xyz;
 	float depth = texture(g_DepthSampler, uv).r;
 
-	//if(depth != 1.0f) {
-	//color = demodulate(color - texture(g_EmissiveSampler, uv).xyz, texture(g_AlbedoSampler, uv).xyz);
 	if (isVectorNan(color)) {
 		color = vec3(0);
 	}
-	//}
 
 	ReprojectionData reproj = GetReprojection(uv);
 	bool success = reproj.historyLength > 0;
