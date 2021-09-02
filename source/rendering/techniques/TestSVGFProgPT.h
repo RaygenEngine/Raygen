@@ -36,7 +36,8 @@ struct TestSVGFProgPT {
 
 	int32 iteration{ 0 };
 
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces);
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, int32 bounces,
+		float minColorAlpha, float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal);
 	void Resize(vk::Extent2D extent);
 };
 

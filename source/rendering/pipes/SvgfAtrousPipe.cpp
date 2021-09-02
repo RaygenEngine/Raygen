@@ -9,7 +9,6 @@ namespace {
 struct PushConstant {
 	int32 iteration;
 	int32 totalIter;
-	int32 progressiveFeedbackIndex;
 	float phiColor;
 	float phiNormal;
 	bool luminanceMode;
@@ -40,20 +39,10 @@ vk::UniquePipeline SvgfAtrousPipe::MakePipeline()
 }
 
 void SvgfAtrousPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
-	vk::DescriptorSet inputOutputStorageImages, int32 iteration, int32 totalIter, bool luminanceMode) const
+	vk::DescriptorSet inputOutputStorageImages, int32 iteration, int32 totalIterations, float phiColor, float phiNormal,
+	bool luminanceMode) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
-
-
-	static ConsoleVariable<bool> cons_enable{ "r.svgf.enable", true, "Enable or disable svgf pass." };
-
-	static ConsoleVariable<int32> cons_progressiveFeedback{ "r.svgf.feedbackIndex", -1,
-		"Selects the index of the iteration to write onto the accumulation result (or do -1 to skip feedback)." };
-
-	static ConsoleVariable<float> cons_phiColor{ "r.svgf.phiColor", 1.f, "Set atrous filter phiColor." };
-
-	static ConsoleVariable<float> cons_phiNormal{ "r.svgf.phiNormal", 0.2f, "Set atrous filter phiNormal." };
-
 
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline());
 
@@ -66,10 +55,9 @@ void SvgfAtrousPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 
 	PushConstant pc{
 		.iteration = iteration,
-		.totalIter = (totalIter < 1 || !cons_enable) ? 0 : totalIter,
-		.progressiveFeedbackIndex = cons_progressiveFeedback,
-		.phiColor = *cons_phiColor,
-		.phiNormal = *cons_phiNormal,
+		.totalIter = totalIterations,
+		.phiColor = phiColor,
+		.phiNormal = phiNormal,
 		.luminanceMode = luminanceMode,
 	};
 

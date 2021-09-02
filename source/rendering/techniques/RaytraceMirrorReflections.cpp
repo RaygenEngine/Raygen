@@ -14,7 +14,8 @@ RaytraceMirrorReflections::RaytraceMirrorReflections()
 	}
 }
 
-void RaytraceMirrorReflections::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc) const
+void RaytraceMirrorReflections::RecordCmd(
+	vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 bounces) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -24,7 +25,7 @@ void RaytraceMirrorReflections::RecordCmd(vk::CommandBuffer cmdBuffer, const Sce
 
 	auto extent = result[sceneDesc.frameIndex].extent;
 
-	StaticPipes::Get<MirrorPipe>().RecordCmd(cmdBuffer, sceneDesc, extent, descSet[sceneDesc.frameIndex]);
+	StaticPipes::Get<MirrorPipe>().RecordCmd(cmdBuffer, sceneDesc, extent, descSet[sceneDesc.frameIndex], bounces);
 
 	result[sceneDesc.frameIndex].TransitionToLayout(cmdBuffer, vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits::eRayTracingShaderKHR,

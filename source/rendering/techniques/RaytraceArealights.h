@@ -30,7 +30,8 @@ struct RaytraceArealights {
 
 	int32 iteration{ 0 };
 
-	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc);
+	void RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc, int32 samples, float minColorAlpha,
+		float minMomentsAlpha, int32 totalIterations, float phiColor, float phiNormal);
 	void Resize(vk::Extent2D extent);
 };
 

@@ -11,7 +11,6 @@ layout(set = 1, binding = 2, rgba32f) uniform image2D svgfOutput;
 layout(push_constant) uniform PC {
 	int iteration;
 	int totalIter;
-	int progressiveFeedbackIndex;
 	float phiColor;
 	float phiNormal;
 	bool luminanceMode;
@@ -168,10 +167,6 @@ void main() {
 	OutputColor(sumIndirect);
 }                               
 
-//
-// 
-//
-
 void OutputColor(vec4 color) {
 	ivec2 iuv = ivec2(gl_FragCoord.xy);
 	if (iteration >= totalIter - 1) {
@@ -179,9 +174,5 @@ void OutputColor(vec4 color) {
 	}
 	else {
 		imageStore(svgfOutput, iuv, color);
-	}
-
-	if (iteration == progressiveFeedbackIndex) {
-		imageStore(progressive, iuv, color);
 	}
 }

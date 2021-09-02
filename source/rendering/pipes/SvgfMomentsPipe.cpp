@@ -11,7 +11,6 @@ namespace {
 struct PushConstant {
 	float minColorAlpha;
 	float minMomentsAlpha;
-	bool firstIter;
 };
 
 static_assert(sizeof(PushConstant) <= 128);
@@ -48,7 +47,8 @@ vk::UniquePipeline SvgfMomentsPipe::MakePipeline()
 }
 
 void SvgfMomentsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
-	const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputOutputsImageDescSet, bool firstIter) const
+	const SceneRenderDesc& sceneDesc, vk::DescriptorSet inputOutputsImageDescSet, float minColorAlpha,
+	float minMomentsAlpha) const
 {
 	COMMAND_SCOPE_AUTO(cmdBuffer);
 
@@ -61,15 +61,9 @@ void SvgfMomentsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D&
 		},
 		nullptr);
 
-	static ConsoleVariable<float> cons_minColorAlpha{ "r.svgf.minColorAlpha", 0.05f,
-		"Set SVGF color alpha for reprojection mix." };
-	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.svgf.minMomentsAlpha", 0.05f,
-		"Set SVGF moments alpha for reprojection mix." };
-
 	PushConstant pc{
-		*cons_minColorAlpha,
-		*cons_minMomentsAlpha,
-		firstIter,
+		minColorAlpha,
+		minMomentsAlpha,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
