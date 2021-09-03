@@ -14,6 +14,28 @@ layout(push_constant) uniform PC
 
 layout(set = 1, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
+float AmbienOcclusionBlurred()
+{
+	float Offsets[4] = float[]( -1.5, -0.5, 0.5, 1.5 );
+
+    float color = texture(ambientLightSampler, uv).a;
+
+	// TODO: correct ambient occlusion and jitter blur
+
+    for (int i = 0 ; i < 4 ; i++) {
+        for (int j = 0 ; j < 4 ; j++) {
+            vec2 tc = uv;
+            tc.x = uv.x + Offsets[j] / textureSize(ambientLightSampler, 0).x;
+            tc.y = uv.y + Offsets[i] / textureSize(ambientLightSampler, 0).y;
+            color += texture(ambientLightSampler, tc).a;
+        }
+    }
+
+    color /= 16.0;
+
+    return color;
+}
+
 void main()
 {
 	float depth = texture(g_DepthSampler, uv).r;
@@ -22,7 +44,7 @@ void main()
 
 
 	if(depth == 1.0) {
-		outColor = vec4(ambientInfo.rgb, 1.0);
+		outColor = vec4(ambientInfo.rgb, 1.0); // sky
 		return;
 	}
 
@@ -49,7 +71,7 @@ void main()
 		arealights += Arealight_EstimateDirectNoLightAttenuation(ql, surface) * arealightShadowing[i];
     }
 
-	vec3 final =  directLight + (indirectLight * ambientInfo.rgb) + surface.emissive + mirror + arealights;
+	vec3 final =  directLight + (indirectLight * AmbienOcclusionBlurred()) + surface.emissive + mirror + arealights;
 
 	outColor = vec4(final, 1.0);
 }
