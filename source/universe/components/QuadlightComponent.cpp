@@ -18,6 +18,12 @@ DECLARE_DIRTY_FUNC(CQuadlight)(BasicComponent& bc)
 				ql.ubo.color = glm::vec4(color, 1.f);
 				ql.ubo.cosAperture = glm::cos(aperture / 2.f);
 				ql.ubo.intensity = intensity;
+				ql.ubo.constantTerm = constantTerm;
+				ql.ubo.linearTerm = linearTerm;
+				ql.ubo.quadraticTerm = quadraticTerm;
+				ql.ubo.hasShadow = hasShadow;
+				ql.ubo.samples = samples;
+				ql.ubo.radius = radius;
 			}
 		};
 }

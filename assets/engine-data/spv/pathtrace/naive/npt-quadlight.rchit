@@ -22,7 +22,7 @@ void main() {
 
 	float cosTheta_o = dot(ql.normal, -gl_WorldRayDirectionEXT);
 
-	if (cosTheta_o < BIAS) {
+	if (cosTheta_o < ql.cosAperture) {
 		prd.radiance = vec3(0); 
 		prd.hitType = 2;
 		return;

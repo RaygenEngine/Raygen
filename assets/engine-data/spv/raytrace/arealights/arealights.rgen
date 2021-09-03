@@ -26,7 +26,7 @@ layout(set = 1, binding = 0, rgba32f) uniform image2D image;
 layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 layout(set = 4, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
 
-float Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed);
+float Arealight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed);
 
 void main() {
 	vec2 uv = (vec2(gl_LaunchIDEXT.xy) + vec2(0.5)) / vec2(gl_LaunchSizeEXT.xy);
@@ -53,7 +53,7 @@ void main() {
 		for(int i = 0; i < min(3, quadlightCount); ++i) {
 
 			Quadlight ql = quadlights.light[i];
-			val[i] += Quadlight_EstimateDirect(topLevelAs, ql, i, surface, seed);
+			val[i] += Arealight_EstimateDirect(topLevelAs, ql, i, surface, seed);
 		}
 	}
 
@@ -87,7 +87,7 @@ bool PtLights_ShadowRayTest(accelerationStructureEXT topLevelAs, int id, vec3 or
 	return prd.hit;
 }
 
-void Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, inout Surface surface, out float pdf_light, inout uint seed)
+void Arealight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, inout Surface surface, out float pdf_light, inout uint seed)
 {
 	pdf_light = 0;
 
@@ -101,7 +101,7 @@ void Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int a
 
 	float cosTheta_o = dot(ql.normal, -L);
 
-	if (cosTheta_o < BIAS) {
+	if (cosTheta_o < ql.cosAperture) {
 		return;
 	}
 
@@ -122,10 +122,10 @@ void Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int a
 	pdf_light = (dist * dist) / (ql.width * ql.height * cosTheta_o);
 }
 
-float Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed)
+float Arealight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed)
 {
 	float pdf_light;
-	Quadlight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
+	Arealight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
 
 	if(pdf_light >= BIAS){
 		return absNdot(surface.o) / pdf_light; 
