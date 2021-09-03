@@ -47,7 +47,7 @@ void main() {
 		float pdf_pickLight = 1.0 / float(totalLights); 
 
 		Quadlight ql = quadlights.light[qIndex];
-		radiance += Quadlight_EstimateDirect(topLevelAs, ql, qIndex, surface, prd.seed) / pdf_pickLight;
+		radiance += Arealight_EstimateDirect(topLevelAs, ql, qIndex, surface, prd.seed) / pdf_pickLight;
 	}
 	
 	for(int i = 0; i < pointlightCount; ++i) {

@@ -44,7 +44,7 @@ bool PtLights_ShadowRayTest(accelerationStructureEXT topLevelAs, int id, vec3 or
 	return prdShadow.hit;
 }
 
-vec3 Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, inout Surface surface, out float pdf_light, inout uint seed)
+vec3 Arealight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, inout Surface surface, out float pdf_light, inout uint seed)
 {
 	pdf_light = 0;
 
@@ -58,7 +58,7 @@ vec3 Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int a
 
 	float cosTheta_o = dot(ql.normal, -L);
 
-	if (cosTheta_o < BIAS) {
+	if (cosTheta_o < ql.cosAperture) {
 		return vec3(0.0); // behind light
 	}
 
@@ -81,13 +81,13 @@ vec3 Quadlight_SampleLi(accelerationStructureEXT topLevelAs, Quadlight ql, int a
 	return ql.color * ql.intensity;
 }
 
-float Quadlight_PdfLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface)
+float Arealight_PdfLi(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface)
 {
 	vec3 L = getOutgoingDir(surface);
 
 	float cosTheta_o = dot(ql.normal, -L);
 
-	if (cosTheta_o < BIAS) {
+	if (cosTheta_o < ql.cosAperture) {
 		return 0; // behind light
 	}
 
@@ -108,7 +108,7 @@ float PowerHeuristic(uint numf, float fPdf, uint numg, float gPdf)
 }
 
 // MIS
-vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed)
+vec3 Arealight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql, int areaLightId, Surface surface, inout uint seed)
 {
 	vec3 directLighting = vec3(0);
 
@@ -120,7 +120,7 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 
 	// Sample light
 
-	Li = Quadlight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
+	Li = Arealight_SampleLi(topLevelAs, ql, areaLightId, surface, pdf_light, seed);
 
 	vec3 ks = interfaceFresnel(surface);
 
@@ -145,7 +145,7 @@ vec3 Quadlight_EstimateDirect(accelerationStructureEXT topLevelAs, Quadlight ql,
 	
 						   // if passing thourgh pdf = 0
 	if(pdf_brdf >= BIAS && !isOutgoingDirPassingThrough(surface)) {
-		pdf_light = Quadlight_PdfLi(topLevelAs, ql, areaLightId, surface);
+		pdf_light = Arealight_PdfLi(topLevelAs, ql, areaLightId, surface);
 
 		// didn't hit light
 		if(pdf_light < BIAS) {
