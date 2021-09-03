@@ -224,4 +224,83 @@ vec3 Irragrid_EstimateDirect(Irragrid grid, samplerCubeArray irradianceSamplers,
 	return diffuseLight * diffuseBRDF(surface) * attenfactor;
 }
 
+// Representative point method
+vec3 Arealight_EstimateDirectNoLightAttenuation(Quadlight ql, Surface surface)
+{
+	vec3 V = getIncomingDir(surface);
+
+	vec3 L = reflect(-V, surface.basis.normal);
+
+	// we need to rotate the reflection ray to force intersection with quad's plane
+	float t;
+	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) {
+		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
+		vec3 pointOnPlane = ql.center + perp_r_n * INF;
+		L = normalize(pointOnPlane - surface.position);
+	}
+
+	vec3 p = surface.position + t * L; // intersection point with rect's plane 
+
+	// if point isn't in rectangle, choose the closest that is
+	if (!PointInsideRectangle(p, ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height)) {
+		p = PointRectangleNearestPoint(p, ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height);
+	}
+
+	L = normalize(p - surface.position);
+
+	addOutgoingDir(surface, L);
+	if (isOutgoingDirPassingThrough(surface)) {
+		return vec3(0);
+	}
+
+	vec3 Li = ql.color * ql.intensity; // missing smooth shadow and attenuation, i.e. arealightShadowing factor
+
+	return Li * explicitBRDF(surface);
+}
+
+// Representative point method
+vec3 Arealight_EstimateDirectHackLightAttenuation(Quadlight ql, Surface surface)
+{
+	vec3 V = getIncomingDir(surface);
+
+	vec3 L = reflect(-V, surface.basis.normal);
+
+	// we need to rotate the reflection ray to force intersection with quad's plane
+	float t;
+	if (!RayPlaneIntersection(surface.position, L, ql.center, ql.normal, t)) {
+		vec3 perp_r_n = L - dot(L, ql.normal) * ql.normal;
+		vec3 pointOnPlane = ql.center + perp_r_n * INF;
+		L = normalize(pointOnPlane - surface.position);
+	}
+
+	vec3 p = surface.position + t * L; // intersection point with rect's plane 
+
+	// if point isn't in rectangle, choose the closest that is
+	if (!PointInsideRectangle(p, ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height)) {
+		p = PointRectangleNearestPoint(p, ql.center, ql.normal, ql.right, ql.up, ql.width, ql.height);
+	}
+
+	L = normalize(p - surface.position);
+
+	float cosTheta_o = dot(ql.normal, -L);
+
+	if (cosTheta_o < BIAS) {
+		return vec3(0);
+	}
+
+	addOutgoingDir(surface, L);
+	if (isOutgoingDirPassingThrough(surface)) {
+		return vec3(0);
+	}
+
+	float dist = distance(p, surface.position);
+
+	float attenuation = 1.0 / (ql.constantTerm + ql.linearTerm * dist +
+		ql.quadraticTerm * (dist * dist));
+
+	vec3 Li = ql.color * ql.intensity * attenuation; // missing smooth shadow and attenuation, i.e. arealightShadowing factor
+
+	return Li * explicitBRDFcosTheta(surface);
+}
+
 #endif

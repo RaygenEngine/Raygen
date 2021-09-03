@@ -55,7 +55,7 @@ void main() {
 
 		for(int i = 0; i < quadlightCount; ++i) {
 			Quadlight ql = quadlights.light[i];
-			radiance += Arealight_EstimateDirectHackLightAttenuation(topLevelAs, ql, surface);
+			radiance += Arealight_EstimateDirectHackLightAttenuation(ql, surface);
 		}
 
 		for(int i = 0; i < spotlightCount; ++i) {
