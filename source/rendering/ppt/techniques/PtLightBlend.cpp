@@ -20,7 +20,6 @@ void PtLightBlend::MakeLayout()
 		{
 			DescriptorLayouts->global.handle(),
 			DescriptorLayouts->_1storageBuffer.handle(), // quadlights
-			DescriptorLayouts->accelerationStructure.handle(),
 		},
 		vk::ShaderStageFlagBits::eFragment);
 }
@@ -59,7 +58,6 @@ void PtLightBlend::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc&
 		{
 			sceneDesc.globalDesc,
 			sceneDesc.scene->tlas.sceneDesc.descSetQuadlights[sceneDesc.frameIndex],
-			sceneDesc.scene->sceneAsDescSet,
 		},
 		nullptr);
 

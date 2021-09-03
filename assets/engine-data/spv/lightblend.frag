@@ -1,6 +1,6 @@
 #include "global-descset.glsl"
 
-#include "radiance-rt.glsl"
+#include "radiance.glsl"
 #include "surface.glsl"
 
 layout(location = 0) out vec4 outColor;
@@ -13,7 +13,6 @@ layout(push_constant) uniform PC
 };
 
 layout(set = 1, binding = 0, std430) readonly buffer Quadlights { Quadlight light[]; } quadlights;
-layout(set = 2, binding = 0) uniform accelerationStructureEXT topLevelAs;
 
 void main()
 {
@@ -47,10 +46,10 @@ void main()
 
     for (int i = 0; i < min(3, quadlightCount); ++i) {
 		Quadlight ql = quadlights.light[i];
-		arealights += Arealight_EstimateDirectNoLightAttenuation(topLevelAs, ql, surface) * arealightShadowing[i];
+		arealights += Arealight_EstimateDirectNoLightAttenuation(ql, surface) * arealightShadowing[i];
     }
 
-	vec3 final =  directLight + (indirectLight *  ambientInfo.rgb) + surface.emissive + mirror + arealights;
+	vec3 final =  directLight + (indirectLight * ambientInfo.rgb) + surface.emissive + mirror + arealights;
 
 	outColor = vec4(final, 1.0);
 }
