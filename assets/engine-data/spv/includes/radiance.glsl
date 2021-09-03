@@ -112,7 +112,7 @@ vec3 Spotlight_EstimateDirectSmooth(Spotlight sl, sampler2DShadow shadowmap, Sur
 }
 
 vec3 Reflprobe_EstimateDirect(Reflprobe rp, sampler2D brdfLutSampler, samplerCube irradianceSampler, samplerCube prefilteredSampler, Surface surface)
-{	
+{	   // TODO: indirect specular lightblend with mirror // TODO use sphere volume like point lights
 	if(surface.a < SPEC_THRESHOLD || distance(rp.position, surface.position) > rp.radius) {
 		return vec3(0);
 	}

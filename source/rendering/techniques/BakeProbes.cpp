@@ -25,16 +25,16 @@ inline glm::mat4 standardProjection()
 	return projInverse;
 }
 
-inline std::array<glm::mat4, 6> cubemapViews()
+inline std::array<glm::mat4, 6> cubemapViews(const glm::vec3& offset = glm::vec3(0.f, 0.f, 0.f))
 {
 	// clang-format off
 	return {
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // right
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // left
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))), // up
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))), // down
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0))), // front
-		glm::inverse(glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0))), // back
+		glm::inverse(glm::lookAt(offset, offset + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // right
+		glm::inverse(glm::lookAt(offset, offset + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0))), // left
+		glm::inverse(glm::lookAt(offset, offset + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))), // up
+		glm::inverse(glm::lookAt(offset, offset + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))), // down
+		glm::inverse(glm::lookAt(offset, offset + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, 1.0, 0.0))), // front
+		glm::inverse(glm::lookAt(offset, offset + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, 1.0, 0.0))), // back
 	};
 	// clang-format on
 }
@@ -44,7 +44,6 @@ inline std::array<glm::mat4, 6> cubemapViews()
 namespace vl {
 
 static auto __projInv = standardProjection();
-static auto __viewInvs = cubemapViews();
 
 void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 {
@@ -148,50 +147,46 @@ void BakeProbes::RecordCmd(const SceneRenderDesc& sceneDesc)
 void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::vector<vk::UniqueImageView>& faceViews,
 	const glm::vec3& probePosition, int32 ptSamples, int32 ptBounces, float offset, const vk::Extent3D& extent)
 {
-	static vk::DescriptorSet faceTempDescSet[6];
-	static vk::DescriptorSet faceTraceDescSet[6];
-	static vk::DescriptorSet viewerDescSet[6];
-	if (!faceTempDescSet[0]) {
-		for (auto i = 0; i < 6; ++i) {
-			faceTempDescSet[i] = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
-			faceTraceDescSet[i] = DescriptorLayouts->_2storageImage.AllocDescriptorSet();
-			viewerDescSet[i] = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
-		}
+	static vk::DescriptorSet faceTempDescSet;
+	static vk::DescriptorSet faceTraceDescSet;
+	static vk::DescriptorSet viewerDescSet;
+	if (!faceTempDescSet) {
+		faceTempDescSet = DescriptorLayouts->_1storageImage.AllocDescriptorSet();
+		faceTraceDescSet = DescriptorLayouts->_2storageImage.AllocDescriptorSet();
+		viewerDescSet = DescriptorLayouts->_1uniformBuffer.AllocDescriptorSet();
 	}
 
-	// TODO: estimate time to complete (roughly)
-	// command buffers shouldn't be divided per face
-	auto iterations = 1 + ptSamples / 128;
-	auto samplesPerIteration = ptSamples / iterations; // samples per iteration must be equal each iteration
+	auto faceTempImage = RImage2D("Face temp image",
+		vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
+		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
+
+	rvk::writeDescriptorImages(faceTempDescSet, 0u,
+		{
+			faceTempImage.view(), // pathtrace target
+		},
+		vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
+
+	auto uboSize = sizeof(UBO_viewer);
+	auto viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
+
+	rvk::writeDescriptorBuffer(viewerDescSet, 0u, viewer.handle());
+
+	auto viewInvs = cubemapViews(probePosition);
+
+	auto iterations = 2 + ptSamples / 128;                 // current logic requires at least 2 iterations
+	auto samplesPerIteration = 1 + ptSamples / iterations; // samples per iteration must be equal each iteration
 
 	for (auto i = 0; i < 6; ++i) {
-
-		auto faceTempImage = RImage2D("Face temp image " + i,
-			vk::Extent2D{ static_cast<uint32>(extent.width), static_cast<uint32>(extent.height) },
-			vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eGeneral);
-
-		rvk::writeDescriptorImages(faceTempDescSet[i], 0u,
-			{
-				faceTempImage.view(), // pathtrace target
-			},
-			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
-
-		rvk::writeDescriptorImages(faceTraceDescSet[i], 0u,
+		rvk::writeDescriptorImages(faceTraceDescSet, 0u,
 			{
 				faceTempImage.view(), // input
 				*faceViews[i],        // output
 			},
 			vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
-
-		auto uboSize = sizeof(UBO_viewer);
-		auto viewer = vl::RBuffer{ uboSize, vk::BufferUsageFlagBits::eUniformBuffer,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent };
-
-		rvk::writeDescriptorBuffer(viewerDescSet[i], 0u, viewer.handle());
-
 		UBO_viewer data = {
-			__viewInvs[i],
+			viewInvs[i],
 			__projInv,
 			offset,
 		};
@@ -202,10 +197,10 @@ void BakeProbes::BakeEnvironment(const SceneRenderDesc& sceneDesc, const std::ve
 
 			ScopedOneTimeSubmitCmdBuffer<Graphics> cmdBuffer{};
 
-			StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(cmdBuffer, sceneDesc, extent, faceTempDescSet[i],
-				viewerDescSet[i], iter, samplesPerIteration, ptBounces);
+			StaticPipes::Get<StochasticPathtracePipe>().RecordCmd(
+				cmdBuffer, sceneDesc, extent, faceTempDescSet, viewerDescSet, iter, samplesPerIteration, ptBounces);
 
-			StaticPipes::Get<AccumulationPipe>().RecordCmd(cmdBuffer, extent, faceTraceDescSet[i], iter);
+			StaticPipes::Get<AccumulationPipe>().RecordCmd(cmdBuffer, extent, faceTraceDescSet, iter);
 		}
 	}
 }
@@ -220,6 +215,8 @@ void BakeProbes::BakeIrradiance(const std::vector<vk::UniqueImageView>& faceView
 		}
 	}
 
+	auto viewInvs = cubemapViews();
+
 	ScopedOneTimeSubmitCmdBuffer<Compute> cmdBuffer{};
 
 	for (auto i = 0; i < 6; ++i) {
@@ -227,7 +224,7 @@ void BakeProbes::BakeIrradiance(const std::vector<vk::UniqueImageView>& faceView
 			faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 		StaticPipes::Get<CubemapConvolutionPipe>().RecordCmd(
-			cmdBuffer, extent, faceDescSet[i], environmentSamplerDescSet, __viewInvs[i], __projInv);
+			cmdBuffer, extent, faceDescSet[i], environmentSamplerDescSet, viewInvs[i], __projInv);
 	}
 }
 
@@ -240,7 +237,7 @@ void BakeProbes::BakePrefiltered(const SceneReflprobe& rp)
 		}
 	}
 
-	auto tmp = __projInv[3][3];
+	auto viewInvs = cubemapViews();
 
 	for (auto mip = 0; mip < rp.prefiltered.mipLevels; ++mip) {
 		// get mip's faces
@@ -258,11 +255,11 @@ void BakeProbes::BakePrefiltered(const SceneReflprobe& rp)
 				faceDescSet[i], 0u, { *faceViews[i] }, vk::DescriptorType::eStorageImage, vk::ImageLayout::eGeneral);
 
 			StaticPipes::Get<CubemapPrefilterPipe>().RecordCmd(cmdBuffer, { mipResolution, mipResolution, 1 },
-				faceDescSet[i], rp.environmentSamplerDescSet, __viewInvs[i], __projInv);
+				faceDescSet[i], rp.environmentSamplerDescSet, viewInvs[i], __projInv);
 		}
 	}
 
-	__projInv[3][3] = tmp;
+	__projInv[3][3] = 1.f;
 }
 
 } // namespace vl

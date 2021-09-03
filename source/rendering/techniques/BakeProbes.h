@@ -5,7 +5,6 @@
 struct SceneRenderDesc;
 struct SceneReflprobe;
 
-// TODO: fix probes
 namespace vl {
 struct BakeProbes {
 
