@@ -5,8 +5,6 @@
 #include "rendering/output/SwapchainOutputPass.h"
 #include "rendering/Pathtracer.h"
 #include "rendering/resource/GpuResources.h"
-#include "rendering/scene/Scene.h"
-#include "rendering/VkCoreIncludes.h"
 
 #include <imgui/examples/imgui_impl_vulkan.h>
 

@@ -1,9 +1,6 @@
 #include "Pathtracer.h"
 
 #include "rendering/output/OutputPassBase.h"
-#include "rendering/scene/SceneCamera.h"
-#include "rendering/pipes/StaticPipes.h"
-#include "rendering/pipes/AccumulationPipe.h"
 #include "engine/Events.h"
 
 namespace {

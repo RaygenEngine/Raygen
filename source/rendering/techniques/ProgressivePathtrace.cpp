@@ -1,6 +1,5 @@
 #include "ProgressivePathtrace.h"
 
-#include "rendering/Layouts.h"
 #include "rendering/pipes/AccumulationPipe.h"
 #include "rendering/pipes/NaivePathtracePipe.h"
 #include "rendering/pipes/StaticPipes.h"

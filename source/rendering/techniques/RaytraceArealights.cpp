@@ -1,13 +1,8 @@
 #include "RaytraceArealights.h"
 
-#include "rendering/assets/GpuAssetManager.h"
-#include "rendering/assets/GpuShader.h"
 #include "rendering/Layouts.h"
 #include "rendering/pipes/ArealightsPipe.h"
 #include "rendering/pipes/StaticPipes.h"
-#include "rendering/pipes/SvgfAtrousPipe.h"
-#include "rendering/pipes/SvgfMomentsPipe.h"
-#include "rendering/pipes/SvgfModulatePipe.h"
 
 namespace vl {
 RaytraceArealights::RaytraceArealights()

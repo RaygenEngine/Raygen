@@ -5,13 +5,10 @@
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuImage.h"
 #include "rendering/output/OutputPassBase.h"
-#include "rendering/pipes/BillboardPipe.h"
 #include "rendering/pipes/geometry/GBufferPipe.h"
-#include "rendering/pipes/geometry/UnlitPipe.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/scene/SceneCamera.h"
-#include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
 
 
 namespace {
