@@ -2,12 +2,10 @@
 
 #include "rendering/Layouts.h"
 #include "rendering/pipes/StaticPipes.h"
-#include "rendering/pipes/StochasticPathtracePipe.h"
 #include "rendering/pipes/SvgfAtrousPipe.h"
 #include "rendering/pipes/SvgfMomentsPipe.h"
 #include "rendering/pipes/SvgfModulatePipe.h"
 #include "rendering/scene/Scene.h"
-#include "rendering/scene/SceneCamera.h"
 
 
 namespace vl {

@@ -17,7 +17,6 @@
 #include "rendering/scene/SceneCamera.h"
 #include "rendering/techniques/CalculateDynamicShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
-#include "engine/Events.h"
 
 
 namespace {

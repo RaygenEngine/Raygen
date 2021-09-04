@@ -1,6 +1,5 @@
 #include "DepthmapPipe.h"
 
-#include "assets/pods/MaterialArchetype.h"
 #include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"

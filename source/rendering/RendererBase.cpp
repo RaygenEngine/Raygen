@@ -1,6 +1,5 @@
 #include "RendererBase.h"
 
-#include "rendering/wrappers/Framebuffer.h"
 #include "rendering/wrappers/passlayout/RenderPassLayout.h"
 
 using namespace vl;
