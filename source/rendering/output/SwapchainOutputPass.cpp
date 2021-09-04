@@ -141,10 +141,14 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 	cmdBuffer.endRenderPass();
 }
 
+static ConsoleVarFunc<float> cons_outRenderScale{ "r.out.renderScale", []() { Event::OnViewportUpdated.Broadcast(); },
+	1.f, "Set output render scale." };
+
 void SwapchainOutputPass::OnPreRender()
 {
 	static ConsoleVariable<bool> cons_workInBackground{ "r.out.workInBackground", false,
 		"Enable rendering even when window is unfocused. (Useful for progressive renderers)" };
+
 
 	using namespace std::literals;
 	if (!m_isFocused && !(*cons_workInBackground)) {
@@ -179,7 +183,10 @@ void SwapchainOutputPass::OnViewportResize()
 	m_viewportRect.offset = vk::Offset2D(g_ViewportCoordinates.position.x, g_ViewportCoordinates.position.y);
 
 	if (m_renderer) {
-		m_renderer->ResizeBuffers(m_viewportRect.extent.width, m_viewportRect.extent.height);
+		auto scaledExtent = vk::Extent2D{ static_cast<uint32>(*cons_outRenderScale * m_viewportRect.extent.width),
+			static_cast<uint32>(*cons_outRenderScale * m_viewportRect.extent.height) };
+
+		m_renderer->ResizeBuffers(scaledExtent.width, scaledExtent.height);
 		OnViewsUpdated(m_renderer->GetOutputViews());
 	}
 }

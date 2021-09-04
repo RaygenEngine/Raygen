@@ -12,11 +12,6 @@
 
 
 namespace {
-vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
-{
-	return viewportSize;
-}
-
 struct UBO_viewer {
 	glm::mat4 viewInv;
 	glm::mat4 projInv;
@@ -51,19 +46,14 @@ RtxRenderer_::RtxRenderer_()
 
 void RtxRenderer_::ResizeBuffers(uint32 width, uint32 height)
 {
-	vk::Extent2D fbSize = SuggestFramebufferSize(vk::Extent2D{ width, height });
-
-	if (fbSize == m_extent) {
-		return;
-	}
-	m_extent = fbSize;
+	m_extent = vk::Extent2D{ width, height };
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
-		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(fbSize.width, fbSize.height);
+		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(m_extent.width, m_extent.height);
 	}
 
-	pathtracedResult = RImage2D("Pathtraced (per iteration)", vk::Extent2D{ fbSize.width, fbSize.height },
+	pathtracedResult = RImage2D("Pathtraced (per iteration)", vk::Extent2D{ m_extent.width, m_extent.height },
 		vk::Format::eR32G32B32A32Sfloat, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	m_svgFiltering.AttachInputImage(pathtracedResult);

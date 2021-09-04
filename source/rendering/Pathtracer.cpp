@@ -3,13 +3,6 @@
 #include "rendering/output/OutputPassBase.h"
 #include "engine/Events.h"
 
-namespace {
-vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
-{
-	return viewportSize;
-}
-} // namespace
-
 namespace vl {
 Pathtracer_::Pathtracer_()
 {
@@ -18,14 +11,9 @@ Pathtracer_::Pathtracer_()
 
 void Pathtracer_::ResizeBuffers(uint32 width, uint32 height)
 {
-	vk::Extent2D fbSize = SuggestFramebufferSize(vk::Extent2D{ width, height });
+	m_extent = vk::Extent2D{ width, height };
 
-	if (fbSize == m_extent) {
-		return;
-	}
-	m_extent = fbSize;
-
-	m_progressivePathtrace.Resize(fbSize);
+	m_progressivePathtrace.Resize(m_extent);
 
 	ClearDebugAttachments();
 	RegisterDebugAttachment(m_progressivePathtrace.pathtraced);

@@ -18,14 +18,6 @@
 #include "rendering/techniques/CalculateDynamicShadowmaps.h"
 #include "rendering/techniques/DrawSelectedEntityDebugVolume.h"
 
-
-namespace {
-vk::Extent2D SuggestFramebufferSize(vk::Extent2D viewportSize)
-{
-	return viewportSize;
-}
-} // namespace
-
 namespace vl {
 
 Renderer_::Renderer_()
@@ -42,25 +34,20 @@ Renderer_::Renderer_()
 
 void Renderer_::ResizeBuffers(uint32 width, uint32 height)
 {
-	vk::Extent2D fbSize = SuggestFramebufferSize(vk::Extent2D{ width, height });
-
-	if (fbSize == m_extent) {
-		return;
-	}
-	m_extent = fbSize;
+	m_extent = vk::Extent2D{ width, height };
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
 		// Generate Passes
-		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(fbSize.width, fbSize.height);
-		m_secondaryPassInst[i] = PassLayouts->secondary.CreatePassInstance(fbSize.width, fbSize.height);
-		m_ptPass[i] = PassLayouts->postproc.CreatePassInstance(fbSize.width, fbSize.height);
+		m_mainPassInst[i] = PassLayouts->main.CreatePassInstance(m_extent.width, m_extent.height);
+		m_secondaryPassInst[i] = PassLayouts->secondary.CreatePassInstance(m_extent.width, m_extent.height);
+		m_ptPass[i] = PassLayouts->postproc.CreatePassInstance(m_extent.width, m_extent.height);
 	}
 
-	m_raytraceArealights.Resize(fbSize);
-	m_raytraceMirrorReflections.Resize(fbSize);
+	m_raytraceArealights.Resize(m_extent);
+	m_raytraceMirrorReflections.Resize(m_extent);
 
 	for (uint32 i = 0; i < c_framesInFlight; ++i) {
-		m_unlitPassInst[i] = PassLayouts->unlit.CreatePassInstance(fbSize.width, fbSize.height,
+		m_unlitPassInst[i] = PassLayouts->unlit.CreatePassInstance(m_extent.width, m_extent.height,
 			{ &m_mainPassInst[i].framebuffer["G_Depth"], &m_ptPass[i].framebuffer["PostProcColor"] });
 	}
 
