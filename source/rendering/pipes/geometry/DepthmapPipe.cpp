@@ -166,8 +166,8 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 
 		COMMAND_SCOPE(cmdBuffer, "Model Draw");
 
-		PushConstant pc{ //
-			viewProj * geom->transform
+		PushConstant pc{
+			.mvp = viewProj * geom->transform,
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
@@ -209,8 +209,8 @@ void DepthmapPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const glm::mat4& viewP
 
 		COMMAND_SCOPE(cmdBuffer, "Skinned Model Draw");
 
-		PushConstant pc{ //
-			viewProj * geom->transform
+		PushConstant pc{
+			.mvp = viewProj * geom->transform,
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {

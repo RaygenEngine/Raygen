@@ -97,13 +97,13 @@ void MirrorPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& s
 		nullptr);
 
 	PushConstant pc{
-		bounces,
-		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
-		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
-		sceneDesc.scene->tlas.sceneDesc.irragridCount,
-		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
-		sceneDesc.scene->tlas.sceneDesc.reflprobeCount,
+		.depth = bounces,
+		.pointlightCount = sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+		.spotlightCount = sceneDesc.scene->tlas.sceneDesc.spotlightCount,
+		.dirlightCount = sceneDesc.scene->tlas.sceneDesc.dirlightCount,
+		.irragridCount = sceneDesc.scene->tlas.sceneDesc.irragridCount,
+		.quadlightCount = sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+		.reflprobeCount = sceneDesc.scene->tlas.sceneDesc.reflprobeCount,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,

@@ -124,9 +124,9 @@ void SwapchainOutputPass::RecordOutPass(vk::CommandBuffer cmdBuffer, uint32 fram
 				"Set the tonemapping mode." };
 
 			PushConstant pc{
-				*cons_gamma,
-				*cons_exposure,
-				cons_tonemapMode,
+				.gamma = *cons_gamma,
+				.exposure = *cons_exposure,
+				.tonemapMode = cons_tonemapMode,
 			};
 
 			cmdBuffer.pushConstants(

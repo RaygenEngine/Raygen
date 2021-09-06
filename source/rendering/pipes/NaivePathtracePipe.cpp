@@ -93,13 +93,13 @@ void NaivePathtracePipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent
 		nullptr);
 
 	PushConstant pc{
-		seed,
-		samples,
-		bounces,
-		sceneDesc.scene->tlas.sceneDesc.pointlightCount,
-		sceneDesc.scene->tlas.sceneDesc.spotlightCount,
-		sceneDesc.scene->tlas.sceneDesc.dirlightCount,
-		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+		.seed = seed,
+		.samples = samples,
+		.bounces = bounces,
+		.pointlightCount = sceneDesc.scene->tlas.sceneDesc.pointlightCount,
+		.spotlightCount = sceneDesc.scene->tlas.sceneDesc.spotlightCount,
+		.dirlightCount = sceneDesc.scene->tlas.sceneDesc.dirlightCount,
+		.quadlightCount = sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,

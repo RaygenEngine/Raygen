@@ -58,10 +58,10 @@ void CubemapPrefilterPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Exte
 		nullptr);
 
 	PushConstant pc{
-		viewInv,
-		projInv,
-		extent.width,
-		extent.height,
+		.viewInv = viewInv,
+		.projInv = projInv,
+		.width = static_cast<int32>(extent.width),
+		.height = static_cast<int32>(extent.height),
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);

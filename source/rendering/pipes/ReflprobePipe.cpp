@@ -110,7 +110,7 @@ void ReflprobePipe::RecordCmd(
 			nullptr);
 
 		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * math::transformMat(rp->ubo.radius, rp->ubo.position),
+			.volumeMat = sceneDesc.viewer.ubo.viewProj * math::transformMat(rp->ubo.radius, rp->ubo.position),
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);

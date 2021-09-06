@@ -58,9 +58,9 @@ void AccumulationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D
 
 
 	PushConstant pc{
-		iteration,
-		static_cast<int32>(extent.width),
-		static_cast<int32>(extent.height),
+		.iteration = iteration,
+		.width = static_cast<int32>(extent.width),
+		.height = static_cast<int32>(extent.height),
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
