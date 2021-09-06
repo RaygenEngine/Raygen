@@ -30,13 +30,14 @@ bool IsInside(ivec2 p, ivec2 screenSize) {
 
 void main() 
 {
-    if(gl_GlobalInvocationID.x > width || 
-	   gl_GlobalInvocationID.y > height) {
+    if(gl_GlobalInvocationID.x >= width || 
+	   gl_GlobalInvocationID.y >= height) {
 		return;
     }
 
 	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
-	const vec2 uv        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+	const vec2 imgSize =  vec2(width, height);
+    const vec2 uv = pixelCenter / imgSize;
 
 	vec3 color = texture(inputImage, uv).xyz;
 	float depth = texture(g_DepthSampler, uv).r;
@@ -69,7 +70,6 @@ void main()
 		variance += 0.2;
 	}
 
-
 	imageStore(svgf0, ivec2(gl_GlobalInvocationID.xy), vec4(color, variance));
 	imageStore(progressive, ivec2(gl_GlobalInvocationID.xy), vec4(color, variance));
 
@@ -78,10 +78,10 @@ void main()
 
 bool IsReprojValid(ivec2 coord, float expectedPrevDepth, vec4 centerUvDrawIndex, out vec4 momentsSample)
 {
-	vec2 size = vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+	const vec2 imgSize =  vec2(width, height);
 
 	if (coord.x < 0 || coord.y < 0 || 
-	    coord.x > size.x || coord.y > size.y) {
+	    coord.x > imgSize.x || coord.y > imgSize.y) {
 		return false;
 	}
 
@@ -150,9 +150,9 @@ ReprojectionData GetReprojection(vec2 uv) {
 	const vec2 motion = motionSample.xy;
 	const float expectedDepth = motionSample.z;
 
-	vec2 size = vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
+	const vec2 imgSize =  vec2(width, height);
 
-	const vec2 posPrev = vec2(gl_GlobalInvocationID.xy) + motion * size;
+	const vec2 posPrev = vec2(gl_GlobalInvocationID.xy) + motion * imgSize;
 
 	const vec4 centerUvDrawIndex = texelFetch(g_UVDrawIndexSampler, ivec2(gl_GlobalInvocationID.xy), 0);
 
