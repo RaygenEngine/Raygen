@@ -1,23 +1,25 @@
 #include "AccumulationPipe.h"
 
+#include "engine/Engine.h"
 #include "rendering/assets/GpuAssetManager.h"
 #include "rendering/assets/GpuShader.h"
 #include "rendering/assets/GpuShaderStage.h"
 #include "rendering/pipes/StaticPipes.h"
 #include "rendering/scene/SceneReflProbe.h"
+#include "engine/Events.h"
 
 namespace {
 struct PushConstant {
 	int32 iteration;
+	int32 width;
+	int32 height;
 };
 
-static_assert(sizeof(PushConstant) <= 128);
+// TODO:
+// static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
-
-ConsoleFunction<> cons_refitAccumulation{ "r.pipes.accumulation.recompile",
-	[]() { StaticPipes::Recompile<AccumulationPipe>(); }, "Recompiles accumulation compute shader." };
 
 vk::UniquePipelineLayout AccumulationPipe::MakePipelineLayout()
 {
@@ -35,38 +37,9 @@ vk::UniquePipeline AccumulationPipe::MakePipeline()
 		StaticPipes::Recompile<AccumulationPipe>();
 	};
 
-	std::array<vk::SpecializationMapEntry, 2> specializationMapEntries;
-	specializationMapEntries[0]
-		.setConstantID(0) //
-		.setSize(sizeof(specializationData.sizeX))
-		.setOffset(0);
-	specializationMapEntries[1]
-		.setConstantID(1) //
-		.setSize(sizeof(specializationData.sizeY))
-		.setOffset(offsetof(SpecializationData, sizeY));
-
-	vk::SpecializationInfo specializationInfo{};
-	specializationInfo
-		.setDataSize(sizeof(specializationData)) //
-		.setMapEntryCount(static_cast<uint32>(specializationMapEntries.size()))
-		.setPMapEntries(specializationMapEntries.data())
-		.setPData(&specializationData);
-
 	auto shaderStageCreateInfo = gpuShader.compute.Lock().shaderStageCreateInfo;
-	shaderStageCreateInfo.setPSpecializationInfo(&specializationInfo);
 
-	vk::ComputePipelineCreateInfo pipelineInfo{};
-	pipelineInfo
-		.setStage(shaderStageCreateInfo) //
-		.setLayout(layout())
-		.setBasePipelineHandle({})
-		.setBasePipelineIndex(-1);
 
-	auto res = std::make_pair<uint32, uint32>(32u, 32u); // TODO: findBestValues(g_ViewportCoordinates.size.x,
-														 // g_ViewportCoordinates.size.y); <-- leetcode required here
-
-	specializationData.sizeX = res.first;
-	specializationData.sizeY = res.second;
 	return rvk::makeComputePipeline(shaderStageCreateInfo, layout());
 }
 
@@ -83,13 +56,19 @@ void AccumulationPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D
 		},
 		nullptr);
 
+
 	PushConstant pc{
 		iteration,
+		static_cast<int32>(extent.width),
+		static_cast<int32>(extent.height),
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.dispatch(extent.width / specializationData.sizeX, extent.height / specializationData.sizeY, 1);
+	uint32 groupCountX = ((extent.width) / 32u) + 1u;
+	uint32 groupCountY = ((extent.height) / 32u) + 1u;
+
+	cmdBuffer.dispatch(groupCountX, groupCountY, 1u);
 }
 
 } // namespace vl

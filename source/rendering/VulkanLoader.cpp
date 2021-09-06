@@ -75,8 +75,6 @@ vk::DynamicLoader dl;
 
 void InitVulkanLoader()
 {
-
-
 	vk::Instance instance = vk::createInstance({}, nullptr);
 
 	// create a dispatcher, based on additional vkDevice/vkGetDeviceProcAddr

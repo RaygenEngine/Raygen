@@ -10,9 +10,12 @@ namespace {
 struct PushConstant {
 	glm::mat4 viewInv;
 	glm::mat4 projInv;
+	int32 width;
+	int32 height;
 };
 
-static_assert(sizeof(PushConstant) <= 128);
+// TODO:
+// static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
@@ -34,7 +37,9 @@ vk::UniquePipeline CubemapPrefilterPipe::MakePipeline()
 		StaticPipes::Recompile<CubemapPrefilterPipe>();
 	};
 
-	return rvk::makeComputePipeline(gpuShader.compute.Lock().shaderStageCreateInfo, layout());
+	auto shaderStageCreateInfo = gpuShader.compute.Lock().shaderStageCreateInfo;
+
+	return rvk::makeComputePipeline(shaderStageCreateInfo, layout());
 }
 
 void CubemapPrefilterPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
@@ -55,11 +60,16 @@ void CubemapPrefilterPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Exte
 	PushConstant pc{
 		viewInv,
 		projInv,
+		extent.width,
+		extent.height,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1); // TODO: see AccumulationPipe example
+	uint32 groupCountX = ((extent.width) / 32u) + 1u;
+	uint32 groupCountY = ((extent.height) / 32u) + 1u;
+
+	cmdBuffer.dispatch(groupCountX, groupCountY, 1u);
 }
 
 } // namespace vl

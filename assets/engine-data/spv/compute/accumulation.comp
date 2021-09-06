@@ -1,9 +1,11 @@
-layout(local_size_x_id = 0) in;               
-layout(local_size_y_id = 1) in;
+layout(local_size_x = 32) in;               
+layout(local_size_y = 32) in;
 
 layout(push_constant) uniform PC
 {
 	int iteration;
+	int width;
+	int height;
 };
 
 layout(set = 0, binding = 0, rgba32f) uniform image2D inputImage;
@@ -11,6 +13,11 @@ layout(set = 0, binding = 1, rgba32f) uniform image2D accumImage;
                                                                                                                 
 void main() 
 {
+    if(gl_GlobalInvocationID.x > width || 
+	   gl_GlobalInvocationID.y > height) {
+		return;
+    }
+
 	vec3 finalColor = imageLoad(inputImage, ivec2(gl_GlobalInvocationID.xy)).xyz;
 
 	// Do accumulation

@@ -1,8 +1,6 @@
 #pragma once
 #include "rendering/pipes/StaticPipeBase.h"
 
-struct SceneReflprobe;
-
 namespace vl {
 
 struct CubemapPrefilterPipe : public StaticPipeBase {

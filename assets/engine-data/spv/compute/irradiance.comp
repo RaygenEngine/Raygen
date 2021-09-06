@@ -2,11 +2,14 @@
 #include "sampling.glsl"
 #include "random.glsl"
 
-layout (local_size_x = 32, local_size_y = 32) in;
+layout(local_size_x = 32) in;               
+layout(local_size_y = 32) in;
 
 layout(push_constant) uniform PC {
 	mat4 viewInv;
 	mat4 projInv;
+	int width;
+	int height;
 };
 
 layout(set = 0, binding = 0, rgba32f) uniform image2D image;
@@ -40,6 +43,11 @@ vec3 envmapColorConvolution(vec3 dir)
 
 void main() 
 {
+    if(gl_GlobalInvocationID.x > width || 
+	   gl_GlobalInvocationID.y > height) {
+		return;
+    }
+
 	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
 	const vec2 inUV        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
 	vec2       d           = inUV * 2.0 - 1.0;

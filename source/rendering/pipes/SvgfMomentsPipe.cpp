@@ -12,9 +12,12 @@ struct PushConstant {
 	float minColorAlpha;
 	float minMomentsAlpha;
 	bool luminanceMode;
+	int32 width;
+	int32 height;
 };
 
-static_assert(sizeof(PushConstant) <= 128);
+// TODO:
+// static_assert(sizeof(PushConstant) <= 128);
 } // namespace
 
 namespace vl {
@@ -66,11 +69,16 @@ void SvgfMomentsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D&
 		minColorAlpha,
 		minMomentsAlpha,
 		luminanceMode,
+		extent.width,
+		extent.height,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eCompute, 0u, sizeof(PushConstant), &pc);
 
-	cmdBuffer.dispatch(extent.width / 32, extent.height / 32, 1); // TODO: see AccumulationPipe example
+	uint32 groupCountX = ((extent.width) / 32u) + 1u;
+	uint32 groupCountY = ((extent.height) / 32u) + 1u;
+
+	cmdBuffer.dispatch(groupCountX, groupCountY, 1u);
 }
 
 } // namespace vl
