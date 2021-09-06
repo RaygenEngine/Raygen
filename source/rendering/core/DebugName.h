@@ -5,10 +5,10 @@
 #include <vulkan/vulkan.hpp>
 
 
-#define COMMAND_SCOPE(cmdBuffer, name) const rvk::CmdScopedLabel MACRO_PASTE(z_scope_t, __LINE__){ cmdBuffer, name };
+#define COMMAND_SCOPE(cmdBuffer, name) // const rvk::CmdScopedLabel MACRO_PASTE(z_scope_t, __LINE__){ cmdBuffer, name };
 #define COMMAND_SCOPE_AUTO(cmdBuffer)                                                                                  \
-	const rvk::CmdScopedLabel MACRO_PASTE(z_scope_t, __LINE__){ cmdBuffer,                                             \
-		std::string(typeid(*this).name()) + "::" + std::source_location::current().function_name() };
+	//	const rvk::CmdScopedLabel MACRO_PASTE(z_scope_t, __LINE__){ cmdBuffer,                                             \
+//		std::string(typeid(*this).name()) + "::" + std::source_location::current().function_name() };
 
 
 #define DEBUG_NAME(handle, name) rvk::registerDebugName(handle, name)

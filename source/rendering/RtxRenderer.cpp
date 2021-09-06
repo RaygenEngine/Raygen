@@ -108,7 +108,7 @@ void RtxRenderer_::UpdateGlobalDescSet(SceneRenderDesc& sceneDesc)
 	sceneDesc.globalDesc = m_globalDesc[sceneDesc.frameIndex];
 }
 
-void RtxRenderer_::DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
+void RtxRenderer_::DrawGeometry(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc)
 {
 	m_mainPassInst[sceneDesc.frameIndex].RecordPass(cmdBuffer, vk::SubpassContents::eInline, [&]() {
 		GbufferPipe::RecordCmd(cmdBuffer, sceneDesc);
@@ -153,9 +153,9 @@ void RtxRenderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& scen
 	// SVGF
 	UpdateGlobalDescSet(sceneDesc);
 
-	// calculates: gbuffer, direct lights, gi, ambient
-	// requires: shadowmaps, gi maps
-	DrawGeometryAndLights(cmdBuffer, sceneDesc);
+	// calculates: gbuffer
+	// requires: -
+	DrawGeometry(cmdBuffer, sceneDesc);
 
 	static ConsoleVariable<float> cons_minColorAlpha{ "r.rtxRenderer.svgf.minColorAlpha", 0.05f,
 		"Set SVGF color alpha for reprojection mix." };

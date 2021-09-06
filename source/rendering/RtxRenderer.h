@@ -39,7 +39,7 @@ private:
 	InFlightResources<vk::DescriptorSet> m_globalDesc;
 
 	void UpdateGlobalDescSet(SceneRenderDesc& sceneDesc);
-	void DrawGeometryAndLights(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc);
+	void DrawGeometry(vk::CommandBuffer cmdBuffer, SceneRenderDesc& sceneDesc);
 
 } * RtxRenderer{};
 } // namespace vl

@@ -13,8 +13,8 @@ layout(set = 0, binding = 1, rgba32f) uniform image2D accumImage;
                                                                                                                 
 void main() 
 {
-    if(gl_GlobalInvocationID.x > width || 
-	   gl_GlobalInvocationID.y > height) {
+    if(gl_GlobalInvocationID.x >= width || 
+	   gl_GlobalInvocationID.y >= height) {
 		return;
     }
 
