@@ -68,7 +68,7 @@ vk::UniquePipeline NaivePathtracePipe::MakePipeline()
 		.setMaxPipelineRayRecursionDepth(1);
 
 	// Assemble the shader stages and construct the SBT
-	return MakeRtPipeline(rayPipelineInfo);
+	return MakeRaytracingPipeline(rayPipelineInfo);
 }
 
 void NaivePathtracePipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent3D& extent,
@@ -105,7 +105,6 @@ void NaivePathtracePipe::RecordCmd(vk::CommandBuffer cmdBuffer, const vk::Extent
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,
 		sizeof(PushConstant), &pc);
 
-	cmdBuffer.traceRaysKHR(&m_raygenShaderBindingTable, &m_missShaderBindingTable, &m_hitShaderBindingTable,
-		&m_callableShaderBindingTable, extent.width, extent.height, 1);
+	TraceRays(cmdBuffer, extent.width, extent.height, 1u);
 }
 } // namespace vl

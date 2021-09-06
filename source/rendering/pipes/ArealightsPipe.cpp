@@ -62,7 +62,7 @@ vk::UniquePipeline ArealightsPipe::MakePipeline()
 		.setMaxPipelineRayRecursionDepth(1);
 
 	// Assemble the shader stages and construct the SBT
-	return MakeRtPipeline(rayPipelineInfo);
+	return MakeRaytracingPipeline(rayPipelineInfo);
 }
 
 void ArealightsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sceneDesc,
@@ -95,8 +95,7 @@ void ArealightsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,
 		sizeof(PushConstant), &pc);
 
-	cmdBuffer.traceRaysKHR(&m_raygenShaderBindingTable, &m_missShaderBindingTable, &m_hitShaderBindingTable,
-		&m_callableShaderBindingTable, extent.width, extent.height, 1);
+	TraceRays(cmdBuffer, extent.width, extent.height, 1u);
 }
 
 } // namespace vl

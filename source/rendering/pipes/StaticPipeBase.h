@@ -41,17 +41,18 @@ class StaticRaytracingPipeBase : public StaticPipeBase {
 	std::vector<vk::PipelineShaderStageCreateInfo> m_stages;
 	size_t missCount{};
 
-
-protected:
 	vk::StridedDeviceAddressRegionKHR m_raygenShaderBindingTable;
 	vk::StridedDeviceAddressRegionKHR m_missShaderBindingTable;
 	vk::StridedDeviceAddressRegionKHR m_hitShaderBindingTable;
 	vk::StridedDeviceAddressRegionKHR m_callableShaderBindingTable;
 
+
+protected:
 	void AddRaygenGroup(vk::ShaderModule shader);
 	void AddMissGroup(vk::ShaderModule shader);
 	void AddHitGroup(vk::ShaderModule chit, vk::ShaderModule ahit = {});
-	vk::UniquePipeline MakeRtPipeline(vk::RayTracingPipelineCreateInfoKHR& createInfo);
-};
 
+	vk::UniquePipeline MakeRaytracingPipeline(vk::RayTracingPipelineCreateInfoKHR& createInfo);
+	void TraceRays(vk::CommandBuffer cmdBuffer, uint32 width, uint32 height, uint32 depth) const;
+};
 } // namespace vl

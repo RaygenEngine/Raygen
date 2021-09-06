@@ -54,7 +54,7 @@ void StaticRaytracingPipeBase::AddHitGroup(vk::ShaderModule chit, vk::ShaderModu
 	m_rtShaderGroups.push_back(hg);
 }
 
-vk::UniquePipeline StaticRaytracingPipeBase::MakeRtPipeline(vk::RayTracingPipelineCreateInfoKHR& createInfo)
+vk::UniquePipeline StaticRaytracingPipeBase::MakeRaytracingPipeline(vk::RayTracingPipelineCreateInfoKHR& createInfo)
 {
 	// Stages are shaders
 	createInfo
@@ -112,4 +112,11 @@ vk::UniquePipeline StaticRaytracingPipeBase::MakeRtPipeline(vk::RayTracingPipeli
 
 	return std::move(pipeline.value);
 }
+
+void StaticRaytracingPipeBase::TraceRays(vk::CommandBuffer cmdBuffer, uint32 width, uint32 height, uint32 depth) const
+{
+	cmdBuffer.traceRaysKHR(&m_raygenShaderBindingTable, &m_missShaderBindingTable, &m_hitShaderBindingTable,
+		&m_callableShaderBindingTable, width, height, depth);
+}
+
 } // namespace vl

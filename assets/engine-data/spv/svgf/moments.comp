@@ -1,6 +1,7 @@
 #include "global-descset.glsl"
 
-layout (local_size_x = 32, local_size_y = 32) in;
+layout(local_size_x = 32) in;               
+layout(local_size_y = 32) in;
 
 layout(set = 1, binding = 0) uniform sampler2D inputImage;
 layout(set = 1, binding = 1, rgba32f) uniform image2D svgf0;
@@ -11,6 +12,8 @@ layout(push_constant) uniform PC {
 	float minColorAlpha;
 	float minMomentsAlpha;
 	bool luminanceMode;
+	int width;
+	int height;
 };
       
 struct ReprojectionData {
@@ -27,6 +30,11 @@ bool IsInside(ivec2 p, ivec2 screenSize) {
 
 void main() 
 {
+    if(gl_GlobalInvocationID.x > width || 
+	   gl_GlobalInvocationID.y > height) {
+		return;
+    }
+
 	const vec2 pixelCenter = vec2(gl_GlobalInvocationID.xy) + vec2(0.5);
 	const vec2 uv        = pixelCenter / vec2(gl_NumWorkGroups.xy * gl_WorkGroupSize.xy);
 
