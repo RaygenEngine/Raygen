@@ -110,7 +110,7 @@ void SelectionStencilPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRen
 		auto geom = sceneDesc->GetElement<SceneGeometry>(pl.sceneUid);
 
 		PushConstant pc{
-			sceneDesc.viewer.ubo.viewProj * geom->transform,
+			.mvp = sceneDesc.viewer.ubo.viewProj * geom->transform,
 		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);

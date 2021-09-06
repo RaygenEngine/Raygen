@@ -136,8 +136,10 @@ void VolumeLinesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		auto volumeTransform
 			= math::transformMat(glm::vec3{ 0.3 }, entity->world().orientation, entity->world().position);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(cm.proj * cm.view),
-			glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * glm::inverse(cm.proj * cm.view),
+			.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
@@ -155,8 +157,10 @@ void VolumeLinesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		auto volumeTransform
 			= math::transformMat(glm::vec3{ 1 }, entity->world().orientation, entity->world().position);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(sl.proj * sl.view),
-			glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * glm::inverse(sl.proj * sl.view),
+			.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
@@ -174,8 +178,10 @@ void VolumeLinesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		auto volumeTransform
 			= math::transformMat(glm::vec3{ 1 }, entity->world().orientation, entity->world().position);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * glm::inverse(dl.proj * dl.view),
-			glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * glm::inverse(dl.proj * dl.view),
+			.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
@@ -197,7 +203,10 @@ void VolumeLinesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 		auto volumeTransform
 			= math::transformMat(glm::vec3{ igAabb.GetExtend() }, glm::identity<glm::quat>(), igAabb.GetCenter());
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 0.3f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * volumeTransform,
+			.color = glm::vec4(1.f, 1.f, 0.3f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
@@ -225,7 +234,10 @@ void VolumeLinesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDe
 			auto volumeTransform = math::transformMat(
 				glm::vec3{ node.aabb.GetExtend() }, glm::identity<glm::quat>(), node.aabb.GetCenter());
 
-			PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+			PushConstant pc{
+				.volumeMatVp = sceneDesc.viewer.ubo.viewProj * volumeTransform,
+				.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+			};
 
 			if (node.isLeaf) {
 				pc.color.y = 0.f;
@@ -270,7 +282,10 @@ void VolumeTrianglesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRend
 		auto volumeTransform = math::transformMat(
 			glm::vec3{ pl.CalculateEffectiveRadius() }, entity->world().orientation, entity->world().position);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * volumeTransform,
+			.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
@@ -287,7 +302,10 @@ void VolumeTrianglesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRend
 		auto volumeTransform
 			= math::transformMat(glm::vec3{ rp.radius }, entity->world().orientation, entity->world().position);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * volumeTransform,
+			.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 
@@ -305,7 +323,10 @@ void VolumeTrianglesPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRend
 		auto volumeTransform = math::transformMat(
 			glm::vec3{ ql.width, ql.height, 1.f }, entity->world().orientation, entity->world().position);
 
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * volumeTransform, glm::vec4(1.f, 1.f, 1.f, 1.f) };
+		PushConstant pc{
+			.volumeMatVp = sceneDesc.viewer.ubo.viewProj * volumeTransform,
+			.color = glm::vec4(1.f, 1.f, 1.f, 1.f),
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 

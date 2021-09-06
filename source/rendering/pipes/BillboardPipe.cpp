@@ -119,12 +119,12 @@ namespace {
 		for (auto&& [ent, comp, bc] : Universe::MainWorld->GetView<T, BasicComponent>().each()) {
 
 			PushConstant pc{
-				sceneDesc.viewer.ubo.viewProj,
-				glm::vec4(bc.world().position, 1.f),
-				cameraRight,
-				cameraUp,
-				uv.first,
-				uv.second,
+				.viewProj = sceneDesc.viewer.ubo.viewProj,
+				.position = glm::vec4(bc.world().position, 1.f),
+				.cameraRight = cameraRight,
+				.cameraUp = cameraUp,
+				.uvMin = uv.first,
+				.uvMax = uv.second,
 			};
 
 			cmdBuffer.pushConstants(layout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0u,
@@ -159,12 +159,12 @@ namespace {
 						auto pos = bc.world().position + glm::vec3(x, y, z) * ig.distToAdjacent;
 
 						PushConstant pc{
-							sceneDesc.viewer.ubo.viewProj,
-							glm::vec4(pos, 1.f),
-							cameraRight,
-							cameraUp,
-							uv.first,
-							uv.second,
+							.viewProj = sceneDesc.viewer.ubo.viewProj,
+							.position = glm::vec4(pos, 1.f),
+							.cameraRight = cameraRight,
+							.cameraUp = cameraUp,
+							.uvMin = uv.first,
+							.uvMax = uv.second,
 						};
 
 						cmdBuffer.pushConstants(layout,

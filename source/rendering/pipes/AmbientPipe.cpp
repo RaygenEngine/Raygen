@@ -54,10 +54,10 @@ void AmbientPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 		nullptr);
 
 	PushConstant pc{
-		bias,
-		strength,
-		radius,
-		samples,
+		.bias = bias,
+		.strength = strength,
+		.radius = radius,
+		.samples = samples,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);

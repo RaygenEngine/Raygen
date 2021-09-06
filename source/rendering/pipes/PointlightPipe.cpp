@@ -114,7 +114,9 @@ void PointlightPipe::RecordCmd(
 	rvk::bindSphere18x9(cmdBuffer);
 
 	for (auto pl : sceneDesc->Get<ScenePointlight>()) {
-		PushConstant pc{ sceneDesc.viewer.ubo.viewProj * pl->volumeTransform };
+		PushConstant pc{
+			.lightVolMatVP = sceneDesc.viewer.ubo.viewProj * pl->volumeTransform,
+		};
 
 		cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eVertex, 0u, sizeof(PushConstant), &pc);
 

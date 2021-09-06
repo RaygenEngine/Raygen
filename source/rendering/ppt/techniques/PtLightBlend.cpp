@@ -62,7 +62,7 @@ void PtLightBlend::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc&
 		nullptr);
 
 	PushConstant pc{
-		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+		.quadlightCount = sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 
 	cmdBuffer.pushConstants(m_pipelineLayout.get(), vk::ShaderStageFlagBits::eFragment, 0u, sizeof(PushConstant), &pc);

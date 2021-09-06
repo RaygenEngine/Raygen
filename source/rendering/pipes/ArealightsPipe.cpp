@@ -87,9 +87,9 @@ void ArealightsPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDes
 		nullptr);
 
 	PushConstant pc{
-		seed,
-		samples,
-		sceneDesc.scene->tlas.sceneDesc.quadlightCount,
+		.frame = seed,
+		.samples = samples,
+		.quadlightCount = sceneDesc.scene->tlas.sceneDesc.quadlightCount,
 	};
 
 	cmdBuffer.pushConstants(layout(), vk::ShaderStageFlagBits::eRaygenKHR | vk::ShaderStageFlagBits::eClosestHitKHR, 0u,

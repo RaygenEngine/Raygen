@@ -122,8 +122,9 @@ void UnlitPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& sc
 
 		COMMAND_SCOPE(cmdBuffer, "Model Draw");
 
-		PushConstant pc{ //
-			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+		PushConstant pc{
+			.modelMat = geom->transform,
+			.normalMat = glm::inverseTranspose(glm::mat3(geom->transform)),
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {

@@ -1,5 +1,6 @@
 #include "GbufferPipe.h"
 
+#include "assets/AssetRegistry.h"
 #include "assets/shared/GeometryShared.h"
 #include "rendering/assets/GpuMaterialArchetype.h"
 #include "rendering/assets/GpuMaterialInstance.h"
@@ -195,18 +196,16 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 
 	for (auto& geom : sceneDesc->Get<SceneGeometry>()) {
 
-		COMMAND_SCOPE(cmdBuffer, "Model Draw");
+		COMMAND_SCOPE(cmdBuffer, "Model Draw: " + AssetRegistry::GetPodUri(BasePodHandle{ geom->mesh.uid }));
 
 		PushConstant pc{
-			//
-			geom->transform,
-			glm::inverseTranspose(glm::mat3(geom->transform)),
-			sceneDesc.viewer.prevViewProj * geom->prevTransform,
-			0.f,
+			.modelMat = geom->transform,
+			.normalMat = glm::inverseTranspose(glm::mat3(geom->transform)),
+			.mvpPrev = sceneDesc.viewer.prevViewProj * geom->prevTransform,
+			.drawIndex = 0.f,
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
-
 			COMMAND_SCOPE(cmdBuffer, "Geometry Group Draw");
 
 			auto& mat = gg.material.Lock();
@@ -247,10 +246,11 @@ void GbufferPipe::RecordCmd(vk::CommandBuffer cmdBuffer, const SceneRenderDesc& 
 
 	for (auto geom : sceneDesc->Get<SceneAnimatedGeometry>()) {
 
-		COMMAND_SCOPE(cmdBuffer, "Skinned Model Draw");
+		COMMAND_SCOPE(cmdBuffer, "Skinned Model Draw: " + AssetRegistry::GetPodUri(BasePodHandle{ geom->mesh.uid }));
 
-		PushConstant pc{ //
-			geom->transform, glm::inverseTranspose(glm::mat3(geom->transform))
+		PushConstant pc{
+			.modelMat = geom->transform,
+			.normalMat = glm::inverseTranspose(glm::mat3(geom->transform)),
 		};
 
 		for (auto& gg : geom->mesh.Lock().geometryGroups) {
