@@ -159,7 +159,7 @@ void Renderer_::RecordCmd(vk::CommandBuffer cmdBuffer, SceneRenderDesc&& sceneDe
 		"Set the sample count of arealights." };
 	static ConsoleVariable<float> cons_minColorAlpha{ "r.renderer.arealights.svgf.minColorAlpha", 0.05f,
 		"Set SVGF color alpha for reprojection mix." };
-	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.renderer.arealight.svgf.minMomentsAlpha", 0.05f,
+	static ConsoleVariable<float> cons_minMomentsAlpha{ "r.renderer.arealights.svgf.minMomentsAlpha", 0.05f,
 		"Set SVGF moments alpha for reprojection mix." };
 	static ConsoleVariable<int32> cons_iters{ "r.renderer.arealights.svgf.iterations", 4,
 		"Controls how many times to apply svgf atrous filter." };
