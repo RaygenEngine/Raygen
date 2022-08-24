@@ -16,12 +16,6 @@ std::string shd::GenerateShaderGeneric(const std::string& inOutCode, const std::
 {
 	std::stringstream ss;
 
-	ss << "// Raygen: Auto Generated Shader Code";
-	ss << R"(
-	#version 460
-	#extension GL_GOOGLE_include_directive : enable
-	)";
-
 	ss << "\n#line 100001\n";
 	ss << inOutCode;
 	ss << "\n#line 200001\n";
@@ -54,6 +48,9 @@ layout(location = 0) in Data
 	vec2 uv;
 	mat3 TBN;
     vec3 fragPos;
+	vec4 clipPos;
+	vec4 prevClipPos;
+	float drawIndex;
 };
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
@@ -70,19 +67,19 @@ std::string shd::GenerateGbufferVert(
 	main += R"(
 void main() {
 	vec3 vertPos = position + OffsetPosition(textCoord);
-
 	vec4 posWCS = push.modelMat * vec4(vertPos, 1.0);
-	gl_Position = camera.viewProj * posWCS;
-	fragPos = posWCS.xyz;
+	gl_Position = cam.viewProj * posWCS;
+	clipPos = gl_Position;
+	prevClipPos = push.mvpPrev * vec4(position, 1.0);
+	drawIndex = push.drawIndex;
+
 	
+
+	fragPos = posWCS.xyz;
 	uv = textCoord;
 
-	vec3 newNormal = EditNormal(normal);
-	vec3 newTangent = EditTangent(tangent);
-
-
-	vec3 T = normalize(mat3(push.normalMat) * newTangent);
-   	vec3 N = normalize(mat3(push.normalMat) * newNormal);
+	vec3 T = normalize(mat3(push.normalMat) * tangent);
+   	vec3 N = normalize(mat3(push.normalMat) * normal);
 
 	// Gram-Schmidt process + cross product
 	// re-orthogonalize T with respect to N
@@ -91,19 +88,24 @@ void main() {
 	vec3 B = cross(N, T);
 
 	TBN = mat3(T, B, N); 
-}    
+}
 )";
 
 
 	return GenerateShaderGeneric(R"(
+#include "global-descset.glsl"
 // out
 
 layout(location=0) out Data
 { 
 	vec2 uv;
 	mat3 TBN;
-    vec3 fragPos;
+	vec3 fragPos;
+	vec4 clipPos; 
+	vec4 prevClipPos;
+	float drawIndex;
 };
+
 
 // in
 
@@ -112,14 +114,12 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec3 tangent;
 layout(location = 3) in vec2 textCoord;
 
-// uniforms
-
 layout(push_constant) uniform PC {
 	mat4 modelMat;
 	mat4 normalMat;
+	mat4 mvpPrev;
+	float drawIndex;
 } push;
-
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 
 )",
 		descSetCode, sharedFunctions, main);
@@ -183,6 +183,9 @@ layout(location = 0) in Data
 	vec2 uv;
 	mat3 TBN;
     vec3 fragPos;
+	vec4 clipPos;
+	vec4 prevClipPos;
+	float drawIndex;
 };
 
 layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };

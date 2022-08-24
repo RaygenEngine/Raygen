@@ -40,10 +40,10 @@ void GpuMaterialInstance::Update(const AssetUpdateInfo& info)
 
 		auto& cl = data->archetype.Lock()->descriptorSetLayout.uboClass;
 		auto prp = cl.GetPropertyByName(std::string("doubleSided"));
+		
+		CLOG_WARN(!prp, "All custom material archetypes must have a doubleSided property for now TODO: DOC:");
+		doubleSided = !prp ? false : prp->GetRef<bool>((void*)matInst->descriptorSet.uboData.data());
 
-		CLOG_ABORT(!prp, "All custom material archetypes must have a doubleSided property for now TODO: DOC:");
-
-		doubleSided = prp->GetRef<bool>((void*)matInst->descriptorSet.uboData.data());
 
 		size_t uboSize = matInst->descriptorSet.uboData.size();
 		if (gpuArch.descLayout.HasUbo() && uboSize > 0) {
