@@ -37,11 +37,42 @@ VkBool32 DebugMessageFunc(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity
 
 	std::string message;
 
-	message += vk::to_string(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity)) + ": "
-			   + vk::to_string(static_cast<vk::DebugUtilsMessageTypeFlagsEXT>(messageTypes)) + ":\n";
-	message += std::string("\t") + "messageIDName   = <" + pCallbackData->pMessageIdName + ">\n";
-	message += std::string("\t") + "messageIdNumber = " + std::to_string(pCallbackData->messageIdNumber) + "\n";
-	message += std::string("\t") + "message         = <" + pCallbackData->pMessage + ">\n";
+
+	message += "Vulkan:\n\t" + vk::to_string(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity))
+		+ ": "
+		+ vk::to_string(static_cast<vk::DebugUtilsMessageTypeFlagsEXT>(messageTypes)) 
+		+ fmt::format(": {} ({:#x})\n", pCallbackData->pMessageIdName , pCallbackData->messageIdNumber);
+
+	std::string msgText(pCallbackData->pMessage);
+	using namespace std::string_view_literals;
+	auto split = str::splitAtSubstringOnce(msgText, "]"sv);
+
+	if (split.second.empty()) {
+		message += msgText;
+	}
+	else {
+		// Skip error, already notified at messageIDName
+		split = str::splitAtLastSubstringOnce(split.second, " | "sv);
+		
+		if (split.second.empty()) {
+			message += split.first;
+		}
+		else {
+			// Skip stuf at the start, we already report these later.
+
+			split = str::splitAtSubstringOnce(split.second, " The Vulkan spec states: "sv);
+		
+			message += "\n";
+			message += split.first;
+			if (!split.second.empty()) {
+				message += std::string(" --- \n\n");
+				message += split.second;
+			}
+			message += "\n";
+		}
+	}
+
+	message += "^^^^^^\n";
 	if (0 < pCallbackData->queueLabelCount) {
 		message += std::string("\t") + "Queue Labels:\n";
 		for (uint8_t i = 0; i < pCallbackData->queueLabelCount; i++) {

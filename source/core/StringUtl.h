@@ -124,6 +124,36 @@ std::vector<std::string_view> split(const T& str, std::string_view delims = " ")
 	return output;
 }
 
+template<CCharSeq T>
+std::pair<std::string_view, std::string_view> splitAtSubstringOnce(const T& str, std::string_view substr) {
+	auto strVw = std::string_view(str);
+	
+	size_t findIndex = strVw.find(substr);
+	if (findIndex == std::string::npos) {
+		return std::pair<std::string_view, std::string_view>{ strVw, {} };
+	}
+
+	return std::pair{
+		strVw.substr(0, findIndex), 
+		strVw.substr(findIndex + substr.size())
+	};
+}
+
+template<CCharSeq T>
+std::pair<std::string_view, std::string_view> splitAtLastSubstringOnce(const T& str, std::string_view substr) {
+	auto strVw = std::string_view(str);
+
+	size_t findIndex = strVw.rfind(substr);
+	if (findIndex == std::string::npos) {
+		return std::pair<std::string_view, std::string_view>{ strVw, {} };
+	}
+
+	return std::pair{
+		strVw.substr(0, findIndex),
+		strVw.substr(findIndex + substr.size())
+	};
+}
+
 // Returns times iterated.
 // "function" signature: bool(std::string_view)
 //		return whether you want to continue iterating (returning false instantly stops and returns current iteration
