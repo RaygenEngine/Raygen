@@ -144,7 +144,7 @@ void BottomLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags,
 	// if memReqs.size > Device->scratchBufferAs.capab.size then we need to update it (rebuild it)
 	scratchBuffer = { asBuildSizes.buildScratchSize,
 		vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR
-			| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress | vk::BufferUsageFlagBits::eStorageBuffer,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	asBuffer = { asBuildSizes.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR,

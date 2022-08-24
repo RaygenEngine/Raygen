@@ -5,6 +5,9 @@ layout(location = 0) out Data
 	vec2 uv;
 	mat3 TBN;
 	vec3 fragPos;
+	vec4 clipPos;     // TODO: Needs to be written in the shader
+	vec4 prevClipPos; // TODO: Needs to be written in the shader
+	float drawIndex;  // TODO: Needs to be written in the shader
 };
 
 layout(location = 0) in vec3 position;

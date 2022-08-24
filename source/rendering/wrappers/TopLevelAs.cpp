@@ -677,7 +677,7 @@ void TopLevelAs::Build(vk::BuildAccelerationStructureFlagsKHR buildFlags)
 	// TODO: use a single scratch buffer based on the maximum requirements of the scene BVH
 	scratchBuffer = { asBuildSizes.buildScratchSize,
 		vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR
-			| vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			| vk::BufferUsageFlagBits::eShaderDeviceAddress | vk::BufferUsageFlagBits::eStorageBuffer,
 		vk::MemoryPropertyFlagBits::eDeviceLocal, vk::MemoryAllocateFlagBits::eDeviceAddress };
 
 	asBuffer = { asBuildSizes.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR,
