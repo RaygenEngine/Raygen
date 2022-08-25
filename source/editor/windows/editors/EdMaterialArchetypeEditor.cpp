@@ -133,16 +133,44 @@ void main() {}
 		ed->gbufferFragMain =
 			R"(
 void main() {
-	vec3 normal = normalize(vec3(0.5, 0.5, 1.0) * 2.0 - 1.0);
 
-    gNormal = vec4(normalize(TBN * normal.rgb), 1.f);
-    gAlbedoOpacity = vec4(0.3f, 0.3f, 0.3f, 1.f);
+	vec3 baseColor = vec3(0.5);
+	float metalness = 0;
+	float roughness = 0.5;
+	vec3 emissive = vec3(0);
+	float occlusion = 1.;
+	float opacity = 1.; // Translucent not handled here, but we still need to write something to the gbuffer
+
+	// This is a good sample, but you can write your own values.
+	{
+		// albedo = (1.0 - metalness) * baseColor;
+		gAlbedo = vec4((1.0 - metalness) * baseColor, opacity);
+
+		// CHECK: reflectance
+		// f0 = 0.16 * reflectance * reflectance * (1.0 - metalness) + albedo * metalness;
+		gSpecularColor = vec4(vec3(0.16 * 0.5 * 0.5 * (1.0 - metalness)) + baseColor * metalness, roughness * roughness);
 	
-	// r: metalness, g: roughness, b: reflectance, a: occlusion strength
-	gSurface = vec4(0.f, 0.5f, 0.5f, 0.f);
-	gEmissive = vec4(0.f, 0.f, 0.f, 1.f);
+		gEmissive = vec4(emissive, occlusion);
+	}
+	
+	vec3 customNormal = vec3(0.5, 0.5, 1.0); // "Default" normal, can be overriden by materials if needed
+	vec3 normal = normalize(customNormal * 2.0 - 1.0);
+
+    gSNormal = vec4(normalize(TBN * normal), 1.0);
+
+	// No reason to edit anything below here, unless you really know what you're doing.
+	// geometric normal
+	gGNormal = vec4(TBN[2], 1.0);
+	
+	vec2 a = (clipPos.xy / clipPos.w) * 0.5 + 0.5;
+    vec2 b = (prevClipPos.xy / prevClipPos.w) * 0.5 + 0.5;
+
+	float expectedDepth = (prevClipPos.z / prevClipPos.w);
+
+	gVelocity = vec4(b - a, expectedDepth, 1.f);
+	gUVDrawIndex = vec4(uv, drawIndex, 1.f);
 }                                                                                        
-)"; // CHECK: fix
+)";
 		needsSave = true;
 	}
 }

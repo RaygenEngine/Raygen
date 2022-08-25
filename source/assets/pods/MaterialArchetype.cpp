@@ -83,7 +83,7 @@ void MaterialArchetype::ChangeLayout(DynamicDescriptorSetLayout&& newLayout)
 bool MaterialArchetype::CompileAll(
 	DynamicDescriptorSetLayout&& newLayout, shd::GeneratedShaderErrors& outErrors, bool outputToConsole)
 {
-	std::string descSetCode = shd::GenerateDescriptorSetCode(newLayout, newLayout.uboName);
+	std::string descSetCode = shd::GenerateDescriptorSetCode(newLayout, newLayout.uboName, 1);
 	outErrors.editorErrors.clear();
 
 

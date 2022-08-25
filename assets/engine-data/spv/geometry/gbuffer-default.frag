@@ -16,6 +16,9 @@ layout(location=0) in Data
 	vec2 uv;
 	mat3 TBN;
 	vec3 fragPos;
+	vec4 clipPos;
+	vec4 prevClipPos;
+	float drawIndex; 
 };
 
 void main() {

@@ -33,27 +33,25 @@ std::string shd::GenerateGbufferFrag(
 {
 	return GenerateShaderGeneric(
 		R"(
-// out
+#include "global-descset.glsl"
+
 layout (location = 0) out vec4 gSNormal;
 layout (location = 1) out vec4 gGNormal;
-// rgb: albedo, a: opacity
-layout(location = 2) out vec4 gAlbedoOpacity;
-// r: metalness, g: roughness, b: reflectance, a: occlusion strength
-layout(location = 3) out vec4 gSurface;
-layout(location = 4) out vec4 gEmissive;
+layout (location = 2) out vec4 gAlbedo;
+layout (location = 3) out vec4 gSpecularColor;
+layout (location = 4) out vec4 gEmissive;
+layout (location = 5) out vec4 gVelocity;
+layout (location = 6) out vec4 gUVDrawIndex;
 
-// in
-layout(location = 0) in Data
-{
+layout(location=0) in Data
+{ 
 	vec2 uv;
 	mat3 TBN;
-    vec3 fragPos;
+	vec3 fragPos;
 	vec4 clipPos;
 	vec4 prevClipPos;
 	float drawIndex;
 };
-
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 )",
 		descSetCode, sharedFunctions, mainCode);
 }
@@ -187,8 +185,6 @@ layout(location = 0) in Data
 	vec4 prevClipPos;
 	float drawIndex;
 };
-
-layout(set = 1, binding = 0) uniform UBO_Camera { Camera cam; };
 )",
 		descSetCode, sharedFunctions, mainCode);
 }
