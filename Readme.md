@@ -7,7 +7,8 @@ Raygen is a game engine focused on exploring real-time applications of ray traci
 ## Requirements
 
 * CMake: minimum version 3.16
-* Visual studio 19: up until version 16.7.7 
+* Visual studio 19: up until version 16.7.7
+* Vulkan SDK: version 1.2.198.1
 
 ## Getting started
 
